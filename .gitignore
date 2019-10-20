@@ -4,3 +4,6 @@
 # text editor backups
 *.py~
 *.swp
+
+# intellij stuff
+.idea
