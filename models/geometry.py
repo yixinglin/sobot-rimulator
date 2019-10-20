@@ -17,15 +17,12 @@
 # Email mccrea.engineering@gmail.com for questions, comments, or to report bugs.
 
 
-
-
-
 # AN ABSTRACT GEOMETRY CLASS
 
 class Geometry:
-  def __init__( self, vertexes ):
-    self.vertexes
-    self.bounding_circle
+    def __init__(self, vertexes):
+        self.vertexes
+        self.bounding_circle
 
-  def get_transformation_to_pose( self, pose ):
-    raise NotImplementedError()
+    def get_transformation_to_pose(self, pose):
+        raise NotImplementedError()

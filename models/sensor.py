@@ -17,12 +17,9 @@
 # Email mccrea.engineering@gmail.com for questions, comments, or to report bugs.
 
 
-
-
-
 # AN ABSTRACT SENSOR CLASS
 
 class Sensor:
 
-  def read( self ):
-    raise NotImplementedError()
+    def read(self):
+        raise NotImplementedError()

@@ -17,8 +17,5 @@
 # Email mccrea.engineering@gmail.com for questions, comments, or to report bugs.
 
 
-
-
-
-class GoalReachedException( Exception ):
-  pass
+class GoalReachedException(Exception):
+    pass
