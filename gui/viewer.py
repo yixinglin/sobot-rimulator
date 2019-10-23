@@ -27,7 +27,7 @@ from frame import *
 from painter import *
 
 DEFAULT_VIEW_PIX_W = 800  # pixels
-DEFAULT_VIEW_PIX_H = 800  # pixels
+DEFAULT_VIEW_PIX_H = 400  # pixels
 DEFAULT_ZOOM = 100  # pixels per meter
 
 # user response codes for file chooser dialog buttons
@@ -60,8 +60,13 @@ class Viewer:
         self.drawing_area.set_size_request(self.view_width_pixels, self.view_height_pixels)
         self.drawing_area.connect('expose_event', self.on_expose)
 
+        self.drawing_area2 = gtk.DrawingArea()
+        self.drawing_area2.set_size_request(self.view_width_pixels, self.view_height_pixels)
+        self.drawing_area2.connect('expose_event', self.on_expose)
+
         # initialize the painter
         self.painter = Painter(self.drawing_area, self.pixels_per_meter)
+        self.painter2 = Painter(self.drawing_area2, self.pixels_per_meter)
 
         # == initialize the buttons
 
@@ -161,6 +166,7 @@ class Viewer:
         # lay out the simulation view and all of the controls
         layout_box = gtk.VBox()
         layout_box.pack_start(self.drawing_area)
+        layout_box.pack_end(self.drawing_area2)
         layout_box.pack_start(self.alert_box, False, False, 5)
         layout_box.pack_start(sim_controls_alignment, False, False, 5)
         layout_box.pack_start(map_controls_alignment, False, False, 5)
@@ -177,6 +183,7 @@ class Viewer:
 
     def draw_frame(self):
         self.drawing_area.queue_draw_area(0, 0, self.view_width_pixels, self.view_height_pixels)
+        self.drawing_area2.queue_draw_area(0, 0, self.view_width_pixels, self.view_height_pixels)
 
     def control_panel_state_init(self):
         self.alert_box.set_text('')
@@ -267,6 +274,7 @@ class Viewer:
 
     def on_expose(self, widget, event):
         self.painter.draw_frame(self.current_frame)
+        self.painter2.draw_frame(self.current_frame)
 
     def on_delete(self, widget, event):
         gtk.main_quit()
