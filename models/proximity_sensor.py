@@ -64,10 +64,10 @@ class ProximitySensor(Sensor):
 
     # set this proximity sensor to detect an object at distance ( delta * max_range )
     def detect(self, delta):
-        if delta != None and (delta < 0.0 or delta > 1.0):
+        if delta is not None and (delta < 0.0 or delta > 1.0):
             raise Exception("delta out of bounds - must be in range [0.0, 1.0]")
 
-        if delta == None:
+        if delta is None:
             self.target_delta = None
             self.read_value = MIN_READ_VALUE
         else:
