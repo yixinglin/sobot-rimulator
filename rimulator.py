@@ -19,6 +19,7 @@
 # Email mccrea.engineering@gmail.com for questions, comments, or to report bugs.
 
 import gi
+
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk as gtk
 from gi.repository import GObject
@@ -32,7 +33,6 @@ from models.world import *
 
 from views.world_view import *
 from sim_exceptions.collision_exception import *
-
 
 REFRESH_RATE = 20.0  # hertz
 

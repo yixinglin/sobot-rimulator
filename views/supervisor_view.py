@@ -17,7 +17,6 @@
 # Email mccrea.engineering@gmail.com for questions, comments, or to report bugs.
 
 
-from models.control_state import *
 from views.controllers.avoid_obstacles_controller_view import *
 from views.controllers.follow_wall_controller_view import *
 from views.controllers.go_to_goal_controller_view import *
