@@ -17,11 +17,6 @@
 # Email mccrea.engineering@gmail.com for questions, comments, or to report bugs.
 
 
-import pygtk
-
-from math import *
-
-
 class Frame:
 
     def __init__(self):

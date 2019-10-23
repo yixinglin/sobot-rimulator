@@ -18,7 +18,7 @@
 
 
 from math import *
-from sensor import *
+from models.sensor import *
 
 
 class WheelEncoder(Sensor):

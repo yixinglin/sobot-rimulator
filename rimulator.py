@@ -18,10 +18,10 @@
 # 
 # Email mccrea.engineering@gmail.com for questions, comments, or to report bugs.
 
-
-import pygtk
-import gtk
-import gobject
+import gi
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk as gtk
+from gi.repository import GObject
 
 import gui.frame
 import gui.viewer
@@ -33,7 +33,6 @@ from models.world import *
 from views.world_view import *
 from sim_exceptions.collision_exception import *
 
-pygtk.require('2.0')
 
 REFRESH_RATE = 20.0  # hertz
 
@@ -51,7 +50,7 @@ class Simulator:
         self.period = 1.0 / REFRESH_RATE  # seconds
 
         # gtk simulation event source - for simulation control
-        self.sim_event_source = gobject.idle_add(self.initialize_sim,
+        self.sim_event_source = GObject.idle_add(self.initialize_sim,
                                                  True)  # we use this opportunity to initialize the sim
 
         # start gtk
@@ -81,13 +80,13 @@ class Simulator:
         self.draw_world()
 
     def play_sim(self):
-        gobject.source_remove(
+        GObject.source_remove(
             self.sim_event_source)  # this ensures multiple calls to play_sim do not speed up the simulator
         self._run_sim()
         self.viewer.control_panel_state_playing()
 
     def pause_sim(self):
-        gobject.source_remove(self.sim_event_source)
+        GObject.source_remove(self.sim_event_source)
         self.viewer.control_panel_state_paused()
 
     def step_sim_once(self):
@@ -95,7 +94,7 @@ class Simulator:
         self._step_sim()
 
     def end_sim(self, alert_text=''):
-        gobject.source_remove(self.sim_event_source)
+        GObject.source_remove(self.sim_event_source)
         self.viewer.control_panel_state_finished(alert_text)
 
     def reset_sim(self):
@@ -119,7 +118,7 @@ class Simulator:
         self.viewer.draw_frame()  # render the frame
 
     def _run_sim(self):
-        self.sim_event_source = gobject.timeout_add(int(self.period * 1000), self._run_sim)
+        self.sim_event_source = GObject.timeout_add(int(self.period * 1000), self._run_sim)
         self._step_sim()
 
     def _step_sim(self):

@@ -20,8 +20,8 @@
 from math import *
 
 from utils import linalg2_util as linalg
-from avoid_obstacles_controller import *
-from go_to_goal_controller import *
+from models.controllers.avoid_obstacles_controller import *
+from models.controllers.go_to_goal_controller import *
 
 
 class GTGAndAOController:
@@ -101,21 +101,19 @@ class GTGAndAOController:
         # self._print_vars( eP, eI, eD, v, omega )
 
     def _print_vars(self, eP, eI, eD, v, omega):
-        print "\n\n"
-        print "=============="
-        print "ERRORS:"
-        print "eP: " + str(eP)
-        print "eI: " + str(eI)
-        print "eD: " + str(eD)
-        print ""
-        print "CONTROL COMPONENTS:"
-        print "kP * eP = " + str(self.kP) + " * " + str(eP)
-        print "= " + str(self.kP * eP)
-        print "kI * eI = " + str(self.kI) + " * " + str(eI)
-        print "= " + str(self.kI * eI)
-        print "kD * eD = " + str(self.kD) + " * " + str(eD)
-        print "= " + str(self.kD * eD)
-        print ""
-        print "OUTPUTS:"
-        print "omega: " + str(omega)
-        print "v    : " + str(v)
+        print("\n\n")
+        print("==============")
+        print("ERRORS:")
+        print("eP: " + str(eP))
+        print("eI: " + str(eI))
+        print("eD: " + str(eD))
+        print("CONTROL COMPONENTS:")
+        print("kP * eP = " + str(self.kP) + " * " + str(eP))
+        print("= " + str(self.kP * eP))
+        print("kI * eI = " + str(self.kI) + " * " + str(eI))
+        print("= " + str(self.kI * eI))
+        print("kD * eD = " + str(self.kD) + " * " + str(eD))
+        print("= " + str(self.kD * eD))
+        print("OUTPUTS:")
+        print("omega: " + str(omega))
+        print("v    : " + str(v))

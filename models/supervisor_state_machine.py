@@ -17,7 +17,7 @@
 # Email mccrea.engineering@gmail.com for questions, comments, or to report bugs.
 
 
-from control_state import *
+from models.control_state import *
 from utils import linalg2_util as linalg
 from sim_exceptions.goal_reached_exception import *
 
@@ -188,15 +188,14 @@ class SupervisorStateMachine:
 
     # === FOR DEBUGGING ===
     def _print_debug_info(self):
-        print "\n ======== \n"
-        print "STATE: " + str(
-            ["At Goal", "Go to Goal", "Avoid Obstacles", "Blended", "Slide Left", "Slide Right"][self.current_state])
-        print ""
-        print "CONDITIONS:"
-        print "At Obstacle: " + str(self.condition_at_obstacle())
-        print "Danger: " + str(self.condition_danger())
-        print "No Obstacle: " + str(self.condition_no_obstacle())
-        print "Progress Made: " + str(self.condition_progress_made()) + " ( Best Dist: " + str(
-            round(self.best_distance_to_goal, 3)) + ", Current Dist: " + str(round(self._distance_to_goal(), 3)) + " )"
-        print "Slide Left: " + str(self.condition_slide_left())
-        print "Slide Right: " + str(self.condition_slide_right())
+        print("\n ======== \n")
+        print("STATE: " + str(
+            ["At Goal", "Go to Goal", "Avoid Obstacles", "Blended", "Slide Left", "Slide Right"][self.current_state]))
+        print("CONDITIONS:")
+        print("At Obstacle: " + str(self.condition_at_obstacle()))
+        print("Danger: " + str(self.condition_danger()))
+        print("No Obstacle: " + str(self.condition_no_obstacle()))
+        print("Progress Made: " + str(self.condition_progress_made()) + " ( Best Dist: " + str(
+            round(self.best_distance_to_goal, 3)) + ", Current Dist: " + str(round(self._distance_to_goal(), 3)) + " )")
+        print("Slide Left: " + str(self.condition_slide_left()))
+        print("Slide Right: " + str(self.condition_slide_right()))
