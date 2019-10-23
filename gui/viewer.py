@@ -27,7 +27,7 @@ from gui.frame import Frame
 from gui.painter import Painter
 
 DEFAULT_VIEW_PIX_W = 700  # pixels
-DEFAULT_VIEW_PIX_H = 350  # pixels
+DEFAULT_VIEW_PIX_H = 600  # pixels
 DEFAULT_ZOOM = 100  # pixels per meter
 
 # user response codes for file chooser dialog buttons
@@ -134,6 +134,12 @@ class Viewer:
 
         # == lay out the window
 
+        plots_box = gtk.HBox(spacing=5)
+        plots_box.pack_start(self.drawing_area, False, False, 0)
+        plots_box.pack_start(self.drawing_area2, False, False, 0)
+        plots_alignment = gtk.Alignment(xalign=0.5, yalign=0.5, xscale=0, yscale=0)
+        plots_alignment.add(plots_box)
+
         # pack the simulation control buttons
         sim_controls_box = gtk.HBox(spacing=5)
         sim_controls_box.pack_start(self.button_play, False, False, 0)
@@ -164,8 +170,7 @@ class Viewer:
 
         # lay out the simulation view and all of the controls
         layout_box = gtk.VBox()
-        layout_box.pack_start(self.drawing_area, False, False, 0)
-        layout_box.pack_end(self.drawing_area2, False, False, 0)
+        layout_box.pack_start(plots_alignment, False, False, 0)
         layout_box.pack_start(self.alert_box, False, False, 5)
         layout_box.pack_start(sim_controls_alignment, False, False, 5)
         layout_box.pack_start(map_controls_alignment, False, False, 5)
