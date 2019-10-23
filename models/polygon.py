@@ -17,8 +17,8 @@
 # Email mccrea.engineering@gmail.com for questions, comments, or to report bugs.
 
 
-from utils import linalg2_util as linalg
 from models.geometry import *
+from utils import linalg2_util as linalg
 
 
 class Polygon(Geometry):

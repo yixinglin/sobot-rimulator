@@ -17,9 +17,6 @@
 # Email mccrea.engineering@gmail.com for questions, comments, or to report bugs.
 
 
-import utils.linalg2_util as linalg
-
-
 class ObstacleView:
 
     def __init__(self, viewer, obstacle):

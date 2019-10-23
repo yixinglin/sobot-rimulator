@@ -18,7 +18,7 @@
 
 
 from math import *
-import utils.linalg2_util as linalg
+
 from models.line_segment import *
 from models.pose import *
 from models.sensor import *

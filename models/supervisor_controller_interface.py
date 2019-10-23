@@ -17,9 +17,6 @@
 # Email mccrea.engineering@gmail.com for questions, comments, or to report bugs.
 
 
-from math import *
-
-
 # an interfacing allowing a controller to interact with its supervisor
 class SupervisorControllerInterface:
 

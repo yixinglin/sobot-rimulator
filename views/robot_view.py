@@ -17,7 +17,6 @@
 # Email mccrea.engineering@gmail.com for questions, comments, or to report bugs.
 
 
-import utils.linalg2_util as linalg
 from views.proximity_sensor_view import *
 from views.supervisor_view import *
 

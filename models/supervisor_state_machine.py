@@ -18,8 +18,8 @@
 
 
 from models.control_state import *
-from utils import linalg2_util as linalg
 from sim_exceptions.goal_reached_exception import *
+from utils import linalg2_util as linalg
 
 # event parameters
 D_STOP = 0.05  # meters from goal

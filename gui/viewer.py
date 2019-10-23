@@ -20,8 +20,6 @@
 import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk as gtk
-from gi.repository import GObject
-from gi.repository import GdkPixbuf
 
 from gui.frame import Frame
 from gui.painter import Painter

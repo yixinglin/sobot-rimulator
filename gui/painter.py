@@ -17,8 +17,9 @@
 # Email mccrea.engineering@gmail.com for questions, comments, or to report bugs.
 
 
-from gui.color_palette import *
 from math import *
+
+from gui.color_palette import *
 
 
 class Painter:

@@ -20,7 +20,6 @@
 from math import *
 
 from utils import linalg2_util as linalg
-from utils import math_util
 
 
 class AvoidObstaclesController:

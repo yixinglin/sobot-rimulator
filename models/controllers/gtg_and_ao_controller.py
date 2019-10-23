@@ -17,9 +17,6 @@
 # Email mccrea.engineering@gmail.com for questions, comments, or to report bugs.
 
 
-from math import *
-
-from utils import linalg2_util as linalg
 from models.controllers.avoid_obstacles_controller import *
 from models.controllers.go_to_goal_controller import *
 

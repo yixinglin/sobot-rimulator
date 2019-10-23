@@ -17,7 +17,6 @@
 # Email mccrea.engineering@gmail.com for questions, comments, or to report bugs.
 
 
-import time
 from models.physics import *
 
 

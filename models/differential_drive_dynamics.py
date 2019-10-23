@@ -18,7 +18,6 @@
 
 
 from math import *
-from models.pose import *
 
 
 class DifferentialDriveDynamics:

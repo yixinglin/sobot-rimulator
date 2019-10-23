@@ -16,14 +16,13 @@
 # 
 # Email mccrea.engineering@gmail.com for questions, comments, or to report bugs.
 
+import pickle
 from math import *
 from random import *
-import pickle
-
-from models.pose import Pose
-from models.rectangle_obstacle import *
 
 import utils.geometrics_util as geometrics
+from models.pose import Pose
+from models.rectangle_obstacle import *
 
 # random environment parameters
 OBS_MIN_DIM = 0.1  # meters
