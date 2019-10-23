@@ -26,8 +26,8 @@ import gobject
 from frame import *
 from painter import *
 
-DEFAULT_VIEW_PIX_W = 800  # pixels
-DEFAULT_VIEW_PIX_H = 400  # pixels
+DEFAULT_VIEW_PIX_W = 700  # pixels
+DEFAULT_VIEW_PIX_H = 350  # pixels
 DEFAULT_ZOOM = 100  # pixels per meter
 
 # user response codes for file chooser dialog buttons
@@ -167,8 +167,8 @@ class Viewer:
         layout_box = gtk.VBox()
         layout_box.pack_start(self.drawing_area)
         layout_box.pack_end(self.drawing_area2)
-        layout_box.pack_start(self.alert_box, False, False, 5)
-        layout_box.pack_start(sim_controls_alignment, False, False, 5)
+        layout_box.pack_start(self.alert_box)
+        layout_box.pack_start(sim_controls_alignment, False, )
         layout_box.pack_start(map_controls_alignment, False, False, 5)
         layout_box.pack_start(invisibles_button_alignment, False, False, 5)
 

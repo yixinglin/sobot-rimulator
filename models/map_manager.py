@@ -27,15 +27,15 @@ import utils.geometrics_util as geometrics
 
 # random environment parameters
 OBS_MIN_DIM = 0.1  # meters
-OBS_MAX_DIM = 2.5  # meters
-OBS_MAX_COMBINED_DIM = 2.6  # meters
+OBS_MAX_DIM = 0.9  # meters
+OBS_MAX_COMBINED_DIM = 1.0  # meters
 OBS_MIN_COUNT = 10
-OBS_MAX_COUNT = 50
-OBS_MIN_DIST = 0.4  # meters
-OBS_MAX_DIST = 6.0  # meters
-GOAL_MIN_DIST = 2.0  # meters
-GOAL_MAX_DIST = 4.0  # meters
-MIN_GOAL_CLEARANCE = 0.2  # meters
+OBS_MAX_COUNT = 30
+OBS_MIN_DIST = 0.2  # meters
+OBS_MAX_DIST = 2.0  # meters
+GOAL_MIN_DIST = 1.0  # meters
+GOAL_MAX_DIST = 2.5  # meters
+MIN_GOAL_CLEARANCE = 0.5  # meters
 
 
 class MapManager:
