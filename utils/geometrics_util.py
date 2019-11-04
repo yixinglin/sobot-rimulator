@@ -41,8 +41,7 @@ def convex_polygon_intersect_test(polygon1, polygon2):
     intersect = True
     edge_index = 0
     edges = polygonA.edges() + polygonB.edges()
-    while intersect == True and edge_index < len(
-            edges):  # loop through the edges of polygonA searching for a separating axis
+    while intersect and edge_index < len(edges):  # loop through the edges of polygonA searching for a separating axis
         # get an axis normal to the current edge
         edge = edges[edge_index]
         edge_vector = linalg.sub(edge[1], edge[0])
@@ -92,13 +91,14 @@ def line_segment_intersection(line1, line2):
     p2, r2 = line2[0], linalg.sub(line2[1], line2[0])
 
     r1xr2 = float(linalg.cross(r1, r2))
-    if r1xr2 == 0.0: return nointersect_symbol
+    if r1xr2 == 0.0:
+        return nointersect_symbol
     p2subp1 = linalg.sub(p2, p1)
 
     d1 = linalg.cross(p2subp1, r2) / r1xr2
     d2 = linalg.cross(p2subp1, r1) / r1xr2
 
-    if d1 >= 0.0 and d1 <= 1.0 and d2 >= 0.0 and d2 <= 1.0:
+    if 0.0 <= d1 <= 1.0 and 0.0 <= d2 <= 1.0:
         return True, linalg.add(p1, linalg.scale(r1, d1)), d1
     else:
         return nointersect_symbol

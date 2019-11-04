@@ -41,6 +41,9 @@ class SupervisorStateMachine:
         # progress tracking
         self.best_distance_to_goal = float("inf")
 
+        # TODO: Change it to a suitable starting state
+        self.current_state = None
+
     def update_state(self):
         if self.current_state == ControlState.GO_TO_GOAL:
             self.execute_state_go_to_goal()
@@ -136,17 +139,20 @@ class SupervisorStateMachine:
 
     def condition_at_obstacle(self):
         for d in self._forward_sensor_distances():
-            if d < D_CAUTION: return True
+            if d < D_CAUTION:
+                return True
         return False
 
     def condition_danger(self):
         for d in self._forward_sensor_distances():
-            if d < D_DANGER: return True
+            if d < D_DANGER:
+                return True
         return False
 
     def condition_no_obstacle(self):
         for d in self._forward_sensor_distances():
-            if d < D_CAUTION: return False
+            if d < D_CAUTION:
+                return False
         return True
 
     def condition_progress_made(self):
@@ -199,3 +205,7 @@ class SupervisorStateMachine:
             round(self.best_distance_to_goal, 3)) + ", Current Dist: " + str(round(self._distance_to_goal(), 3)) + " )")
         print("Slide Left: " + str(self.condition_slide_left()))
         print("Slide Right: " + str(self.condition_slide_right()))
+
+
+ssm = SupervisorStateMachine(None)
+ssm.

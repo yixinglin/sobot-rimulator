@@ -30,5 +30,4 @@ def frange(x, y, jump=1.0):
     while x < y:
         r.append(x)
         x += jump
-
     return r
