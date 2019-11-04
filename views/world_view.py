@@ -32,10 +32,12 @@ class WorldView:
 
         # initialize views for world objects
         self.robot_views = []
-        for robot in world.robots: self.add_robot(robot)
+        for robot in world.robots:
+            self.add_robot(robot)
 
         self.obstacle_views = []
-        for obstacle in world.obstacles: self.add_obstacle(obstacle)
+        for obstacle in world.obstacles:
+            self.add_obstacle(obstacle)
 
     def add_robot(self, robot):
         robot_view = RobotView(self.viewer, robot)
@@ -54,7 +56,7 @@ class WorldView:
             robot_view.draw_robot_to_frame()
         # draw all the obstacles
         for obstacle_view in self.obstacle_views:
-            obstacle_view.draw_obstacle_to_frame()
+            obstacle_view.draw_obstacle_to_frame(self.viewer.current_frames[0])
 
     def _draw_grid_to_frame(self):
         # NOTE: THIS FORMULA ASSUMES THE FOLLOWING:
@@ -101,11 +103,12 @@ class WorldView:
             accum.append([[-x_halfwidth, -y], [x_halfwidth, -y]])  # negative-side gridline
 
         # draw the gridlines
-        self.viewer.current_frame.add_lines(major_lines_accum,  # draw major gridlines
-                                            linewidth=meters_per_pixel,  # roughly 1 pixel
-                                            color="black",
-                                            alpha=0.2)
-        self.viewer.current_frame.add_lines(minor_lines_accum,  # draw minor gridlines
-                                            linewidth=meters_per_pixel,  # roughly 1 pixel
-                                            color="black",
-                                            alpha=0.1)
+        for current_frame in self.viewer.current_frames:
+            current_frame.add_lines(major_lines_accum,  # draw major gridlines
+                                    linewidth=meters_per_pixel,  # roughly 1 pixel
+                                    color="black",
+                                    alpha=0.2)
+            current_frame.add_lines(minor_lines_accum,  # draw minor gridlines
+                                    linewidth=meters_per_pixel,  # roughly 1 pixel
+                                    color="black",
+                                    alpha=0.1)

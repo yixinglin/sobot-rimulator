@@ -37,7 +37,7 @@ class AvoidObstaclesControllerView:
         obstacle_vertexes = self.avoid_obstacles_controller.obstacle_vectors[:]
         obstacle_vertexes.append(obstacle_vertexes[0])  # close the drawn polygon
         obstacle_vertexes = linalg.rotate_and_translate_vectors(obstacle_vertexes, robot_theta, robot_pos)
-        self.viewer.current_frame.add_lines([obstacle_vertexes],
+        self.viewer.current_frames[0].add_lines([obstacle_vertexes],
                                             linewidth=0.005,
                                             color="black",
                                             alpha=1.0)
@@ -46,7 +46,7 @@ class AvoidObstaclesControllerView:
         ao_heading_vector = linalg.scale(linalg.unit(self.avoid_obstacles_controller.ao_heading_vector), VECTOR_LEN)
         vector_line = [[0.0, 0.0], ao_heading_vector]
         vector_line = linalg.rotate_and_translate_vectors(vector_line, robot_theta, robot_pos)
-        self.viewer.current_frame.add_lines([vector_line],
+        self.viewer.current_frames[0].add_lines([vector_line],
                                             linewidth=0.02,
                                             color="red",
                                             alpha=1.0)

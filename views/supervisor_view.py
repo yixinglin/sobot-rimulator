@@ -62,11 +62,11 @@ class SupervisorView:
 
     def _draw_goal_to_frame(self):
         goal = self.supervisor.goal
-        self.viewer.current_frame.add_circle(pos=goal,
+        self.viewer.current_frames[0].add_circle(pos=goal,
                                              radius=0.05,
                                              color="dark green",
                                              alpha=0.65)
-        self.viewer.current_frame.add_circle(pos=goal,
+        self.viewer.current_frames[0].add_circle(pos=goal,
                                              radius=0.01,
                                              color="black",
                                              alpha=0.5)
@@ -75,16 +75,17 @@ class SupervisorView:
         # draw the estimated position of the robot
         vertexes = self.robot_geometry.get_transformation_to_pose(self.supervisor.estimated_pose).vertexes[:]
         vertexes.append(vertexes[0])  # close the drawn polygon
-        self.viewer.current_frame.add_lines([vertexes],
-                                            color="black",
-                                            linewidth=0.0075,
-                                            alpha=0.5)
+        for current_frame in self.viewer.current_frames:
+            current_frame.add_lines([vertexes],
+                                    color="black",
+                                    linewidth=0.0075,
+                                    alpha=0.5)
 
-        # draw the estimated traverse path of the robot
-        self.viewer.current_frame.add_lines([self.robot_estimated_traverse_path],
-                                            linewidth=0.005,
-                                            color="red",
-                                            alpha=0.5)
+            # draw the estimated traverse path of the robot
+            current_frame.add_lines([self.robot_estimated_traverse_path],
+                                    linewidth=0.005,
+                                    color="red",
+                                    alpha=0.5)
 
     # draw the current controller's state to the frame
     def _draw_current_controller_to_frame(self):

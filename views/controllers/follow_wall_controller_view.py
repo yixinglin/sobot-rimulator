@@ -70,7 +70,7 @@ class FollowWallControllerView:
 
         # draw the estimated wall surface
         surface_line = linalg.rotate_and_translate_vectors(surface_line, robot_theta, robot_pos)
-        self.viewer.current_frame.add_lines([surface_line],
+        self.viewer.current_frames[0].add_lines([surface_line],
                                             linewidth=0.01,
                                             color="black",
                                             alpha=1.0)
@@ -78,7 +78,7 @@ class FollowWallControllerView:
         # draw the measuring line from the robot to the wall
         range_line = [[0.0, 0.0], distance_vector]
         range_line = linalg.rotate_and_translate_vectors(range_line, robot_theta, robot_pos)
-        self.viewer.current_frame.add_lines([range_line],
+        self.viewer.current_frames[0].add_lines([range_line],
                                             linewidth=0.005,
                                             color="black",
                                             alpha=1.0)
@@ -103,7 +103,7 @@ class FollowWallControllerView:
         fw_heading_vector = linalg.scale(linalg.unit(fw_heading_vector), VECTOR_LEN)
         vector_line = [[0.0, 0.0], fw_heading_vector]
         vector_line = linalg.rotate_and_translate_vectors(vector_line, robot_theta, robot_pos)
-        self.viewer.current_frame.add_lines([vector_line],
+        self.viewer.current_frames[0].add_lines([vector_line],
                                             linewidth=0.02,
                                             color="orange",
                                             alpha=1.0)

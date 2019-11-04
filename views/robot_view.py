@@ -61,24 +61,27 @@ class RobotView:
 
         # draw the robot
         robot_bottom = self.robot.global_geometry.vertexes
-        self.viewer.current_frame.add_polygons([robot_bottom],
-                                               color="blue",
-                                               alpha=0.5)
+        for current_frame in self.viewer.current_frames:
+            current_frame.add_polygons([robot_bottom],
+                                        color="blue",
+                                        alpha=0.5)
         # add decoration
         robot_pos, robot_theta = self.robot.pose.vunpack()
         robot_top = linalg.rotate_and_translate_vectors(K3_TOP_PLATE, robot_theta, robot_pos)
-        self.viewer.current_frame.add_polygons([robot_top],
-                                               color="black",
-                                               alpha=0.5)
+        for current_frame in self.viewer.current_frames:
+            current_frame.add_polygons([robot_top],
+                                        color="black",
+                                        alpha=0.5)
 
         # draw the robot's traverse path if indicated
         if self.viewer.draw_invisibles:
             self._draw_traverse_path_to_frame()
 
     def _draw_traverse_path_to_frame(self):
-        self.viewer.current_frame.add_lines([self.traverse_path],
-                                            color="black",
-                                            linewidth=0.01)
+        for current_frame in self.viewer.current_frames:
+            current_frame.add_lines([self.traverse_path],
+                                    color="black",
+                                    linewidth=0.01)
 
     # draws the traverse path as dots weighted according to robot speed
     def _draw_rich_traverse_path_to_frame(self):

@@ -28,6 +28,7 @@ from gui.painter import Painter
 DEFAULT_VIEW_PIX_W = 700  # pixels
 DEFAULT_VIEW_PIX_H = 600  # pixels
 DEFAULT_ZOOM = 100  # pixels per meter
+NUM_FRAMES = 2 # Frame 1 is actual frame, frame 2 ekf state
 
 # user response codes for file chooser dialog buttons
 LS_DIALOG_RESPONSE_CANCEL = 1
@@ -40,8 +41,8 @@ class Viewer:
         # bind the simulator
         self.simulator = simulator
 
-        # initialize frame
-        self.current_frame = Frame()
+        # initialize frames
+        self.current_frames = [Frame() for _ in range(NUM_FRAMES)]
 
         # initialize camera parameters
         self.view_width_pixels = DEFAULT_VIEW_PIX_W
@@ -61,12 +62,12 @@ class Viewer:
 
         self.drawing_area2 = gtk.DrawingArea()
         self.drawing_area2.set_size_request(self.view_width_pixels, self.view_height_pixels)
-        self.drawing_area2.connect('draw', self.on_expose)
+        self.drawing_area2.connect('draw', self.on_expose2)
 
         # initialize the painter
         self.painter = Painter(self.pixels_per_meter)
 
-        # == initialize the buttons
+    # == initialize the buttons
 
         # build the play button
         self.button_play = gtk.Button('Play')
@@ -182,7 +183,7 @@ class Viewer:
         self.window.show_all()
 
     def new_frame(self):
-        self.current_frame = Frame()
+        self.current_frames = [Frame() for _ in range(NUM_FRAMES)]
 
     def draw_frame(self):
         self.drawing_area.queue_draw_area(0, 0, self.view_width_pixels, self.view_height_pixels)
@@ -276,7 +277,10 @@ class Viewer:
         self.simulator.draw_world()
 
     def on_expose(self, widget, context):
-        self.painter.draw_frame(self.current_frame, widget, context)
+        self.painter.draw_frame(self.current_frames[0], widget, context)
+
+    def on_expose2(self, widget, context):
+        self.painter.draw_frame(self.current_frames[1], widget, context)
 
     def on_delete(self, widget, event):
         gtk.main_quit()
