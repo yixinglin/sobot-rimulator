@@ -72,9 +72,9 @@ class RobotView:
 
         # draw the robot's traverse path if indicated
         if draw_invisibles:
-            self._draw_traverse_path_to_frame(frame)
+            self._draw_real_traverse_path_to_frame(frame)
 
-    def _draw_traverse_path_to_frame(self, frame):
+    def _draw_real_traverse_path_to_frame(self, frame):
         frame.add_lines([self.traverse_path],
                         color="black",
                         linewidth=0.01)

@@ -68,9 +68,8 @@ class SupervisorView:
         # draw the estimated position of the robot
         vertexes = self.robot_geometry.get_transformation_to_pose(self.supervisor.estimated_pose).vertexes[:]
         vertexes.append(vertexes[0])  # close the drawn polygon
-        frame.add_lines([vertexes],
+        frame.add_polygons([vertexes],
                         color="black",
-                        linewidth=0.0075,
                         alpha=0.5)
 
         # draw the estimated traverse path of the robot

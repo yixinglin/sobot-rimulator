@@ -69,7 +69,7 @@ class Supervisor:
         self.follow_wall_controller = FollowWallController(controller_interface)
 
         # slam
-        self.slam = EKFSlam(controller_interface)
+        self.slam = EKFSlam(controller_interface, step_time=1/20)
 
         # state machine
         self.state_machine = SupervisorStateMachine(self)
@@ -90,6 +90,9 @@ class Supervisor:
         self.v_output = 0.0
         self.omega_output = 0.0
 
+        self.v_l = 0.0
+        self.v_r = 0.0
+
     # simulate this supervisor running for one time increment
     def step(self, dt):
         # increment the internal clock time
@@ -105,6 +108,8 @@ class Supervisor:
     def _execute(self):
         self._update_state()  # update state
         self.current_controller.execute()  # apply the current controller
+        v, yaw = self._diff_to_uni(self.v_l, self.v_r)
+        self.slam.ekf_slam(self.slam.xEst, self.slam.PEst, np.array([[v],[yaw]]), self.proximity_sensor_distances)
         self._send_robot_commands()  # output the generated control signals to the robot
 
     # update the estimated robot state and the control state
@@ -169,6 +174,8 @@ class Supervisor:
 
         # send the drive commands to the robot
         v_l, v_r = self._uni_to_diff(v, omega)
+        self.v_l = v_l
+        self.v_r = v_r
         self.robot.set_wheel_drive_rates(v_l, v_r)
 
     def _uni_to_diff(self, v, omega):

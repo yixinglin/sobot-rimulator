@@ -54,7 +54,7 @@ class WorldView:
         # draw all the robots
         for robot_view in self.robot_views:
             robot_view.draw_robot_to_frame(self.viewer.current_frames[0], self.viewer.draw_invisibles)
-            robot_view.draw_robot_to_frame(self.viewer.current_frames[1], draw_invisibles=False)
+            #robot_view.draw_robot_to_frame(self.viewer.current_frames[1], draw_invisibles=False)
 
         # draw all the obstacles
         for obstacle_view in self.obstacle_views:

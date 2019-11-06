@@ -77,11 +77,11 @@ class Simulator:
 
         # create the world view
         self.world_view = WorldView(self.world, self.viewer)
+        self.slam_view = SlamView(self.world.supervisors[0].slam, self.viewer)
+        self.world.supervisors[0].slam.set_slam_view(self.slam_view)
 
         # render the initial world
         self.draw_world()
-
-        #self.slam_view = SlamView(self.world.supervisors[0].slam)
 
     def play_sim(self):
         GObject.source_remove(
@@ -119,6 +119,7 @@ class Simulator:
     def draw_world(self):
         self.viewer.new_frame()  # start a fresh frame
         self.world_view.draw_world_to_frame()  # draw the world onto the frame
+        self.slam_view.draw_slam_to_frame()
         self.viewer.draw_frame()  # render the frame
 
     def _run_sim(self):
