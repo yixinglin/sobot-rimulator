@@ -33,8 +33,6 @@ class SlamView:
         self.viewer = viewer
 
         # initialize views for world objects
-        self.robot_views = []
-        self.add_robot(robot)
 
         self.obstacle_views = []
         for landmark in self.slam.landmarks:

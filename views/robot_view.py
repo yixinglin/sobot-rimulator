@@ -32,59 +32,55 @@ K3_TOP_PLATE = [[-0.031, 0.043],
 
 class RobotView:
 
-    def __init__(self, viewer, robot):
-        self.viewer = viewer
+    def __init__(self, robot):
         self.robot = robot
 
         # add the supervisor views for this robot
-        self.supervisor_view = SupervisorView(viewer, robot.supervisor, robot.geometry)
+        self.supervisor_view = SupervisorView(robot.supervisor, robot.geometry)
 
         # add the IR sensor views for this robot
         self.ir_sensor_views = []
         for ir_sensor in robot.ir_sensors:
-            self.ir_sensor_views.append(ProximitySensorView(viewer, ir_sensor))
+            self.ir_sensor_views.append(ProximitySensorView(ir_sensor))
 
         self.traverse_path = []  # this robot's traverse path
 
-    def draw_robot_to_frame(self):
+    def draw_robot_to_frame(self, frame, draw_invisibles=False):
         # update the robot traverse path
         position = self.robot.pose.vposition()
         self.traverse_path.append(position)
 
         # draw the internal state ( supervisor ) to the frame
-        self.supervisor_view.draw_supervisor_to_frame()
+        self.supervisor_view.draw_supervisor_to_frame(frame, draw_invisibles)
 
         # draw the IR sensors to the frame if indicated
-        if self.viewer.draw_invisibles:
+        if draw_invisibles:
             for ir_sensor_view in self.ir_sensor_views:
-                ir_sensor_view.draw_proximity_sensor_to_frame()
+                ir_sensor_view.draw_proximity_sensor_to_frame(frame)
 
         # draw the robot
         robot_bottom = self.robot.global_geometry.vertexes
-        for current_frame in self.viewer.current_frames:
-            current_frame.add_polygons([robot_bottom],
-                                        color="blue",
-                                        alpha=0.5)
+        frame.add_polygons([robot_bottom],
+                           color="blue",
+                           alpha=0.5)
         # add decoration
         robot_pos, robot_theta = self.robot.pose.vunpack()
         robot_top = linalg.rotate_and_translate_vectors(K3_TOP_PLATE, robot_theta, robot_pos)
-        for current_frame in self.viewer.current_frames:
-            current_frame.add_polygons([robot_top],
-                                        color="black",
-                                        alpha=0.5)
+        frame.add_polygons([robot_top],
+                           color="black",
+                           alpha=0.5)
 
         # draw the robot's traverse path if indicated
-        if self.viewer.draw_invisibles:
-            self._draw_traverse_path_to_frame()
+        if draw_invisibles:
+            self._draw_traverse_path_to_frame(frame)
 
-    def _draw_traverse_path_to_frame(self):
-        for current_frame in self.viewer.current_frames:
-            current_frame.add_lines([self.traverse_path],
-                                    color="black",
-                                    linewidth=0.01)
+    def _draw_traverse_path_to_frame(self, frame):
+        frame.add_lines([self.traverse_path],
+                        color="black",
+                        linewidth=0.01)
 
     # draws the traverse path as dots weighted according to robot speed
-    def _draw_rich_traverse_path_to_frame(self):
+    def _draw_rich_traverse_path_to_frame(self, frame):
         # when robot is moving fast, draw small, opaque dots
         # when robot is moving slow, draw large, transparent dots
         d_min, d_max = 0.0, 0.01574  # possible distances between dots
@@ -96,7 +92,6 @@ class RobotView:
         b_a = a_max - m_a * r_min
 
         prev_posn = self.traverse_path[0]
-        frame = self.viewer.current_frame
         for posn in self.traverse_path[1::1]:
             d = linalg.distance(posn, prev_posn)
             r = (m_r * d) + b_r

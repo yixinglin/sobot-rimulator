@@ -19,8 +19,7 @@
 
 class ObstacleView:
 
-    def __init__(self, viewer, obstacle):
-        self.viewer = viewer
+    def __init__(self, obstacle):
         self.obstacle = obstacle
 
     def draw_obstacle_to_frame(self, frame):

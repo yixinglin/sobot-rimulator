@@ -40,11 +40,11 @@ class WorldView:
             self.add_obstacle(obstacle)
 
     def add_robot(self, robot):
-        robot_view = RobotView(self.viewer, robot)
+        robot_view = RobotView(robot)
         self.robot_views.append(robot_view)
 
     def add_obstacle(self, obstacle):
-        obstacle_view = ObstacleView(self.viewer, obstacle)
+        obstacle_view = ObstacleView(obstacle)
         self.obstacle_views.append(obstacle_view)
 
     def draw_world_to_frame(self):
@@ -53,7 +53,9 @@ class WorldView:
 
         # draw all the robots
         for robot_view in self.robot_views:
-            robot_view.draw_robot_to_frame()
+            robot_view.draw_robot_to_frame(self.viewer.current_frames[0], self.viewer.draw_invisibles)
+            robot_view.draw_robot_to_frame(self.viewer.current_frames[1], draw_invisibles=False)
+
         # draw all the obstacles
         for obstacle_view in self.obstacle_views:
             obstacle_view.draw_obstacle_to_frame(self.viewer.current_frames[0])

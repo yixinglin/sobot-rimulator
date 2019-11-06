@@ -20,6 +20,8 @@
 
 import gi
 
+from views.SlamView import SlamView
+
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk as gtk
 from gi.repository import GObject
@@ -79,7 +81,7 @@ class Simulator:
         # render the initial world
         self.draw_world()
 
-        self.slam_view = SlamView(self.world.supervisors[0].slam)
+        #self.slam_view = SlamView(self.world.supervisors[0].slam)
 
     def play_sim(self):
         GObject.source_remove(
