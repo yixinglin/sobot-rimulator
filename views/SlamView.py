@@ -60,6 +60,6 @@ class SlamView:
                            alpha=0.5)
 
     def add_landmark(self, landmark):
-        obstacle = RectangleObstacle(0.1, 0.1, Pose(landmark[0], landmark[1], 0))
+        obstacle = RectangleObstacle(0.05, 0.05, Pose(landmark[0], landmark[1], 0))
         obstacle_view = ObstacleView(obstacle)
         self.obstacle_views.append(obstacle_view)

@@ -105,7 +105,7 @@ class EKFSlam:
         # Update
         z = zip(z, self.supervisor.proximity_sensor_placements())
         for iz, (distance, pose) in enumerate(z):
-            if distance == self.supervisor.proximity_sensor_max_range():  # only execute if landmark is observed
+            if distance >= self.supervisor.proximity_sensor_max_range() - 0.01:  # only execute if landmark is observed
                 continue
             minid = search_correspond_landmark_id(xEst, PEst, [distance, pose.theta])
 
