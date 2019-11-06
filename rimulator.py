@@ -79,6 +79,8 @@ class Simulator:
         # render the initial world
         self.draw_world()
 
+        self.slam_view = SlamView(self.world.supervisors[0].slam)
+
     def play_sim(self):
         GObject.source_remove(
             self.sim_event_source)  # this ensures multiple calls to play_sim do not speed up the simulator

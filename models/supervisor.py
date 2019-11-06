@@ -23,6 +23,7 @@ from models.controllers.gtg_and_ao_controller import *
 from models.pose import *
 from models.supervisor_controller_interface import *
 from models.supervisor_state_machine import *
+from models.controllers.EKFSlam import *
 
 # control parameters
 K3_TRANS_VEL_LIMIT = 0.3148  # m/s
@@ -67,6 +68,9 @@ class Supervisor:
         self.gtg_and_ao_controller = GTGAndAOController(controller_interface)
         self.follow_wall_controller = FollowWallController(controller_interface)
 
+        # slam
+        self.slam = EKFSlam(controller_interface)
+
         # state machine
         self.state_machine = SupervisorStateMachine(self)
 
@@ -95,10 +99,10 @@ class Supervisor:
         # although technically this is not likely to be realistic, it is a good simplificiation
 
         # execute one full control loop
-        self.execute()
+        self._execute()
 
     # execute one control loop
-    def execute(self):
+    def _execute(self):
         self._update_state()  # update state
         self.current_controller.execute()  # apply the current controller
         self._send_robot_commands()  # output the generated control signals to the robot

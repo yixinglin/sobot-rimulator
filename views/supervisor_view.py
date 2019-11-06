@@ -15,8 +15,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # 
 # Email mccrea.engineering@gmail.com for questions, comments, or to report bugs.
-
-
+from models.pose import Pose
 from views.controllers.avoid_obstacles_controller_view import *
 from views.controllers.follow_wall_controller_view import *
 from views.controllers.go_to_goal_controller_view import *
@@ -75,7 +74,10 @@ class SupervisorView:
         # draw the estimated position of the robot
         vertexes = self.robot_geometry.get_transformation_to_pose(self.supervisor.estimated_pose).vertexes[:]
         vertexes.append(vertexes[0])  # close the drawn polygon
-        for current_frame in self.viewer.current_frames:
+        for i, current_frame in enumerate(self.viewer.current_frames):
+            if i == 1:
+                vertexes = self.robot_geometry.get_transformation_to_pose(Pose(*[0, 0, 0])).vertexes[:]
+                vertexes.append(vertexes[0])  # close the drawn polygon
             current_frame.add_lines([vertexes],
                                     color="black",
                                     linewidth=0.0075,
