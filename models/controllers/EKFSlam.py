@@ -94,7 +94,6 @@ class EKFSlam:
 
         self.xEst = np.zeros((STATE_SIZE, 1))
         self.PEst = np.identity(STATE_SIZE)
-        self.slam_view = None
 
     def ekf_slam(self, xEst, PEst, u, z):
         # Predict
@@ -117,8 +116,6 @@ class EKFSlam:
             if minid == nLM:   # If the landmark is new
                 # Extend state and covariance matrix
                 landmark_position = calc_landmark_position(xEst, [distance, pose.theta])
-                if self.slam_view is not None:
-                    self.slam_view.add_landmark(landmark_position)
                 xAug = np.vstack((xEst, landmark_position))
                 PAug = np.vstack((np.hstack((PEst, np.zeros((len(xEst), LM_SIZE)))),
                                   np.hstack((np.zeros((LM_SIZE, len(xEst))), initP))))
@@ -162,9 +159,6 @@ class EKFSlam:
         G = np.eye(STATE_SIZE) + Fx.transpose() * jF * Fx
 
         return G, Fx
-
-    def set_slam_view(self, slam_view):
-        self.slam_view = slam_view
 
 
 

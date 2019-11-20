@@ -33,17 +33,13 @@ class SlamView:
         self.viewer = viewer
         self.robot = Robot()
 
-    # initialize views for world objects
-
-        self.obstacle_views = []
-        for landmark in self.slam.get_landmarks():
-            self.add_landmark(landmark)
-
     def draw_slam_to_frame(self):
         self.__draw_robot_to_frame(self.viewer.current_frames[1], self.slam.get_estimated_pose())
 
         # draw all the obstacles
-        for obstacle_view in self.obstacle_views:
+        for landmark in self.slam.get_landmarks():
+            obstacle = RectangleObstacle(0.05, 0.05, Pose(landmark[0], landmark[1], 0))
+            obstacle_view = ObstacleView(obstacle)
             obstacle_view.draw_obstacle_to_frame(self.viewer.current_frames[1])
 
     def __draw_robot_to_frame(self, frame, robot_pose, draw_invisibles=False):

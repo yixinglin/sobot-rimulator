@@ -78,7 +78,6 @@ class Simulator:
         # create the world view
         self.world_view = WorldView(self.world, self.viewer)
         self.slam_view = SlamView(self.world.supervisors[0].slam, self.viewer)
-        self.world.supervisors[0].slam.set_slam_view(self.slam_view)
 
         # render the initial world
         self.draw_world()
