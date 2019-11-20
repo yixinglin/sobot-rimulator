@@ -53,28 +53,7 @@ class MapManager:
         obs_min_dist = OBS_MIN_DIST
         obs_max_dist = OBS_MAX_DIST
 
-        # GOAL PARAMS
-        goal_min_dist = GOAL_MIN_DIST
-        goal_max_dist = GOAL_MAX_DIST
-
         # BUILD RANDOM ELEMENTS
-        # generate the goal
-        goal_dist_range = goal_max_dist - goal_min_dist
-        dist = goal_min_dist + (random() * goal_dist_range)
-        phi = -pi + (random() * 2 * pi)
-        x = dist * sin(phi)
-        y = dist * cos(phi)
-        goal = [x, y]
-
-        # generate a proximity test geometry for the goal
-        r = MIN_GOAL_CLEARANCE
-        n = 6
-        goal_test_geometry = []
-        for i in range(n):
-            goal_test_geometry.append(
-                [x + r * cos(i * 2 * pi / n),
-                 y + r * sin(i * 2 * pi / n)])
-        goal_test_geometry = Polygon(goal_test_geometry)
 
         # generate the obstacles
         obstacles = []
@@ -82,7 +61,7 @@ class MapManager:
         obs_dist_range = obs_max_dist - obs_min_dist
         num_obstacles = randrange(obs_min_count, obs_max_count + 1)
 
-        test_geometries = [r.global_geometry for r in world.robots] + [goal_test_geometry]
+        test_geometries = [r.global_geometry for r in world.robots]
         while len(obstacles) < num_obstacles:
 
             # generate dimensions
@@ -106,14 +85,46 @@ class MapManager:
             intersects = False
             for test_geometry in test_geometries:
                 intersects |= geometrics.convex_polygon_intersect_test(test_geometry, obstacle.global_geometry)
-            if intersects == False: obstacles.append(obstacle)
+            if not intersects:
+                obstacles.append(obstacle)
 
         # update the current obstacles and goal
         self.current_obstacles = obstacles
-        self.current_goal = goal
+        self.add_new_goal()
 
         # apply the new obstacles and goal to the world
         self.apply_to_world(world)
+
+    def add_new_goal(self):
+        while True:
+            goal = self.__generate_new_goal()
+            intersects = self.__check_obstacle_intersections(goal)
+            if not intersects:
+                self.current_goal = goal
+                break
+
+    def __generate_new_goal(self):
+        goal_dist_range = GOAL_MAX_DIST - GOAL_MIN_DIST
+        dist = GOAL_MIN_DIST + (random() * goal_dist_range)
+        phi = -pi + (random() * 2 * pi)
+        x = dist * sin(phi)
+        y = dist * cos(phi)
+        goal = [x, y]
+        return goal
+
+    def __check_obstacle_intersections(self, goal):
+        # generate a proximity test geometry for the goal
+        n = 6   # goal is n sided polygon
+        goal_test_geometry = []
+        for i in range(n):
+            goal_test_geometry.append(
+                [goal[0] + MIN_GOAL_CLEARANCE * cos(i * 2 * pi / n),
+                 goal[1] + MIN_GOAL_CLEARANCE * sin(i * 2 * pi / n)])
+        goal_test_geometry = Polygon(goal_test_geometry)
+        intersects = False
+        for obstacle in self.current_obstacles:
+            intersects |= geometrics.convex_polygon_intersect_test(goal_test_geometry, obstacle.global_geometry)
+        return intersects
 
     def save_map(self, filename):
         with open(filename, 'wb') as file:

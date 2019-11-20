@@ -7,7 +7,7 @@ Cx = np.diag([0.5, 0.5, np.deg2rad(30.0)]) ** 2
 
 STATE_SIZE = 3  # State size [x,y,theta]
 LM_SIZE = 2  # LM state size [x,y]
-M_DIST_TH = 0.1  # Threshold of Mahalanobis distance for data association.
+M_DIST_TH = 0.015  # Threshold of Mahalanobis distance for data association.
 
 
 def pi_2_pi(angle):
