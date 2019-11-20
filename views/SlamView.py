@@ -28,7 +28,6 @@ MAJOR_GRIDLINE_SUBDIVISIONS = 5  # minor gridlines for every major gridline
 class SlamView:
 
     def __init__(self, slam, viewer):
-        # bind the viewer
         self.slam = slam
         self.viewer = viewer
         self.robot = Robot()

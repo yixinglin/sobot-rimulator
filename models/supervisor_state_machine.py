@@ -50,8 +50,10 @@ class SupervisorStateMachine:
             self.execute_state_slide_left()
         elif self.current_state == ControlState.SLIDE_RIGHT:
             self.execute_state_slide_right()
+        elif self.current_state == ControlState.AT_GOAL:
+            self.execute_state_go_to_goal()
         else:
-            raise Exception("undefined supervisor state or behavior")
+            raise Exception("undefined supervisor state or behavior", self.current_state)
 
     # === STATE PROCEDURES ===
     def execute_state_go_to_goal(self):

@@ -109,7 +109,7 @@ class Supervisor:
         self._update_state()  # update state
         self.current_controller.execute()  # apply the current controller
         v, yaw = self._diff_to_uni(self.v_l, self.v_r)
-        self.slam.ekf_slam(self.slam.xEst, self.slam.PEst, np.array([[v],[yaw]]), self.proximity_sensor_distances)
+        self.slam.ekf_slam(np.array([[v], [yaw]]), self.proximity_sensor_distances)
         self._send_robot_commands()  # output the generated control signals to the robot
 
     # update the estimated robot state and the control state

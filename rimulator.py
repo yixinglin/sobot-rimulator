@@ -132,7 +132,8 @@ class Simulator:
         except CollisionException:
             self.end_sim('Collision!')
         except GoalReachedException:
-            self.end_sim('Goal Reached!')
+            self.map_manager.add_new_goal()
+            self.map_manager.apply_to_world(self.world)
 
         # draw the resulting world
         self.draw_world()

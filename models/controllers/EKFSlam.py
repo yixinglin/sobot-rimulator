@@ -7,7 +7,7 @@ Cx = np.diag([0.5, 0.5, np.deg2rad(30.0)]) ** 2
 
 STATE_SIZE = 3  # State size [x,y,theta]
 LM_SIZE = 2  # LM state size [x,y]
-M_DIST_TH = 0.015  # Threshold of Mahalanobis distance for data association.
+M_DIST_TH = 0.1  # Threshold of Mahalanobis distance for data association.
 
 
 def pi_2_pi(angle):
@@ -16,7 +16,7 @@ def pi_2_pi(angle):
 
 def calc_landmark_position(x, z):
     zp = np.zeros((2, 1))
-    zp[0, 0] = x[0, 0] + z[0] * cos(x[2, 0] + z[1])
+    zp[0, 0] = x[0, 0] + z[0] * cos(x[2, 0] + z[1])  # TODO: See if adding a constant to z[0] helps to compensate for the robot size
     zp[1, 0] = x[1, 0] + z[0] * sin(x[2, 0] + z[1])
     return zp
 
@@ -77,7 +77,7 @@ def search_correspond_landmark_id(xAug, PAug, zi):
         y, S, H = calc_innovation(lm, xAug, PAug, zi, i)
         distance = y.T @ np.linalg.inv(S) @ y
         mdist.append(distance)
-        print("Landmark with id " + str(i) + " has distance " + str(distance))
+        print("Landmark with id", i, "has distance", distance)
 
     mdist.append(M_DIST_TH)  # new landmark
     minid = mdist.index(min(mdist))
@@ -95,44 +95,43 @@ class EKFSlam:
         self.xEst = np.zeros((STATE_SIZE, 1))
         self.PEst = np.identity(STATE_SIZE)
 
-    def ekf_slam(self, xEst, PEst, u, z):
+    def ekf_slam(self, u, z):
         # Predict
         S = STATE_SIZE
-        xEst[0:S] = self.motion_model(xEst[0:S], u)
-        G, Fx = self.jacob_motion(xEst[0:S], u)
-        PEst[0:S, 0:S] = G.T * PEst[0:S, 0:S] * G + Fx.T * Cx * Fx
+        self.xEst[0:S] = self.motion_model(self.xEst[0:S], u)
+        G, Fx = self.jacob_motion(self.xEst[0:S], u)
+        self.PEst[0:S, 0:S] = G.T * self.PEst[0:S, 0:S] * G + Fx.T * Cx * Fx
         initP = np.eye(2)
-
+        #print("Current Pose Estimate", self.xEst[0], " ", self.xEst[1])
         # Update
-        z = zip(z, self.supervisor.proximity_sensor_placements())
-        for iz, (distance, pose) in enumerate(z):
+        assert len(z) == len(self.supervisor.proximity_sensor_placements())
+        z = zip(z, [pose.theta for pose in self.supervisor.proximity_sensor_placements()])
+        for iz, (distance, theta) in enumerate(z):
             if distance >= self.supervisor.proximity_sensor_max_range() - 0.01:  # only execute if landmark is observed
                 continue
-            minid = search_correspond_landmark_id(xEst, PEst, [distance, pose.theta])
+            minid = search_correspond_landmark_id(self.xEst, self.PEst, [distance, theta])
 
-            nLM = get_n_lm(xEst)
+            nLM = get_n_lm(self.xEst)
             print("Seeing landmark with Id: ", minid)
             print("Number of landmarks is: ", nLM)
             if minid == nLM:   # If the landmark is new
+                print("New Landmark")
                 # Extend state and covariance matrix
-                landmark_position = calc_landmark_position(xEst, [distance, pose.theta])
-                xAug = np.vstack((xEst, landmark_position))
-                PAug = np.vstack((np.hstack((PEst, np.zeros((len(xEst), LM_SIZE)))),
-                                  np.hstack((np.zeros((LM_SIZE, len(xEst))), initP))))
-                xEst = xAug
-                PEst = PAug
-            lm = get_landmark_position_from_state(xEst, minid)
-            y, S, H = calc_innovation(lm, xEst, PEst, [distance, pose.theta], minid)
+                landmark_position = calc_landmark_position(self.xEst, [distance, theta])
+                xAug = np.vstack((self.xEst, landmark_position))
+                PAug = np.vstack((np.hstack((self.PEst, np.zeros((len(self.xEst), LM_SIZE)))),
+                                  np.hstack((np.zeros((LM_SIZE, len(self.xEst))), initP))))
+                self.xEst = xAug
+                self.PEst = PAug
+            lm = get_landmark_position_from_state(self.xEst, minid)
+            y, S, H = calc_innovation(lm, self.xEst, self.PEst, [distance, theta], minid)
 
-            K = (PEst @ H.T) @ np.linalg.inv(S)
-            xEst = xEst + (K @ y)
-            PEst = (np.eye(len(xEst)) - (K @ H)) @ PEst
+            K = (self.PEst @ H.T) @ np.linalg.inv(S)
+            self.xEst = self.xEst + (K @ y)
+            self.PEst = (np.eye(len(self.xEst)) - (K @ H)) @ self.PEst
+        #print("Updated Pose Estimate", self.xEst[0], " ", self.xEst[1])
 
-        xEst[2] = pi_2_pi(xEst[2])
-
-        self.xEst = xEst
-        self.PEst = PEst
-        return xEst, PEst
+        self.xEst[2] = pi_2_pi(self.xEst[2])
 
     def get_estimated_pose(self):
         return Pose(self.xEst[0, 0], self.xEst[1, 0], self.xEst[2, 0])
