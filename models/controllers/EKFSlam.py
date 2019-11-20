@@ -75,7 +75,9 @@ def search_correspond_landmark_id(xAug, PAug, zi):
     for i in range(nLM):
         lm = get_landmark_position_from_state(xAug, i)
         y, S, H = calc_innovation(lm, xAug, PAug, zi, i)
-        mdist.append(y.T @ np.linalg.inv(S) @ y)
+        distance = y.T @ np.linalg.inv(S) @ y
+        mdist.append(distance)
+        print("Landmark with id " + str(i) + " has distance " + str(distance))
 
     mdist.append(M_DIST_TH)  # new landmark
     minid = mdist.index(min(mdist))
@@ -110,6 +112,8 @@ class EKFSlam:
             minid = search_correspond_landmark_id(xEst, PEst, [distance, pose.theta])
 
             nLM = get_n_lm(xEst)
+            print("Seeing landmark with Id: ", minid)
+            print("Number of landmarks is: ", nLM)
             if minid == nLM:   # If the landmark is new
                 # Extend state and covariance matrix
                 landmark_position = calc_landmark_position(xEst, [distance, pose.theta])
