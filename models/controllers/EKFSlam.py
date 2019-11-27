@@ -3,7 +3,7 @@ from math import *
 from models.pose import Pose
 
 # EKF state covariance
-Cx = np.diag([0.5, 0.5, np.deg2rad(30.0)]) ** 2
+Cx = np.diag([0.1, 0.1, np.deg2rad(5.0)]) ** 2
 
 STATE_SIZE = 3  # State size [x,y,theta]
 LM_SIZE = 2  # LM state size [x,y]
@@ -151,19 +151,28 @@ class EKFSlam:
     # The motion model for a motion command u = (velocity, angular velocity)
     # TODO: Try different motion model (currently the robot moves in straight line even if angular velocity is != 0)!!!
     def motion_model(self, x, u):
-        B = np.array([[self.dt * cos(x[2, 0]), 0],
-                      [self.dt * sin(x[2, 0]), 0],
-                      [0.0, self.dt]])
-        res = x + (B @ u)
+        if u[1, 0] == 0:
+            B = np.array([[self.dt * cos(x[2, 0]) * u[0, 0]],
+                          [self.dt * sin(x[2, 0]) * u[0, 0]],
+                          [0.0]])
+        else:
+            B = np.array([[u[0, 0] / u[1, 0] * (sin(x[2, 0] + self.dt * u[1, 0]) - sin(x[2, 0]))],
+                          [u[0, 0] / u[1, 0] * (-cos(x[2, 0] + self.dt * u[1, 0]) + cos(x[2, 0]))],
+                          [u[1, 0] * self.dt]])
+        res = x + B
         return res
 
     def jacob_motion(self, x, u):
         Fx = np.hstack((np.identity(STATE_SIZE),
                         np.zeros((STATE_SIZE, LM_SIZE * get_n_lm(x)))))
-
-        jF = np.array([[0, 0, -self.dt * u[0] * sin(x[2, 0])],
-                       [0, 0, self.dt * u[0] * cos(x[2, 0])],
-                       [0, 0, 0]])
+        if u[1, 0] == 0:
+            jF = np.array([[0, 0, -self.dt * u[0] * sin(x[2, 0])],
+                           [0, 0, self.dt * u[0] * cos(x[2, 0])],
+                           [0, 0, 0]])
+        else:
+            jF = np.array([[u[0, 0] / u[1, 0] * (cos(x[2, 0] + self.dt * u[1, 0]) - cos(x[2, 0]))],
+                          [u[0, 0] / u[1, 0] * (sin(x[2, 0] + self.dt * u[1, 0]) - sin(x[2, 0]))],
+                          [u[1, 0] * self.dt]])
 
         G = np.eye(STATE_SIZE) + Fx.transpose() * jF * Fx
 
