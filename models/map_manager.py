@@ -28,12 +28,12 @@ from models.rectangle_obstacle import *
 OBS_MIN_DIM = 0.05  # meters
 OBS_MAX_DIM = 0.075  # meters
 OBS_MAX_COMBINED_DIM = 0.125  # meters
-OBS_MIN_COUNT = 15
-OBS_MAX_COUNT = 30
+OBS_MIN_COUNT = 25
+OBS_MAX_COUNT = 50
 OBS_MIN_DIST = 0.4  # meters
 OBS_MAX_DIST = 2  # meters
-GOAL_MIN_DIST = 1.0  # meters
-GOAL_MAX_DIST = 2.5  # meters
+GOAL_MIN_DIST = 0  # meters
+GOAL_MAX_DIST = 2  # meters
 MIN_GOAL_CLEARANCE = 0.2  # meters
 
 

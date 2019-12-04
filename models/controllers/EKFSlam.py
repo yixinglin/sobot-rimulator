@@ -3,11 +3,12 @@ from math import *
 from models.pose import Pose
 
 # EKF state covariance
-Cx = np.diag([0.1, 0.1, np.deg2rad(5.0)]) ** 2
+sensor_noise = np.diag([0.5, 0.5, np.deg2rad(30)]) ** 2
+motion_noise = np.diag([0.05, 0.05, np.deg2rad(1)]) ** 2
 
 STATE_SIZE = 3  # State size [x,y,theta]
 LM_SIZE = 2  # LM state size [x,y]
-M_DIST_TH = 0.02  # Threshold of Mahalanobis distance for data association.
+M_DIST_TH = 0.5  # Threshold of Mahalanobis distance for data association.
 
 
 def pi_2_pi(angle):
@@ -39,8 +40,6 @@ def jacob_h(q, delta, x, i):
                     np.eye(2), np.zeros((2, 2 * nLM - 2 * i))))
 
     F = np.vstack((F1, F2))
-    #print("Matrix G:")
-    #print(G)
     H = G @ F
 
     return H
@@ -51,16 +50,10 @@ def calc_innovation(lm, xEst, PEst, z, LMid):
     q = (delta.T @ delta)[0, 0]
     zangle = atan2(delta[1, 0], delta[0, 0]) - xEst[2, 0]
     zp = np.array([[sqrt(q), pi_2_pi(zangle)]])
-    #print("Delta:", zp)
-    #print("Measurement:", z)
     y = (z - zp).T
     y[1] = pi_2_pi(y[1])
-    print("Difference:", y)
     H = jacob_h(q, delta, xEst, LMid + 1)
-    #print("Matrix H:")
-    #print(H)
-    S = H @ PEst @ H.T + Cx[0:2, 0:2]
-    #print("Matrix S:", S)
+    S = H @ PEst @ H.T + sensor_noise[0:2, 0:2]
 
     return y, S, H
 
@@ -82,10 +75,8 @@ def search_correspond_landmark_id(xAug, PAug, zi):
     for i in range(nLM):
         lm = get_landmark_position_from_state(xAug, i)
         y, S, H = calc_innovation(lm, xAug, PAug, zi, i)
-        print("Inverse of S:", np.linalg.inv(S))
         distance = y.T @ np.linalg.inv(S) @ y
         mdist.append(distance)
-        print("Landmark with id", i, "has distance", distance)
 
     mdist.append(M_DIST_TH)  # new landmark
     minid = mdist.index(min(mdist))
@@ -107,10 +98,9 @@ class EKFSlam:
         # Predict
         S = STATE_SIZE
         self.xEst[0:S] = self.motion_model(self.xEst[0:S], u)
-        G, Fx = self.jacob_motion(self.xEst[0:S], u)
-        self.PEst[0:S, 0:S] = G.T * self.PEst[0:S, 0:S] * G + Fx.T * Cx * Fx
+        G = self.jacob_motion(self.xEst[0:S], u)
+        self.PEst[0:S, 0:S] = G.T @ self.PEst[0:S, 0:S] @ G + motion_noise
         initP = np.eye(2)
-        #print("Current Pose Estimate", self.xEst[0], " ", self.xEst[1])
         # Update
         assert len(z) == len(self.supervisor.proximity_sensor_placements())
         z = zip(z, [pose.theta for pose in self.supervisor.proximity_sensor_placements()])
@@ -120,8 +110,6 @@ class EKFSlam:
             minid = search_correspond_landmark_id(self.xEst, self.PEst, [distance, theta])
 
             nLM = get_n_lm(self.xEst)
-            print("Seeing landmark with Id: ", minid)
-            print("Number of landmarks is: ", nLM)
             if minid == nLM:   # If the landmark is new
                 print("New Landmark")
                 # Extend state and covariance matrix
@@ -131,14 +119,13 @@ class EKFSlam:
                                   np.hstack((np.zeros((LM_SIZE, len(self.xEst))), initP))))
                 self.xEst = xAug
                 self.PEst = PAug
-            else:
-                lm = get_landmark_position_from_state(self.xEst, minid)
-                y, S, H = calc_innovation(lm, self.xEst, self.PEst, [distance, theta], minid)
 
-                K = (self.PEst @ H.T) @ np.linalg.inv(S)
-                self.xEst = self.xEst + (K @ y)
-                self.PEst = (np.eye(len(self.xEst)) - (K @ H)) @ self.PEst
-        #print("Updated Pose Estimate", self.xEst[0], " ", self.xEst[1])
+            lm = get_landmark_position_from_state(self.xEst, minid)
+            y, S, H = calc_innovation(lm, self.xEst, self.PEst, [distance, theta], minid)
+
+            K = (self.PEst @ H.T) @ np.linalg.inv(S)
+            self.xEst = self.xEst + (K @ y)
+            self.PEst = (np.eye(len(self.xEst)) - (K @ H)) @ self.PEst
 
         self.xEst[2] = pi_2_pi(self.xEst[2])
 
@@ -149,7 +136,6 @@ class EKFSlam:
         return [(x, y) for (x, y) in zip(self.xEst[STATE_SIZE::2], self.xEst[STATE_SIZE+1::2])]
 
     # The motion model for a motion command u = (velocity, angular velocity)
-    # TODO: Try different motion model (currently the robot moves in straight line even if angular velocity is != 0)!!!
     def motion_model(self, x, u):
         if u[1, 0] == 0:
             B = np.array([[self.dt * cos(x[2, 0]) * u[0, 0]],
@@ -163,20 +149,17 @@ class EKFSlam:
         return res
 
     def jacob_motion(self, x, u):
-        Fx = np.hstack((np.identity(STATE_SIZE),
-                        np.zeros((STATE_SIZE, LM_SIZE * get_n_lm(x)))))
         if u[1, 0] == 0:
             jF = np.array([[0, 0, -self.dt * u[0] * sin(x[2, 0])],
                            [0, 0, self.dt * u[0] * cos(x[2, 0])],
                            [0, 0, 0]])
         else:
-            jF = np.array([[u[0, 0] / u[1, 0] * (cos(x[2, 0] + self.dt * u[1, 0]) - cos(x[2, 0]))],
-                          [u[0, 0] / u[1, 0] * (sin(x[2, 0] + self.dt * u[1, 0]) - sin(x[2, 0]))],
-                          [u[1, 0] * self.dt]])
+            jF = np.array([[0, 0, u[0, 0] / u[1, 0] * (cos(x[2, 0] + self.dt * u[1, 0]) - cos(x[2, 0]))],
+                          [0, 0, u[0, 0] / u[1, 0] * (sin(x[2, 0] + self.dt * u[1, 0]) - sin(x[2, 0]))],
+                          [0, 0, 0]])
 
-        G = np.eye(STATE_SIZE) + Fx.transpose() * jF * Fx
-
-        return G, Fx
+        G = np.eye(STATE_SIZE) + jF
+        return G
 
 
 
