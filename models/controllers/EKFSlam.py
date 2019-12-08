@@ -111,7 +111,6 @@ class EKFSlam:
 
             nLM = get_n_lm(self.xEst)
             if minid == nLM:   # If the landmark is new
-                print("New Landmark")
                 # Extend state and covariance matrix
                 landmark_position = calc_landmark_position(self.xEst, [distance, theta])
                 xAug = np.vstack((self.xEst, landmark_position))
