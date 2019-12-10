@@ -10,6 +10,8 @@ STATE_SIZE = 3  # State size [x,y,theta]
 LM_SIZE = 2  # LM state size [x,y]
 M_DIST_TH = 0.5  # Threshold of Mahalanobis distance for data association.
 
+OBS_RADIUS = 0.05  # Keep this in sync with the one in the main
+
 
 def pi_2_pi(angle):
     return (angle + pi) % (2 * pi) - pi
@@ -107,6 +109,7 @@ class EKFSlam:
         for iz, (distance, theta) in enumerate(z):
             if distance >= self.supervisor.proximity_sensor_max_range() - 0.01:  # only execute if landmark is observed
                 continue
+            distance += OBS_RADIUS
             minid = search_correspond_landmark_id(self.xEst, self.PEst, [distance, theta])
 
             nLM = get_n_lm(self.xEst)
