@@ -38,13 +38,14 @@ MIN_GOAL_CLEARANCE = 0.2  # meters
 
 class MapManager:
 
-    def __init__(self):
+    def __init__(self, radius):
         self.current_obstacles = []
         self.current_goal = None
+        self.radius = radius
 
     def random_map(self, world):
         # OBSTACLE PARAMS
-        obs_radius = OBS_RADIUS
+        obs_radius = self.radius
         obs_min_count = OBS_MIN_COUNT
         obs_max_count = OBS_MAX_COUNT
         obs_min_dist = OBS_MIN_DIST

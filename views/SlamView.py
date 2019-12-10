@@ -15,6 +15,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # 
 # Email mccrea.engineering@gmail.com for questions, comments, or to report bugs.
+from models.CircleObstacle import CircleObstacle
 from models.rectangle_obstacle import RectangleObstacle
 from models.robot import Robot
 from models.pose import Pose
@@ -27,17 +28,18 @@ MAJOR_GRIDLINE_SUBDIVISIONS = 5  # minor gridlines for every major gridline
 
 class SlamView:
 
-    def __init__(self, slam, viewer):
+    def __init__(self, slam, viewer, radius):
         self.slam = slam
         self.viewer = viewer
         self.robot = Robot()
+        self.radius = radius
 
     def draw_slam_to_frame(self):
         self.__draw_robot_to_frame(self.viewer.current_frames[1], self.slam.get_estimated_pose())
 
         # draw all the obstacles
         for landmark in self.slam.get_landmarks():
-            obstacle = RectangleObstacle(0.05, 0.05, Pose(landmark[0], landmark[1], 0))
+            obstacle = CircleObstacle(self.radius, Pose(landmark[0], landmark[1], 0))
             obstacle_view = ObstacleView(obstacle)
             obstacle_view.draw_obstacle_to_frame(self.viewer.current_frames[1])
 

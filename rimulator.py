@@ -37,6 +37,7 @@ from views.world_view import *
 from sim_exceptions.collision_exception import *
 
 REFRESH_RATE = 20.0  # hertz
+OBS_RADIUS = 0.05  # meters
 
 
 class Simulator:
@@ -46,7 +47,7 @@ class Simulator:
         self.viewer = gui.viewer.Viewer(self)
 
         # create the map manager
-        self.map_manager = MapManager()
+        self.map_manager = MapManager(OBS_RADIUS)
 
         # timing control
         self.period = 1.0 / REFRESH_RATE  # seconds
@@ -76,7 +77,7 @@ class Simulator:
 
         # create the world view
         self.world_view = WorldView(self.world, self.viewer)
-        self.slam_view = SlamView(self.world.supervisors[0].slam, self.viewer)
+        self.slam_view = SlamView(self.world.supervisors[0].slam, self.viewer, OBS_RADIUS)
 
         # render the initial world
         self.draw_world()
