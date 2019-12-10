@@ -21,13 +21,12 @@ from math import *
 from random import *
 
 import utils.geometrics_util as geometrics
+from models.CircleObstacle import CircleObstacle
 from models.pose import Pose
 from models.rectangle_obstacle import *
 
 # random environment parameters
-OBS_MIN_DIM = 0.05  # meters
-OBS_MAX_DIM = 0.075  # meters
-OBS_MAX_COMBINED_DIM = 0.125  # meters
+OBS_RADIUS = 0.05  # meters
 OBS_MIN_COUNT = 25
 OBS_MAX_COUNT = 50
 OBS_MIN_DIST = 0.4  # meters
@@ -45,9 +44,7 @@ class MapManager:
 
     def random_map(self, world):
         # OBSTACLE PARAMS
-        obs_min_dim = OBS_MIN_DIM
-        obs_max_dim = OBS_MAX_DIM
-        obs_max_combined_dim = OBS_MAX_COMBINED_DIM
+        obs_radius = OBS_RADIUS
         obs_min_count = OBS_MIN_COUNT
         obs_max_count = OBS_MAX_COUNT
         obs_min_dist = OBS_MIN_DIST
@@ -57,18 +54,11 @@ class MapManager:
 
         # generate the obstacles
         obstacles = []
-        obs_dim_range = obs_max_dim - obs_min_dim
         obs_dist_range = obs_max_dist - obs_min_dist
         num_obstacles = randrange(obs_min_count, obs_max_count + 1)
 
         test_geometries = [r.global_geometry for r in world.robots]
         while len(obstacles) < num_obstacles:
-
-            # generate dimensions
-            width = obs_min_dim + (random() * obs_dim_range)
-            height = obs_min_dim + (random() * obs_dim_range)
-            while width + height > obs_max_combined_dim:
-                height = obs_min_dim + (random() * obs_dim_range)
 
             # generate position
             dist = obs_min_dist + (random() * obs_dist_range)
@@ -80,8 +70,7 @@ class MapManager:
             theta = -pi + (random() * 2 * pi)
 
             # test if the obstacle overlaps the robots or the goal
-            obstacle = RectangleObstacle(width, height,
-                                         Pose(x, y, theta))
+            obstacle = CircleObstacle(obs_radius, Pose(x, y, theta))
             intersects = False
             for test_geometry in test_geometries:
                 intersects |= geometrics.convex_polygon_intersect_test(test_geometry, obstacle.global_geometry)
