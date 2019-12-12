@@ -37,7 +37,7 @@ from views.world_view import *
 from sim_exceptions.collision_exception import *
 
 REFRESH_RATE = 20.0  # hertz
-OBS_RADIUS = 0.05  # meters
+OBS_RADIUS = 0.04  # meters
 
 
 class Simulator:

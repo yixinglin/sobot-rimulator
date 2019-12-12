@@ -42,6 +42,14 @@ class Painter:
 
         draw_list = frame.draw_list
         for component in draw_list:
+            if component['type'] == 'ellipse':
+                self.draw_ellipse(context,
+                                 component['pos'],
+                                 component['radius_1'],
+                                 component['radius_2'],
+                                 component['color'],
+                                 component['alpha'])
+
             if component['type'] == 'circle':
                 self.draw_circle(context,
                                  component['pos'],
@@ -61,6 +69,14 @@ class Painter:
                                 component['linewidth'],
                                 component['color'],
                                 component['alpha'])
+
+    def draw_ellipse(self, context,
+                     pos, radius_1, radius_2,
+                     color, alpha):
+        self.set_color(context, color, alpha)
+        context.scale(radius_1, radius_2)
+        context.arc(pos[0] / radius_1, pos[1] / radius_2, 1, 0, 2.0 * pi)
+        context.fill()
 
     def draw_circle(self, context,
                     pos, radius,

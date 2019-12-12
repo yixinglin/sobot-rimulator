@@ -21,6 +21,7 @@ from models.robot import Robot
 from models.pose import Pose
 from views.obstacle_view import *
 from views.robot_view import *
+import numpy as np
 
 MAJOR_GRIDLINE_INTERVAL = 1.0  # meters
 MAJOR_GRIDLINE_SUBDIVISIONS = 5  # minor gridlines for every major gridline
@@ -35,13 +36,20 @@ class SlamView:
         self.radius = radius
 
     def draw_slam_to_frame(self):
-        self.__draw_robot_to_frame(self.viewer.current_frames[1], self.slam.get_estimated_pose())
+        frame = self.viewer.current_frames[1]
+        self.__draw_robot_to_frame(frame, self.slam.get_estimated_pose())
 
         # draw all the obstacles
         for landmark in self.slam.get_landmarks():
             obstacle = CircleObstacle(self.radius, Pose(landmark[0], landmark[1], 0))
             obstacle_view = ObstacleView(obstacle)
             obstacle_view.draw_obstacle_to_frame(self.viewer.current_frames[1])
+
+        if self.viewer.draw_invisibles:
+            # Plot variance ellipses
+            vars = self.slam.get_variances()
+            std_dev_pos = np.sqrt(vars[0:2])
+            frame.add_ellipse(self.slam.get_estimated_pose().sunpack(), std_dev_pos[0], std_dev_pos[1], color="red", alpha=0.5)
 
     def __draw_robot_to_frame(self, frame, robot_pose, draw_invisibles=False):
         # draw the robot
@@ -55,8 +63,3 @@ class SlamView:
         frame.add_polygons([robot_top],
                            color="black",
                            alpha=0.5)
-
-    def add_landmark(self, landmark):
-        obstacle = RectangleObstacle(0.05, 0.05, Pose(landmark[0], landmark[1], 0))
-        obstacle_view = ObstacleView(obstacle)
-        self.obstacle_views.append(obstacle_view)

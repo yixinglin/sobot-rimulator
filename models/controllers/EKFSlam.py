@@ -3,14 +3,14 @@ from math import *
 from models.pose import Pose
 
 # EKF state covariance
-sensor_noise = np.diag([0.5, 0.5, np.deg2rad(30)]) ** 2
+sensor_noise = np.diag([0.2, np.deg2rad(30)]) ** 2
 motion_noise = np.diag([0.05, 0.05, np.deg2rad(1)]) ** 2
 
 STATE_SIZE = 3  # State size [x,y,theta]
 LM_SIZE = 2  # LM state size [x,y]
-M_DIST_TH = 0.5  # Threshold of Mahalanobis distance for data association.
+M_DIST_TH = 0.3  # Threshold of Mahalanobis distance for data association.
 
-OBS_RADIUS = 0.05  # Keep this in sync with the one in the main
+OBS_RADIUS = 0.04  # Keep this in sync with the one in the main
 
 
 def pi_2_pi(angle):
@@ -55,7 +55,7 @@ def calc_innovation(lm, xEst, PEst, z, LMid):
     y = (z - zp).T
     y[1] = pi_2_pi(y[1])
     H = jacob_h(q, delta, xEst, LMid + 1)
-    S = H @ PEst @ H.T + sensor_noise[0:2, 0:2]
+    S = H @ PEst @ H.T + sensor_noise
 
     return y, S, H
 
@@ -133,6 +133,9 @@ class EKFSlam:
 
     def get_estimated_pose(self):
         return Pose(self.xEst[0, 0], self.xEst[1, 0], self.xEst[2, 0])
+
+    def get_variances(self):
+        return self.PEst.diagonal()
 
     def get_landmarks(self):
         return [(x, y) for (x, y) in zip(self.xEst[STATE_SIZE::2], self.xEst[STATE_SIZE+1::2])]
