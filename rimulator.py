@@ -18,6 +18,7 @@
 # 
 # Email mccrea.engineering@gmail.com for questions, comments, or to report bugs.
 
+import sys
 import yaml
 import gi
 from gi.repository import GLib
@@ -142,7 +143,8 @@ class Simulator:
         self.draw_world()
 
 
-# RUN THE SIM:
-with open("config.yml", 'r') as ymlfile:
-    cfg = yaml.safe_load(ymlfile)
-Simulator(cfg)
+if __name__ == "__main__":
+    filename = "config.yaml" if len(sys.argv) == 1 else sys.argv[1]
+    with open(filename, 'r') as ymlfile:
+        cfg = yaml.safe_load(ymlfile)
+    Simulator(cfg)
