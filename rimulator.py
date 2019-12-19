@@ -18,6 +18,7 @@
 # 
 # Email mccrea.engineering@gmail.com for questions, comments, or to report bugs.
 
+import yaml
 import gi
 from gi.repository import GLib
 
@@ -42,7 +43,7 @@ OBS_RADIUS = 0.04  # meters
 
 class Simulator:
 
-    def __init__(self):
+    def __init__(self, cfg):
         # create the GUI
         self.viewer = gui.viewer.Viewer(self)
 
@@ -51,6 +52,8 @@ class Simulator:
 
         # timing control
         self.period = 1.0 / REFRESH_RATE  # seconds
+
+        self.cfg = cfg
 
         # gtk simulation event source - for simulation control
         self.sim_event_source = GLib.idle_add(self.initialize_sim, True)  # we use this opportunity to initialize the sim
@@ -66,7 +69,7 @@ class Simulator:
         self.world = World(self.period)
 
         # create the robot
-        robot = Robot()
+        robot = Robot(self.cfg["robot"])
         self.world.add_robot(robot)
 
         # generate a random environment
@@ -77,7 +80,7 @@ class Simulator:
 
         # create the world view
         self.world_view = WorldView(self.world, self.viewer)
-        self.slam_view = SlamView(self.world.supervisors[0].slam, self.viewer, OBS_RADIUS)
+        self.slam_view = SlamView(self.world.supervisors[0].slam, self.viewer, OBS_RADIUS, self.cfg["robot"])
 
         # render the initial world
         self.draw_world()
@@ -140,4 +143,6 @@ class Simulator:
 
 
 # RUN THE SIM:
-Simulator()
+with open("config.yml", 'r') as ymlfile:
+    cfg = yaml.safe_load(ymlfile)
+Simulator(cfg)

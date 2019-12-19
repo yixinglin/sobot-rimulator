@@ -29,10 +29,10 @@ MAJOR_GRIDLINE_SUBDIVISIONS = 5  # minor gridlines for every major gridline
 
 class SlamView:
 
-    def __init__(self, slam, viewer, radius):
+    def __init__(self, slam, viewer, radius, robot_config):
         self.slam = slam
         self.viewer = viewer
-        self.robot = Robot()
+        self.robot = Robot(robot_config)
         self.radius = radius
 
     def draw_slam_to_frame(self):

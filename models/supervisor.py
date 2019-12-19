@@ -25,19 +25,11 @@ from models.supervisor_controller_interface import *
 from models.supervisor_state_machine import *
 from models.controllers.EKFSlam import *
 
-# control parameters
-K3_TRANS_VEL_LIMIT = 0.3148  # m/s
-K3_ANG_VEL_LIMIT = 2.2763  # rad/s
-
 
 class Supervisor:
 
     def __init__(self, robot_interface,  # the interface through which this supervisor will interact with the robot
-                 wheel_radius,  # the radius of a drive wheel on the robot
-                 wheel_base_length,  # the robot's wheel base
-                 wheel_encoder_ticks_per_rev,  # the number of wheel encoder ticks per revolution of a drive wheel
-                 sensor_placements,  # placement pose of the sensors on the robot body
-                 sensor_range,  # max detection range of the sensors
+                 robot_cfg,
                  goal=[0.0, 0.0],  # the goal to which this supervisor will guide the robot
                  initial_pose_args=[0.0, 0.0, 0.0]):  # the pose the robot will have when control begins
 
@@ -50,13 +42,13 @@ class Supervisor:
 
         # proximity sensor information
         self.proximity_sensor_placements = [Pose(rawpose[0], rawpose[1], radians(rawpose[2])) for rawpose in
-                                            sensor_placements]
-        self.proximity_sensor_max_range = sensor_range
+                                            robot_cfg["sensor"]["poses"]]
+        self.proximity_sensor_max_range = robot_cfg["sensor"]["max_range"]
 
         # odometry information
-        self.robot_wheel_radius = wheel_radius
-        self.robot_wheel_base_length = wheel_base_length
-        self.wheel_encoder_ticks_per_revolution = wheel_encoder_ticks_per_rev
+        self.robot_wheel_radius = robot_cfg["wheel"]["radius"]
+        self.robot_wheel_base_length = robot_cfg["wheel"]["base_length"]
+        self.wheel_encoder_ticks_per_revolution = robot_cfg["wheel"]["ticks_per_rev"]
         self.prev_ticks_left = 0
         self.prev_ticks_right = 0
 
@@ -75,7 +67,7 @@ class Supervisor:
         self.state_machine = SupervisorStateMachine(self)
 
         # state
-        self.proximity_sensor_distances = [0.0, 0.0] * len(sensor_placements)  # sensor distances
+        self.proximity_sensor_distances = [0.0, 0.0] * len(robot_cfg["sensor"]["poses"])  # sensor distances
         self.estimated_pose = Pose(*initial_pose_args)  # estimated pose
         self.current_controller = self.go_to_goal_controller  # current controller
 
@@ -83,8 +75,8 @@ class Supervisor:
         self.goal = goal
 
         # control bounds
-        self.v_max = K3_TRANS_VEL_LIMIT
-        self.omega_max = K3_ANG_VEL_LIMIT
+        self.v_max = robot_cfg["max_transl_vel"]
+        self.omega_max = robot_cfg["max_ang_vel"]
 
         # CONTROL OUTPUTS - UNICYCLE
         self.v_output = 0.0
