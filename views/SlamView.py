@@ -23,9 +23,6 @@ from views.obstacle_view import *
 from views.robot_view import *
 import numpy as np
 
-MAJOR_GRIDLINE_INTERVAL = 1.0  # meters
-MAJOR_GRIDLINE_SUBDIVISIONS = 5  # minor gridlines for every major gridline
-
 
 class SlamView:
 
@@ -33,6 +30,7 @@ class SlamView:
         self.slam = slam
         self.viewer = viewer
         self.robot = Robot(robot_config)
+        self.robot_shape = robot_config["top_plate"]
         self.radius = radius
 
     def draw_slam_to_frame(self):
@@ -59,7 +57,7 @@ class SlamView:
                            alpha=0.5)
         # add decoration
         robot_pos, robot_theta = robot_pose.vunpack()
-        robot_top = linalg.rotate_and_translate_vectors(K3_TOP_PLATE, robot_theta, robot_pos)
+        robot_top = linalg.rotate_and_translate_vectors(self.robot_shape, robot_theta, robot_pos)
         frame.add_polygons([robot_top],
                            color="black",
                            alpha=0.5)

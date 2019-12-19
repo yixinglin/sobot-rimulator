@@ -20,20 +20,12 @@
 from views.proximity_sensor_view import *
 from views.supervisor_view import *
 
-# Khepera III Dimensions
-K3_TOP_PLATE = [[-0.031, 0.043],
-                [-0.031, -0.043],
-                [0.033, -0.043],
-                [0.052, -0.021],
-                [0.057, 0.000],
-                [0.052, 0.021],
-                [0.033, 0.043]]
-
 
 class RobotView:
 
     def __init__(self, robot):
         self.robot = robot
+        self.robot_shape = robot.robot_cfg["top_plate"]
 
         # add the supervisor views for this robot
         self.supervisor_view = SupervisorView(robot.supervisor, robot.geometry)
@@ -65,7 +57,7 @@ class RobotView:
                            alpha=0.5)
         # add decoration
         robot_pos, robot_theta = self.robot.pose.vunpack()
-        robot_top = linalg.rotate_and_translate_vectors(K3_TOP_PLATE, robot_theta, robot_pos)
+        robot_top = linalg.rotate_and_translate_vectors(self.robot_shape, robot_theta, robot_pos)
         frame.add_polygons([robot_top],
                            color="black",
                            alpha=0.5)
