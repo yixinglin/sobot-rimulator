@@ -22,7 +22,7 @@ import utils.geometrics_util as geometrics
 from sim_exceptions.collision_exception import *
 
 
-class Physics():
+class Physics:
 
     def __init__(self, world):
         # the world this physics engine acts on

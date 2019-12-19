@@ -25,31 +25,21 @@ from models.CircleObstacle import CircleObstacle
 from models.pose import Pose
 from models.rectangle_obstacle import *
 
-# random environment parameters
-OBS_RADIUS = 0.05  # meters
-OBS_MIN_COUNT = 25
-OBS_MAX_COUNT = 50
-OBS_MIN_DIST = 0.4  # meters
-OBS_MAX_DIST = 2  # meters
-GOAL_MIN_DIST = 0  # meters
-GOAL_MAX_DIST = 2  # meters
-MIN_GOAL_CLEARANCE = 0.2  # meters
-
 
 class MapManager:
 
-    def __init__(self, radius):
+    def __init__(self, map_config):
         self.current_obstacles = []
         self.current_goal = None
-        self.radius = radius
+        self.cfg = map_config
 
     def random_map(self, world):
         # OBSTACLE PARAMS
-        obs_radius = self.radius
-        obs_min_count = OBS_MIN_COUNT
-        obs_max_count = OBS_MAX_COUNT
-        obs_min_dist = OBS_MIN_DIST
-        obs_max_dist = OBS_MAX_DIST
+        obs_radius = self.cfg["obstacle"]["radius"]
+        obs_min_count = self.cfg["obstacle"]["min_count"]
+        obs_max_count = self.cfg["obstacle"]["min_count"]
+        obs_min_dist = self.cfg["obstacle"]["min_distance"]
+        obs_max_dist = self.cfg["obstacle"]["max_distance"]
 
         # BUILD RANDOM ELEMENTS
 
@@ -94,8 +84,10 @@ class MapManager:
                 break
 
     def __generate_new_goal(self):
-        goal_dist_range = GOAL_MAX_DIST - GOAL_MIN_DIST
-        dist = GOAL_MIN_DIST + (random() * goal_dist_range)
+        min_dist = self.cfg["goal"]["min_distance"]
+        max_dist = self.cfg["goal"]["max_distance"]
+        goal_dist_range = max_dist - min_dist
+        dist = min_dist + (random() * goal_dist_range)
         phi = -pi + (random() * 2 * pi)
         x = dist * sin(phi)
         y = dist * cos(phi)
@@ -104,12 +96,13 @@ class MapManager:
 
     def __check_obstacle_intersections(self, goal):
         # generate a proximity test geometry for the goal
+        min_clearance = self.cfg["goal"]["min_clearance"]
         n = 6   # goal is n sided polygon
         goal_test_geometry = []
         for i in range(n):
             goal_test_geometry.append(
-                [goal[0] + MIN_GOAL_CLEARANCE * cos(i * 2 * pi / n),
-                 goal[1] + MIN_GOAL_CLEARANCE * sin(i * 2 * pi / n)])
+                [goal[0] + min_clearance * cos(i * 2 * pi / n),
+                 goal[1] + min_clearance * sin(i * 2 * pi / n)])
         goal_test_geometry = Polygon(goal_test_geometry)
         intersects = False
         for obstacle in self.current_obstacles:

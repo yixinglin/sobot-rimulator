@@ -47,6 +47,18 @@ robot:
     # Maximum speed of the wheel in rad/s
     max_speed: 15.0
 
+map:
+  obstacle:
+    radius: 0.04
+    min_count: 25
+    max_count: 50
+    min_distance: 0.2
+    max_distance: 2
+  goal:
+    min_distance: 0
+    max_distance: 2
+    min_clearance: 0.2
+
 control:
   goal_reached_distance: 0.05
   caution_distance: 0.15
