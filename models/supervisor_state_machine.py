@@ -21,18 +21,10 @@ from models.control_state import *
 from sim_exceptions.goal_reached_exception import *
 from utils import linalg2_util as linalg
 
-# event parameters
-D_STOP = 0.05  # meters from goal
-D_CAUTION = 0.15  # meters from obstacle
-D_DANGER = 0.04  # meters from obstacle
-
-# progress margin
-PROGRESS_EPSILON = 0.05
-
 
 class SupervisorStateMachine:
 
-    def __init__(self, supervisor):
+    def __init__(self, supervisor, control_config):
         self.supervisor = supervisor
 
         # initialize state
@@ -40,6 +32,8 @@ class SupervisorStateMachine:
 
         # progress tracking
         self.best_distance_to_goal = float("inf")
+
+        self.cfg = control_config
 
     def update_state(self):
         if self.current_state == ControlState.GO_TO_GOAL:
@@ -134,28 +128,28 @@ class SupervisorStateMachine:
 
     # === CONDITIONS ===
     def condition_at_goal(self):
-        return linalg.distance(self.supervisor.estimated_pose.vposition(), self.supervisor.goal) < D_STOP
+        return linalg.distance(self.supervisor.estimated_pose.vposition(), self.supervisor.goal) < self.cfg["goal_reached_distance"]
 
     def condition_at_obstacle(self):
         for d in self._forward_sensor_distances():
-            if d < D_CAUTION:
+            if d < self.cfg["caution_distance"]:
                 return True
         return False
 
     def condition_danger(self):
         for d in self._forward_sensor_distances():
-            if d < D_DANGER:
+            if d < self.cfg["danger_distance"]:
                 return True
         return False
 
     def condition_no_obstacle(self):
         for d in self._forward_sensor_distances():
-            if d < D_CAUTION:
+            if d < self.cfg["caution_distance"]:
                 return False
         return True
 
     def condition_progress_made(self):
-        return self._distance_to_goal() < self.best_distance_to_goal - PROGRESS_EPSILON
+        return self._distance_to_goal() < self.best_distance_to_goal - self.cfg["progress_epsilon"]
 
     def condition_slide_left(self):
         heading_gtg = self.supervisor.go_to_goal_controller.gtg_heading_vector

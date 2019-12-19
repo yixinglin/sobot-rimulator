@@ -55,9 +55,6 @@ class Robot:  # Khepera III robot
         # dynamics
         self.dynamics = DifferentialDriveDynamics(self.wheel_radius, self.wheel_base_length)
 
-        # supervisor
-        self.supervisor = Supervisor(RobotSupervisorInterface(self), robot_cfg)
-
         ## initialize state
         # set wheel drive rates (rad/s)
         self.left_wheel_drive_rate = 0.0

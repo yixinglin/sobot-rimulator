@@ -30,6 +30,7 @@ class Supervisor:
 
     def __init__(self, robot_interface,  # the interface through which this supervisor will interact with the robot
                  robot_cfg,
+                 control_cfg,
                  goal=[0.0, 0.0],  # the goal to which this supervisor will guide the robot
                  initial_pose_args=[0.0, 0.0, 0.0]):  # the pose the robot will have when control begins
 
@@ -64,7 +65,7 @@ class Supervisor:
         self.slam = EKFSlam(controller_interface, step_time=1/20)
 
         # state machine
-        self.state_machine = SupervisorStateMachine(self)
+        self.state_machine = SupervisorStateMachine(self, control_cfg)
 
         # state
         self.proximity_sensor_distances = [0.0, 0.0] * len(robot_cfg["sensor"]["poses"])  # sensor distances
