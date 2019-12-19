@@ -23,17 +23,13 @@ from models.line_segment import *
 from models.pose import *
 from models.sensor import *
 
-MIN_READ_VALUE = 18
-MAX_READ_VALUE = 3960
-
 
 class ProximitySensor(Sensor):
 
     def __init__(self, robot,  # robot this sensor is attached to
                  placement_pose,
                  # pose of this sensor relative to the robot (NOTE: normalized on robot located at origin and with theta 0, i.e. facing east )
-                 min_range,  # min sensor range (meters)
-                 max_range,  # max sensor range (meters)
+                 sensor_config,
                  phi_view):  # view angle of this sensor (rad from front of robot)
 
         # bind the robot
@@ -43,24 +39,27 @@ class ProximitySensor(Sensor):
         self.placement_pose = placement_pose  # pose of this sensor relative to the robot
         self.pose = Pose(0.0, 0.0, 0.0)  # global pose of this sensor
 
+        # sensitivity attributes
+        self.min_range = sensor_config["min_range"]
+        self.max_range = sensor_config["max_range"]
+        self.min_read_value = sensor_config["min_read_value"]
+        self.max_read_value = sensor_config["max_read_value"]
+
         # detector line
-        self.detector_line_source = LineSegment([[0.0, 0.0], [max_range, 0.0]])
-        self.detector_line = LineSegment([[0.0, 0.0], [max_range, 0.0]])
+        self.detector_line_source = LineSegment([[0.0, 0.0], [self.max_range, 0.0]])
+        self.detector_line = LineSegment([[0.0, 0.0], [self.max_range, 0.0]])
 
         # pose and detector_line are incorrect until:
         # set initial position
         self.update_position()
 
-        # sensitivity attributes
-        self.min_range = min_range
-        self.max_range = max_range
         self.phi_view = phi_view
 
         # physical distance detected to target as a proportion of max_range ( must be in range [0, 1] or None )
         self.target_delta = None
 
         # sensor output
-        self.read_value = MIN_READ_VALUE
+        self.read_value = self.min_read_value
 
     # set this proximity sensor to detect an object at distance ( delta * max_range )
     def detect(self, delta):
@@ -69,7 +68,7 @@ class ProximitySensor(Sensor):
 
         if delta is None:
             self.target_delta = None
-            self.read_value = MIN_READ_VALUE
+            self.read_value = self.min_read_value
         else:
             max_range = self.max_range
             min_range = self.min_range
@@ -77,11 +76,11 @@ class ProximitySensor(Sensor):
             d = max_range * delta  # d is the real distance in meters
             if d <= min_range:  # d in [0.00, 0.02]
                 self.target_delta = min_range / max_range
-                self.read_value = MAX_READ_VALUE
+                self.read_value = self.max_read_value
             else:  # d in (0.02, 0.20]
                 self.target_delta = delta
-                self.read_value = max(MIN_READ_VALUE,
-                                      int(ceil(MAX_READ_VALUE * e ** (-30 * (d - 0.02))))
+                self.read_value = max(self.min_read_value,
+                                      int(ceil(self.max_read_value * e ** (-30 * (d - 0.02))))
                                       )
 
     # get this sensor's output
