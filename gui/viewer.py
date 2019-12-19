@@ -28,7 +28,7 @@ from gui.painter import Painter
 DEFAULT_VIEW_PIX_W = 700  # pixels
 DEFAULT_VIEW_PIX_H = 600  # pixels
 DEFAULT_ZOOM = 100  # pixels per meter
-NUM_FRAMES = 2 # Frame 1 is actual frame, frame 2 ekf state
+NUM_FRAMES = 2  # Frame 1 is actual frame, frame 2 ekf state
 
 # user response codes for file chooser dialog buttons
 LS_DIALOG_RESPONSE_CANCEL = 1

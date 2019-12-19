@@ -73,10 +73,11 @@ class Painter:
     def draw_ellipse(self, context,
                      pos, radius_1, radius_2,
                      color, alpha):
-        self.set_color(context, color, alpha)
-        context.scale(radius_1, radius_2)
-        context.arc(pos[0] / radius_1, pos[1] / radius_2, 1, 0, 2.0 * pi)
-        context.fill()
+        if radius_1 > 0 and radius_2 > 0:
+            self.set_color(context, color, alpha)
+            context.scale(radius_1, radius_2)
+            context.arc(pos[0] / radius_1, pos[1] / radius_2, 1, 0, 2.0 * pi)
+            context.fill()
 
     def draw_circle(self, context,
                     pos, radius,

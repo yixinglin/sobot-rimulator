@@ -19,7 +19,7 @@ def pi_2_pi(angle):
 
 def calc_landmark_position(x, z):
     zp = np.zeros((2, 1))
-    zp[0, 0] = x[0, 0] + z[0] * cos(z[1] + x[2, 0])  # TODO: See if adding a constant to z[0] helps to compensate for the robot size
+    zp[0, 0] = x[0, 0] + z[0] * cos(z[1] + x[2, 0])  # TODO: See if adding a constant to z[0] helps to compensate for the robot size (but then add it to measurement instead)
     zp[1, 0] = x[1, 0] + z[0] * sin(z[1] + x[2, 0])
     return zp
 
@@ -30,7 +30,7 @@ def get_n_lm(x):
     return n
 
 
-def jacob_h(q, delta, x, i):
+def jacob_sensor(q, delta, x, i):
     sq = sqrt(q)
     G = np.array([[-sq * delta[0, 0], - sq * delta[1, 0], 0, sq * delta[0, 0], sq * delta[1, 0]],
                   [delta[1, 0], - delta[0, 0], -q, - delta[1, 0], delta[0, 0]]])
@@ -39,10 +39,13 @@ def jacob_h(q, delta, x, i):
     nLM = get_n_lm(x)
     F1 = np.hstack((np.eye(3), np.zeros((3, 2 * nLM))))
     F2 = np.hstack((np.zeros((2, 3)), np.zeros((2, 2 * (i - 1))),
-                    np.eye(2), np.zeros((2, 2 * nLM - 2 * i))))
+                    np.eye(2), np.zeros((2, 2 * (nLM - i)))))
 
     F = np.vstack((F1, F2))
+
     H = G @ F
+
+    # H is just G, but with many extra [0, 0] columns for all landmarks with id different i, and the last 2 columns of G at the position of i
 
     return H
 
@@ -54,7 +57,7 @@ def calc_innovation(lm, xEst, PEst, z, LMid):
     zp = np.array([[sqrt(q), pi_2_pi(zangle)]])
     y = (z - zp).T
     y[1] = pi_2_pi(y[1])
-    H = jacob_h(q, delta, xEst, LMid + 1)
+    H = jacob_sensor(q, delta, xEst, LMid + 1)
     S = H @ PEst @ H.T + sensor_noise
 
     return y, S, H
@@ -94,7 +97,7 @@ class EKFSlam:
         self.dt = step_time
 
         self.xEst = np.zeros((STATE_SIZE, 1))
-        self.PEst = np.identity(STATE_SIZE)
+        self.PEst = np.zeros((STATE_SIZE, STATE_SIZE))  # TODO: Initialize with identity or 0 matrix??
 
     def ekf_slam(self, u, z):
         # Predict
@@ -102,7 +105,6 @@ class EKFSlam:
         self.xEst[0:S] = self.motion_model(self.xEst[0:S], u)
         G = self.jacob_motion(self.xEst[0:S], u)
         self.PEst[0:S, 0:S] = G.T @ self.PEst[0:S, 0:S] @ G + motion_noise
-        initP = np.eye(2)
         # Update
         assert len(z) == len(self.supervisor.proximity_sensor_placements())
         z = zip(z, [pose.theta for pose in self.supervisor.proximity_sensor_placements()])
@@ -118,7 +120,7 @@ class EKFSlam:
                 landmark_position = calc_landmark_position(self.xEst, [distance, theta])
                 xAug = np.vstack((self.xEst, landmark_position))
                 PAug = np.vstack((np.hstack((self.PEst, np.zeros((len(self.xEst), LM_SIZE)))),
-                                  np.hstack((np.zeros((LM_SIZE, len(self.xEst))), initP))))
+                                  np.hstack((np.zeros((LM_SIZE, len(self.xEst))), np.identity(LM_SIZE)))))
                 self.xEst = xAug
                 self.PEst = PAug
 
@@ -127,7 +129,7 @@ class EKFSlam:
 
             K = (self.PEst @ H.T) @ np.linalg.inv(S)
             self.xEst = self.xEst + (K @ y)
-            self.PEst = (np.eye(len(self.xEst)) - (K @ H)) @ self.PEst
+            self.PEst = (np.identity(len(self.xEst)) - (K @ H)) @ self.PEst
 
         self.xEst[2] = pi_2_pi(self.xEst[2])
 
@@ -163,7 +165,7 @@ class EKFSlam:
                           [0, 0, u[0, 0] / u[1, 0] * (sin(x[2, 0] + self.dt * u[1, 0]) - sin(x[2, 0]))],
                           [0, 0, 0]])
 
-        G = np.eye(STATE_SIZE) + jF
+        G = np.identity(STATE_SIZE) + jF
         return G
 
 
