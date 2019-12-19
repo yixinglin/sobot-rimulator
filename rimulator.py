@@ -38,20 +38,18 @@ from models.world import *
 from views.world_view import *
 from sim_exceptions.collision_exception import *
 
-REFRESH_RATE = 20.0  # hertz
-
 
 class Simulator:
 
     def __init__(self, cfg):
         # create the GUI
-        self.viewer = gui.viewer.Viewer(self)
+        self.viewer = gui.viewer.Viewer(self, cfg["viewer"])
 
         # create the map manager
         self.map_manager = MapManager(cfg["map"])
 
         # timing control
-        self.period = 1.0 / REFRESH_RATE  # seconds
+        self.period = cfg["period"]
 
         self.cfg = cfg
 
