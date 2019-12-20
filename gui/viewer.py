@@ -36,6 +36,8 @@ class Viewer:
         # bind the simulator
         self.simulator = simulator
 
+        self.cfg = viewer_config
+
         # initialize camera parameters
         self.num_frames = viewer_config["num_frames"]
         self.view_width_pixels = viewer_config["pixels_width"]

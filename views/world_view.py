@@ -20,9 +20,6 @@
 from views.obstacle_view import *
 from views.robot_view import *
 
-MAJOR_GRIDLINE_INTERVAL = 1.0  # meters
-MAJOR_GRIDLINE_SUBDIVISIONS = 5  # minor gridlines for every major gridline
-
 
 class WorldView:
 
@@ -65,8 +62,9 @@ class WorldView:
         # - Window size never changes
         # - Window is always centered at (0, 0)
 
+        major_gridline_interval = self.viewer.cfg["major_gridline_interval"]
         # calculate minor gridline interval
-        minor_gridline_interval = MAJOR_GRIDLINE_INTERVAL / MAJOR_GRIDLINE_SUBDIVISIONS
+        minor_gridline_interval = major_gridline_interval / self.viewer.cfg["major_gridline_subdivisions"]
 
         # determine world space to draw grid upon
         meters_per_pixel = 1.0 / self.viewer.pixels_per_meter
@@ -85,7 +83,7 @@ class WorldView:
         for i in range(x_max + 1):  # build the vertical gridlines
             x = i * minor_gridline_interval
 
-            if x % MAJOR_GRIDLINE_INTERVAL == 0:  # sort major from minor
+            if x % major_gridline_interval == 0:  # sort major from minor
                 accum = major_lines_accum
             else:
                 accum = minor_lines_accum
@@ -96,7 +94,7 @@ class WorldView:
         for j in range(y_max + 1):  # build the horizontal gridlines
             y = j * minor_gridline_interval
 
-            if y % MAJOR_GRIDLINE_INTERVAL == 0:  # sort major from minor
+            if y % major_gridline_interval == 0:  # sort major from minor
                 accum = major_lines_accum
             else:
                 accum = minor_lines_accum

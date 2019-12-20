@@ -66,6 +66,10 @@ viewer:
   pixels_height: 600
   # Pixels per meter
   zoom: 100
+  # Distance in meters of the major gridlines
+  major_gridline_interval: 1
+  # Between the major gridline there are this many minor divisions
+  major_gridline_subdivisions: 5
 
 map:
   obstacle:
