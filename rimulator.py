@@ -23,27 +23,28 @@ import yaml
 import gi
 from gi.repository import GLib
 
-from views.SlamView import SlamView
+from plotters.SlamPlotter import SlamPlotter
 
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk as gtk
 
-import gui.frame
-import gui.viewer
+import gui.Frame
+import gui.Viewer
 
-from models.map_manager import *
-from models.robot import *
-from models.world import *
+from simulation.MapManager import *
+from robot.Robot import *
+from robot.RobotSupervisorInterface import *
+from simulation.World import *
 
-from views.world_view import *
-from sim_exceptions.collision_exception import *
+from plotters.WorldPlotter import *
+from simulation.exceptions import CollisionException
 
 
 class Simulator:
 
     def __init__(self, cfg):
         # create the GUI
-        self.viewer = gui.viewer.Viewer(self, cfg["viewer"])
+        self.viewer = gui.Viewer.Viewer(self, cfg["viewer"])
 
         # create the map manager
         self.map_manager = MapManager(cfg["map"])
@@ -79,8 +80,8 @@ class Simulator:
             self.map_manager.apply_to_world(self.world)
 
         # create the world view
-        self.world_view = WorldView(self.world, self.viewer)
-        self.slam_view = SlamView(self.world.supervisors[0].slam, self.viewer, self.cfg["map"]["obstacle"]["radius"], self.cfg["robot"])
+        self.world_view = WorldPlotter(self.world, self.viewer)
+        self.slam_view = SlamPlotter(self.world.supervisors[0].slam, self.viewer, self.cfg["map"]["obstacle"]["radius"], self.cfg["robot"])
 
         # render the initial world
         self.draw_world()
