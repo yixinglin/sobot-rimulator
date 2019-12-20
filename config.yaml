@@ -1,3 +1,4 @@
+# Disrecte time
 period: 0.05
 # Khepera III Robot
 robot:
@@ -68,18 +69,28 @@ viewer:
 
 map:
   obstacle:
+    # Radius of obstacles
     radius: 0.04
+    # Minimum amount of generated obstacles
     min_count: 25
+    # Maximum amount of generated obstacles
     max_count: 50
+    # Minimum distance to origin
     min_distance: 0.2
+    # Maximum distance to origin
     max_distance: 2
   goal:
+    # Minimum distance to origin
     min_distance: 0
+    # Maximum distance to origin
     max_distance: 2
+    # Minimum distance to all obstacles
     min_clearance: 0.2
 
 control:
+  # If robot is closer than this distance to the goal, it is considered as reached
   goal_reached_distance: 0.05
+  # TODO
   caution_distance: 0.15
   danger_distance: 0.04
   progress_epsilon: 0.05
