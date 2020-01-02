@@ -128,6 +128,8 @@ class EKFSlam:
             y, S, H = calc_innovation(lm, self.xEst, self.PEst, [distance, theta], minid)
 
             K = (self.PEst @ H.T) @ np.linalg.inv(S)
+            print("Kalman gain:", K)
+            print("Correction:", K @ y)
             self.xEst = self.xEst + (K @ y)
             self.PEst = (np.identity(len(self.xEst)) - (K @ H)) @ self.PEst
 
