@@ -28,8 +28,8 @@ class SlamPlotter:
     def __init__(self, slam, viewer, radius, robot_config):
         self.slam = slam
         self.viewer = viewer
-        self.robot = Robot(robot_config)
-        self.robot_shape = robot_config["top_plate"]
+        self.robot_bottom_shape = robot_config["bottom_plate"]
+        self.robot_top_shape = robot_config["top_plate"]
         self.radius = radius
 
     def draw_slam_to_frame(self):
@@ -49,14 +49,14 @@ class SlamPlotter:
             frame.add_ellipse(self.slam.get_estimated_pose().sunpack(), std_dev_pos[0], std_dev_pos[1], color="red", alpha=0.5)
 
     def __draw_robot_to_frame(self, frame, robot_pose, draw_invisibles=False):
+        robot_pos, robot_theta = robot_pose.vunpack()
         # draw the robot
-        robot_bottom = self.robot.geometry.get_transformation_to_pose(robot_pose).vertexes
+        robot_bottom = linalg.rotate_and_translate_vectors(self.robot_bottom_shape, robot_theta, robot_pos)
         frame.add_polygons([robot_bottom],
                            color="blue",
                            alpha=0.5)
         # add decoration
-        robot_pos, robot_theta = robot_pose.vunpack()
-        robot_top = linalg.rotate_and_translate_vectors(self.robot_shape, robot_theta, robot_pos)
+        robot_top = linalg.rotate_and_translate_vectors(self.robot_top_shape, robot_theta, robot_pos)
         frame.add_polygons([robot_top],
                            color="black",
                            alpha=0.5)
