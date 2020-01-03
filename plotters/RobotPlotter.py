@@ -33,7 +33,7 @@ class RobotPlotter:
         # add the IR sensor views for this robot
         self.ir_sensor_views = []
         for ir_sensor in robot.ir_sensors:
-            self.ir_sensor_views.append(ProximitySensorPlotter(ir_sensor))
+            self.ir_sensor_views.append(ProximitySensorPlotter(ir_sensor, radians(robot.robot_cfg["sensor"]["cone_angle"])))
 
         self.traverse_path = []  # this robot's traverse path
 

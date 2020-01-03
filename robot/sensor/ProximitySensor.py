@@ -29,8 +29,7 @@ class ProximitySensor(Sensor):
     def __init__(self, robot,  # robot this sensor is attached to
                  placement_pose,
                  # pose of this sensor relative to the robot (NOTE: normalized on robot located at origin and with theta 0, i.e. facing east )
-                 sensor_config,
-                 phi_view):  # view angle of this sensor (rad from front of robot)
+                 sensor_config):
 
         # bind the robot
         self.robot = robot
@@ -52,8 +51,6 @@ class ProximitySensor(Sensor):
         # pose and detector_line are incorrect until:
         # set initial position
         self.update_position()
-
-        self.phi_view = phi_view
 
         # physical distance detected to target as a proportion of max_range ( must be in range [0, 1] or None )
         self.target_delta = None

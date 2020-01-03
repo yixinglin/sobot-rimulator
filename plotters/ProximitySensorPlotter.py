@@ -24,8 +24,9 @@ import utils.linalg2_util as linalg
 
 class ProximitySensorPlotter:
 
-    def __init__(self, proximity_sensor):
+    def __init__(self, proximity_sensor, cone_angle):
         self.proximity_sensor = proximity_sensor
+        self.cone_angle = cone_angle
 
     def draw_proximity_sensor_to_frame(self, frame):
         proximity_sensor = self.proximity_sensor
@@ -35,11 +36,10 @@ class ProximitySensorPlotter:
 
         # build the sensor cone
         r = proximity_sensor.max_range
-        phi = proximity_sensor.phi_view
         sensor_cone_poly = [[0.0, 0.0],
-                            [r * cos(-phi / 2), r * sin(-phi / 2)],
+                            [r * cos(-self.cone_angle / 2), r * sin(-self.cone_angle / 2)],
                             [r, 0.0],
-                            [r * cos(phi / 2), r * sin(phi / 2)]]
+                            [r * cos(self.cone_angle / 2), r * sin(self.cone_angle / 2)]]
         sensor_cone_poly = linalg.rotate_and_translate_vectors(sensor_cone_poly,
                                                                sensor_theta,
                                                                sensor_pos)
