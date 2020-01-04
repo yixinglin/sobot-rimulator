@@ -80,8 +80,8 @@ class Simulator:
             self.map_manager.apply_to_world(self.world)
 
         # create the world view
-        self.world_view = WorldPlotter(self.world, self.viewer)
-        self.slam_view = SlamPlotter(self.world.supervisors[0].slam, self.viewer, self.cfg["map"]["obstacle"]["radius"], self.cfg["robot"])
+        self.world_plotter = WorldPlotter(self.world, self.viewer)
+        self.slam_plotter = SlamPlotter(self.world.supervisors[0].slam, self.viewer, self.cfg["map"]["obstacle"]["radius"], self.cfg["robot"])
 
         # render the initial world
         self.draw_world()
@@ -121,8 +121,8 @@ class Simulator:
 
     def draw_world(self):
         self.viewer.new_frame()  # start a fresh frame
-        self.world_view.draw_world_to_frame()  # draw the world onto the frame
-        self.slam_view.draw_slam_to_frame()
+        self.world_plotter.draw_world_to_frame()  # draw the world onto the frame
+        self.slam_plotter.draw_slam_to_frame()
         self.viewer.draw_frame()  # render the frame
 
     def _run_sim(self):

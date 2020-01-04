@@ -28,10 +28,10 @@ class SupervisorPlotter:
         self.supervisor_state_machine = supervisor.state_machine
 
         # controller views
-        self.go_to_goal_controller_view = GoToGoalControllerPlotter(supervisor)
-        self.avoid_obstacles_controller_view = AvoidObstaclesControllerPlotter(supervisor)
-        self.gtg_and_ao_controller_view = GTGAndAOControllerPlotter(supervisor)
-        self.follow_wall_controller_view = FollowWallControllerPlotter(supervisor)
+        self.go_to_goal_controller_plotter = GoToGoalControllerPlotter(supervisor)
+        self.avoid_obstacles_controller_plotter = AvoidObstaclesControllerPlotter(supervisor)
+        self.gtg_and_ao_controller_plotter = GTGAndAOControllerPlotter(supervisor)
+        self.follow_wall_controller_plotter = FollowWallControllerPlotter(supervisor)
 
         # additional information for rendering
         self.robot_geometry = robot_geometry  # robot geometry
@@ -82,17 +82,17 @@ class SupervisorPlotter:
     def _draw_current_controller_to_frame(self, frame):
         current_state = self.supervisor_state_machine.current_state
         if current_state == ControlState.GO_TO_GOAL:
-            self.go_to_goal_controller_view.draw_go_to_goal_controller_to_frame(frame)
+            self.go_to_goal_controller_plotter.draw_go_to_goal_controller_to_frame(frame)
         elif current_state == ControlState.AVOID_OBSTACLES:
-            self.avoid_obstacles_controller_view.draw_avoid_obstacles_controller_to_frame(frame)
+            self.avoid_obstacles_controller_plotter.draw_avoid_obstacles_controller_to_frame(frame)
         elif current_state == ControlState.GTG_AND_AO:
-            self.gtg_and_ao_controller_view.draw_gtg_and_ao_controller_to_frame(frame)
+            self.gtg_and_ao_controller_plotter.draw_gtg_and_ao_controller_to_frame(frame)
         elif current_state in [ControlState.SLIDE_LEFT, ControlState.SLIDE_RIGHT]:
-            self.follow_wall_controller_view.draw_active_follow_wall_controller_to_frame(frame)
+            self.follow_wall_controller_plotter.draw_active_follow_wall_controller_to_frame(frame)
 
     # draw all of the controllers's to the frame
     def _draw_all_controllers_to_frame(self, frame):
-        self.go_to_goal_controller_view.draw_go_to_goal_controller_to_frame(frame)
-        self.avoid_obstacles_controller_view.draw_avoid_obstacles_controller_to_frame(frame)
-        # self.gtg_and_ao_controller_view.draw_gtg_and_ao_controller_to_frame()
-        self.follow_wall_controller_view.draw_complete_follow_wall_controller_to_frame(frame)
+        self.go_to_goal_controller_plotter.draw_go_to_goal_controller_to_frame(frame)
+        self.avoid_obstacles_controller_plotter.draw_avoid_obstacles_controller_to_frame(frame)
+        # self.gtg_and_ao_controller_plotter.draw_gtg_and_ao_controller_to_frame()
+        self.follow_wall_controller_plotter.draw_complete_follow_wall_controller_to_frame(frame)

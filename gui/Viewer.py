@@ -130,6 +130,13 @@ class Viewer:
         self.button_draw_invisibles.set_image_position(gtk.PositionType.LEFT)
         self.button_draw_invisibles.connect('clicked', self.on_draw_invisibles)
 
+        # build the plot-covariance-matrix toggle button
+        self.plot_covariances = False  # controls whether covariance matrix s plotted
+        self.button_plot_covariances = gtk.Button("Plot Covariance Matrix")
+        self.button_plot_covariances.set_image_position(gtk.PositionType.LEFT)
+        self.button_plot_covariances.connect('clicked', self.on_plot_covariances)
+
+
         # == lay out the window
 
         plots_box = gtk.HBox(spacing=5)
@@ -154,6 +161,7 @@ class Viewer:
         # pack the invisibles button
         invisibles_button_box = gtk.HBox()
         invisibles_button_box.pack_start(self.button_draw_invisibles, False, False, 0)
+        invisibles_button_box.pack_start(self.button_plot_covariances, False, False, 0)
 
         # align the controls
         sim_controls_alignment = gtk.Alignment(xalign=0.5, yalign=0.5, xscale=0, yscale=0)
@@ -272,6 +280,10 @@ class Viewer:
             self._decorate_draw_invisibles_button_active()
         else:
             self._decorate_draw_invisibles_button_inactive()
+        self.simulator.draw_world()
+
+    def on_plot_covariances(self, widget):
+        self.plot_covariances = not self.plot_covariances
         self.simulator.draw_world()
 
     def on_expose(self, widget, context):

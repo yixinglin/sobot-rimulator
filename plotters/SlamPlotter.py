@@ -20,6 +20,7 @@ from robot.Robot import Robot
 from models.Pose import Pose
 from plotters.ObstaclePlotter import *
 from plotters.RobotPlotter import *
+from matplotlib import pyplot as plt
 import numpy as np
 
 
@@ -39,11 +40,14 @@ class SlamPlotter:
         # draw all the obstacles
         for landmark in self.slam.get_landmarks():
             obstacle = CircleObstacle(self.radius, Pose(landmark[0], landmark[1], 0))
-            obstacle_view = ObstaclePlotter(obstacle)
-            obstacle_view.draw_obstacle_to_frame(self.viewer.current_frames[1])
+            obstacle_plotter = ObstaclePlotter(obstacle)
+            obstacle_plotter.draw_obstacle_to_frame(self.viewer.current_frames[1])
 
         if self.viewer.draw_invisibles:
             self.__draw_confidence_ellipse(frame)
+
+        if self.viewer.plot_covariances:
+            pass
 
     def __draw_robot_to_frame(self, frame, robot_pose, draw_invisibles=False):
         robot_pos, robot_theta = robot_pose.vunpack()

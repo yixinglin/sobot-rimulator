@@ -27,13 +27,13 @@ class RobotPlotter:
         self.robot = robot
         self.robot_shape = robot.robot_cfg["top_plate"]
 
-        # add the supervisor views for this robot
-        self.supervisor_view = SupervisorPlotter(robot.supervisor, robot.geometry)
+        # add the supervisor plotter for this robot
+        self.supervisor_plotter = SupervisorPlotter(robot.supervisor, robot.geometry)
 
         # add the IR sensor views for this robot
-        self.ir_sensor_views = []
+        self.ir_sensor_plotters = []
         for ir_sensor in robot.ir_sensors:
-            self.ir_sensor_views.append(ProximitySensorPlotter(ir_sensor, radians(robot.robot_cfg["sensor"]["cone_angle"])))
+            self.ir_sensor_plotters.append(ProximitySensorPlotter(ir_sensor, radians(robot.robot_cfg["sensor"]["cone_angle"])))
 
         self.traverse_path = []  # this robot's traverse path
 
@@ -43,12 +43,12 @@ class RobotPlotter:
         self.traverse_path.append(position)
 
         # draw the internal state ( supervisor ) to the frame
-        self.supervisor_view.draw_supervisor_to_frame(frame, draw_invisibles)
+        self.supervisor_plotter.draw_supervisor_to_frame(frame, draw_invisibles)
 
         # draw the IR sensors to the frame if indicated
         if draw_invisibles:
-            for ir_sensor_view in self.ir_sensor_views:
-                ir_sensor_view.draw_proximity_sensor_to_frame(frame)
+            for ir_sensor_plotter in self.ir_sensor_plotters:
+                ir_sensor_plotter.draw_proximity_sensor_to_frame(frame)
 
         # draw the robot
         robot_bottom = self.robot.global_geometry.vertexes

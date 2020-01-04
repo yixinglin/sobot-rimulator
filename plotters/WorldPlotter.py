@@ -28,34 +28,34 @@ class WorldPlotter:
         self.viewer = viewer
 
         # initialize views for world objects
-        self.robot_views = []
+        self.robot_plotters = []
         for robot in world.robots:
             self.add_robot(robot)
 
-        self.obstacle_views = []
+        self.obstacle_plotters = []
         for obstacle in world.obstacles:
             self.add_obstacle(obstacle)
 
     def add_robot(self, robot):
-        robot_view = RobotPlotter(robot)
-        self.robot_views.append(robot_view)
+        robot_plotter = RobotPlotter(robot)
+        self.robot_plotters.append(robot_plotter)
 
     def add_obstacle(self, obstacle):
-        obstacle_view = ObstaclePlotter(obstacle)
-        self.obstacle_views.append(obstacle_view)
+        obstacle_plotter = ObstaclePlotter(obstacle)
+        self.obstacle_plotters.append(obstacle_plotter)
 
     def draw_world_to_frame(self):
         # draw the grid
         self._draw_grid_to_frame()
 
         # draw all the robots
-        for robot_view in self.robot_views:
-            robot_view.draw_robot_to_frame(self.viewer.current_frames[0], self.viewer.draw_invisibles)
-            #robot_view.draw_robot_to_frame(self.viewer.current_frames[1], draw_invisibles=False)
+        for robot_plotter in self.robot_plotters:
+            robot_plotter.draw_robot_to_frame(self.viewer.current_frames[0], self.viewer.draw_invisibles)
+            #robot_plotter.draw_robot_to_frame(self.viewer.current_frames[1], draw_invisibles=False)
 
         # draw all the obstacles
-        for obstacle_view in self.obstacle_views:
-            obstacle_view.draw_obstacle_to_frame(self.viewer.current_frames[0])
+        for obstacle_plotter in self.obstacle_plotters:
+            obstacle_plotter.draw_obstacle_to_frame(self.viewer.current_frames[0])
 
     def _draw_grid_to_frame(self):
         # NOTE: THIS FORMULA ASSUMES THE FOLLOWING:
