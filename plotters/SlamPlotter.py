@@ -21,6 +21,7 @@ from models.Pose import Pose
 from plotters.ObstaclePlotter import *
 from plotters.RobotPlotter import *
 from matplotlib import pyplot as plt
+from matplotlib.animation import FuncAnimation
 import numpy as np
 
 
@@ -46,10 +47,12 @@ class SlamPlotter:
         if self.viewer.draw_invisibles:
             self.__draw_confidence_ellipse(frame)
 
-        if self.viewer.plot_covariances:
-            pass
+    def plot_covariances(self):
+        cov = self.slam.get_covariances()
+        plt.matshow(cov)
+        plt.show()
 
-    def __draw_robot_to_frame(self, frame, robot_pose, draw_invisibles=False):
+    def __draw_robot_to_frame(self, frame, robot_pose):
         robot_pos, robot_theta = robot_pose.vunpack()
         # draw the robot
         robot_bottom = linalg.rotate_and_translate_vectors(self.robot_bottom_shape, robot_theta, robot_pos)

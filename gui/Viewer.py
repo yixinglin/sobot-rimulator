@@ -131,7 +131,6 @@ class Viewer:
         self.button_draw_invisibles.connect('clicked', self.on_draw_invisibles)
 
         # build the plot-covariance-matrix toggle button
-        self.plot_covariances = False  # controls whether covariance matrix s plotted
         self.button_plot_covariances = gtk.Button("Plot Covariance Matrix")
         self.button_plot_covariances.set_image_position(gtk.PositionType.LEFT)
         self.button_plot_covariances.connect('clicked', self.on_plot_covariances)
@@ -283,8 +282,7 @@ class Viewer:
         self.simulator.draw_world()
 
     def on_plot_covariances(self, widget):
-        self.plot_covariances = not self.plot_covariances
-        self.simulator.draw_world()
+        self.simulator.slam_plotter.plot_covariances()
 
     def on_expose(self, widget, context):
         self.painter.draw_frame(self.current_frames[0], widget, context)
