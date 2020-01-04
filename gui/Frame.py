@@ -55,13 +55,15 @@ class Frame:
         })
 
     def add_ellipse(self,
-                    pos, radius_1, radius_2,
+                    pos, angle,
+                    radius_x, radius_y,
                     color, alpha=None):
         self.draw_list.append({
             'type': 'ellipse',
             'pos': pos,
-            'radius_1': radius_1,
-            'radius_2': radius_2,
+            'angle': angle,
+            'radius_x': radius_x,
+            'radius_y': radius_y,
             'color': color,
             'alpha': alpha
         })

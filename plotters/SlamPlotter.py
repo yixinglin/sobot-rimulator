@@ -44,9 +44,10 @@ class SlamPlotter:
 
         if self.viewer.draw_invisibles:
             # Plot variance ellipses
-            vars = self.slam.get_variances()
-            std_dev_pos = np.sqrt(vars[0:2])
-            frame.add_ellipse(self.slam.get_estimated_pose().sunpack(), std_dev_pos[0], std_dev_pos[1], color="red", alpha=0.5)
+            self.__draw_confidence_ellipse(frame)
+            #vars = self.slam.get_covariances().diagonal()
+            #std_dev_pos = np.sqrt(vars[0:2])
+            #frame.add_ellipse(self.slam.get_estimated_pose().sunpack(), 0, std_dev_pos[0], std_dev_pos[1], color="red", alpha=0.5)
 
     def __draw_robot_to_frame(self, frame, robot_pose, draw_invisibles=False):
         robot_pos, robot_theta = robot_pose.vunpack()
@@ -60,3 +61,48 @@ class SlamPlotter:
         frame.add_polygons([robot_top],
                            color="black",
                            alpha=0.5)
+
+    def __draw_confidence_ellipse(self, frame, n_std=1.0):
+        cov = self.slam.get_covariances()[:2, :2]  # Get covariances of position arguments
+        pearson = cov[0, 1]/np.sqrt(cov[0, 0] * cov[1, 1])
+        # Using a special case to obtain the eigenvalues of this
+        # two-dimensionl dataset.
+        eigvals, eigvecs = np.linalg.eig(cov)
+        ell_radius_x = np.sqrt(1 + pearson)
+        ell_radius_y = np.sqrt(1 - pearson)
+        print(eigvals, ell_radius_x, ell_radius_y)
+        scale_x = np.sqrt(cov[0, 0]) * n_std
+        scale_y = np.sqrt(cov[1, 1]) * n_std
+        ell_radius_x *= scale_x
+        ell_radius_y *= scale_y
+        angle = pi/4
+
+        frame.add_ellipse(self.slam.get_estimated_pose().sunpack(),
+                          angle, ell_radius_x, ell_radius_y,
+                          color="red", alpha=0.5)
+
+        """
+        ellipse = Ellipse((0, 0),
+                          width=ell_radius_x * 2,
+                          height=ell_radius_y * 2,
+                          facecolor=facecolor,
+                          **kwargs)
+
+        # Calculating the stdandard deviation of x from
+        # the squareroot of the variance and multiplying
+        # with the given number of standard deviations.
+        scale_x = np.sqrt(cov[0, 0]) * n_std
+        mean_x = np.mean(x)
+
+        # calculating the stdandard deviation of y ...
+        scale_y = np.sqrt(cov[1, 1]) * n_std
+        mean_y = np.mean(y)
+
+        transf = transforms.Affine2D() \
+            .rotate_deg(45) \
+            .scale(scale_x, scale_y) \
+            .translate(mean_x, mean_y)
+
+        ellipse.set_transform(transf + ax.transData)
+        return ax.add_patch(ellipse)
+        """

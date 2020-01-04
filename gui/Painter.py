@@ -45,8 +45,9 @@ class Painter:
             if component['type'] == 'ellipse':
                 self.draw_ellipse(context,
                                  component['pos'],
-                                 component['radius_1'],
-                                 component['radius_2'],
+                                 component['angle'],
+                                 component['radius_x'],
+                                 component['radius_y'],
                                  component['color'],
                                  component['alpha'])
 
@@ -71,12 +72,15 @@ class Painter:
                                 component['alpha'])
 
     def draw_ellipse(self, context,
-                     pos, radius_1, radius_2,
+                     pos, angle,
+                     radius_x, radius_y,
                      color, alpha):
-        if radius_1 > 0 and radius_2 > 0:
+        if radius_x > 0 and radius_y > 0:
             self.set_color(context, color, alpha)
-            context.scale(radius_1, radius_2)
-            context.arc(pos[0] / radius_1, pos[1] / radius_2, 1, 0, 2.0 * pi)
+            context.translate(pos[0], pos[1])
+            context.rotate(angle)
+            context.scale(radius_x, radius_y)
+            context.arc(0, 0, 1, 0, 2.0 * pi)
             context.fill()
 
     def draw_circle(self, context,

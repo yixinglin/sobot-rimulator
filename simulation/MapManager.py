@@ -25,6 +25,7 @@ from models.obstacles.CircleObstacle import CircleObstacle
 from models.Pose import Pose
 from models.obstacles.RectangleObstacle import *
 
+seed(42)
 
 class MapManager:
 

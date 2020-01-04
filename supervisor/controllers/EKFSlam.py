@@ -128,8 +128,8 @@ class EKFSlam:
             y, S, H = calc_innovation(lm, self.xEst, self.PEst, [distance, theta], minid)
 
             K = (self.PEst @ H.T) @ np.linalg.inv(S)
-            print("Kalman gain:", K)
-            print("Correction:", K @ y)
+            #print("Kalman gain:", K)
+            #print("Correction:", K @ y)
             self.xEst = self.xEst + (K @ y)
             self.PEst = (np.identity(len(self.xEst)) - (K @ H)) @ self.PEst
 
@@ -138,8 +138,8 @@ class EKFSlam:
     def get_estimated_pose(self):
         return Pose(self.xEst[0, 0], self.xEst[1, 0], self.xEst[2, 0])
 
-    def get_variances(self):
-        return self.PEst.diagonal()
+    def get_covariances(self):
+        return self.PEst
 
     def get_landmarks(self):
         return [(x, y) for (x, y) in zip(self.xEst[STATE_SIZE::2], self.xEst[STATE_SIZE+1::2])]
