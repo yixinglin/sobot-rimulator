@@ -16,12 +16,10 @@
 # 
 # Email mccrea.engineering@gmail.com for questions, comments, or to report bugs.
 from models.obstacles.CircleObstacle import CircleObstacle
-from robot.Robot import Robot
 from models.Pose import Pose
 from plotters.ObstaclePlotter import *
 from plotters.RobotPlotter import *
 from matplotlib import pyplot as plt
-from matplotlib.animation import FuncAnimation
 import numpy as np
 
 
