@@ -130,7 +130,7 @@ class Viewer:
         self.button_draw_invisibles.set_image_position(gtk.PositionType.LEFT)
         self.button_draw_invisibles.connect('clicked', self.on_draw_invisibles)
 
-        # build the plot-covariance-matrix toggle button
+        # build the plot-covariance-matrix button
         self.button_plot_covariances = gtk.Button("Plot Covariance Matrix")
         self.button_plot_covariances.set_image_position(gtk.PositionType.LEFT)
         self.button_plot_covariances.connect('clicked', self.on_plot_covariances)

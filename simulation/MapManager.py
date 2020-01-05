@@ -27,6 +27,7 @@ from models.obstacles.RectangleObstacle import *
 
 seed(42)
 
+
 class MapManager:
 
     def __init__(self, map_config):
