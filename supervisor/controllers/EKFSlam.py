@@ -90,20 +90,18 @@ def search_correspond_landmark_id(xAug, PAug, zi):
 
 class EKFSlam:
 
-    def __init__(self, supervisor_interface, step_time):
+    def __init__(self, supervisor_interface):
         # bind the supervisor
         self.supervisor = supervisor_interface
-
-        self.dt = step_time
 
         self.xEst = np.zeros((STATE_SIZE, 1))
         self.PEst = np.zeros((STATE_SIZE, STATE_SIZE))  # TODO: Initialize with identity or 0 matrix??
 
-    def ekf_slam(self, u, z):
+    def ekf_slam(self, u, z, dt):
         # Predict
         S = STATE_SIZE
-        self.xEst[0:S] = self.motion_model(self.xEst[0:S], u)
-        G = self.jacob_motion(self.xEst[0:S], u)
+        self.xEst[0:S] = self.motion_model(self.xEst[0:S], u, dt)
+        G = self.jacob_motion(self.xEst[0:S], u, dt)
         self.PEst[0:S, 0:S] = G.T @ self.PEst[0:S, 0:S] @ G + motion_noise
         # Update
         assert len(z) == len(self.supervisor.proximity_sensor_placements())
@@ -145,26 +143,26 @@ class EKFSlam:
         return [(x, y) for (x, y) in zip(self.xEst[STATE_SIZE::2], self.xEst[STATE_SIZE+1::2])]
 
     # The motion model for a motion command u = (velocity, angular velocity)
-    def motion_model(self, x, u):
+    def motion_model(self, x, u, dt):
         if u[1, 0] == 0:
-            B = np.array([[self.dt * cos(x[2, 0]) * u[0, 0]],
-                          [self.dt * sin(x[2, 0]) * u[0, 0]],
+            B = np.array([[dt * cos(x[2, 0]) * u[0, 0]],
+                          [dt * sin(x[2, 0]) * u[0, 0]],
                           [0.0]])
         else:
-            B = np.array([[u[0, 0] / u[1, 0] * (sin(x[2, 0] + self.dt * u[1, 0]) - sin(x[2, 0]))],
-                          [u[0, 0] / u[1, 0] * (-cos(x[2, 0] + self.dt * u[1, 0]) + cos(x[2, 0]))],
-                          [u[1, 0] * self.dt]])
+            B = np.array([[u[0, 0] / u[1, 0] * (sin(x[2, 0] + dt * u[1, 0]) - sin(x[2, 0]))],
+                          [u[0, 0] / u[1, 0] * (-cos(x[2, 0] + dt * u[1, 0]) + cos(x[2, 0]))],
+                          [u[1, 0] * dt]])
         res = x + B
         return res
 
-    def jacob_motion(self, x, u):
+    def jacob_motion(self, x, u, dt):
         if u[1, 0] == 0:
-            jF = np.array([[0, 0, -self.dt * u[0] * sin(x[2, 0])],
-                           [0, 0, self.dt * u[0] * cos(x[2, 0])],
+            jF = np.array([[0, 0, -dt * u[0] * sin(x[2, 0])],
+                           [0, 0, dt * u[0] * cos(x[2, 0])],
                            [0, 0, 0]])
         else:
-            jF = np.array([[0, 0, u[0, 0] / u[1, 0] * (cos(x[2, 0] + self.dt * u[1, 0]) - cos(x[2, 0]))],
-                          [0, 0, u[0, 0] / u[1, 0] * (sin(x[2, 0] + self.dt * u[1, 0]) - sin(x[2, 0]))],
+            jF = np.array([[0, 0, u[0, 0] / u[1, 0] * (cos(x[2, 0] + dt * u[1, 0]) - cos(x[2, 0]))],
+                          [0, 0, u[0, 0] / u[1, 0] * (sin(x[2, 0] + dt * u[1, 0]) - sin(x[2, 0]))],
                           [0, 0, 0]])
 
         G = np.identity(STATE_SIZE) + jF
