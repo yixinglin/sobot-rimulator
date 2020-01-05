@@ -15,7 +15,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # 
 # Email mccrea.engineering@gmail.com for questions, comments, or to report bugs.
-
+from supervisor.controllers.FastSlam import FastSlam
 from supervisor.controllers.GTGAndAOController import *
 from supervisor.controllers.FollowWallController import *
 from supervisor.controllers.GoToAngleController import *
@@ -60,7 +60,9 @@ class Supervisor:
         self.follow_wall_controller = FollowWallController(controller_interface)
 
         # slam
+        # TODO: FIX THIS SHIT
         self.slam = EKFSlam(controller_interface, step_time=1/20)
+        #self.slam = FastSlam(controller_interface, step_time=1/20)
 
         # state machine
         self.state_machine = SupervisorStateMachine(self, control_cfg)
@@ -101,6 +103,7 @@ class Supervisor:
         self.current_controller.execute()  # apply the current controller
         v, yaw = self._diff_to_uni(self.v_l, self.v_r)
         self.slam.ekf_slam(np.array([[v], [yaw]]), self.proximity_sensor_distances)
+        #self.slam.fast_slam(np.array([[v], [yaw]]), self.proximity_sensor_distances)
         self._send_robot_commands()  # output the generated control signals to the robot
 
     # update the estimated robot state and the control state
