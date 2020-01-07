@@ -44,12 +44,12 @@ class Painter:
         for component in draw_list:
             if component['type'] == 'ellipse':
                 self.draw_ellipse(context,
-                                 component['pos'],
-                                 component['angle'],
-                                 component['radius_x'],
-                                 component['radius_y'],
-                                 component['color'],
-                                 component['alpha'])
+                                  component['pos'],
+                                  component['angle'],
+                                  component['radius_x'],
+                                  component['radius_y'],
+                                  component['color'],
+                                  component['alpha'])
 
             if component['type'] == 'circle':
                 self.draw_circle(context,

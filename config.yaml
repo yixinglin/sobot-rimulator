@@ -1,6 +1,7 @@
 # Disrecte time
 period: 0.05
-# Khepera III Robot
+# Configures the robot
+# These values are inspired by the Khepera III robot
 robot:
   # Maximum translational velocity in m/s
   max_transl_vel: 0.3148
@@ -27,6 +28,7 @@ robot:
               [0.057, 0.000],
               [0.052, 0.021],
               [0.033, 0.043]]
+  # Configures the sensors used by the robot
   sensor:
     # Minimum detection range of the sensor in meters
     min_range: 0.02
@@ -50,7 +52,7 @@ robot:
     # Degree of the plotted cone angle of the sensor
     # Careful: the sensor only has a single detection line! The cone is purely for plotting.
     cone_angle: 10
-
+  # Configures the wheels of the robot
   wheel:
     # Wheel radius
     radius: 0.021
@@ -61,6 +63,7 @@ robot:
     # Maximum speed of the wheel in rad/s
     max_speed: 15.0
 
+# Configures the GUI
 viewer:
   # Number of frames
   num_frames: 2
@@ -75,7 +78,9 @@ viewer:
   # Between the major gridline there are this many minor divisions
   major_gridline_subdivisions: 5
 
+# Configures the random map generation
 map:
+  # Configures the generated obstacles
   obstacle:
     # Radius of obstacles
     radius: 0.04
@@ -87,6 +92,7 @@ map:
     min_distance: 0.2
     # Maximum distance to origin
     max_distance: 2
+  # Configures the goal generation
   goal:
     # Minimum distance to origin
     min_distance: 0
@@ -95,6 +101,7 @@ map:
     # Minimum distance to all obstacles
     min_clearance: 0.2
 
+# Configures the control of the robot
 control:
   # If robot is closer than this distance to the goal, it is considered as reached
   goal_reached_distance: 0.05
@@ -103,6 +110,7 @@ control:
   danger_distance: 0.04
   progress_epsilon: 0.05
 
+# Configures the SLAM system
 slam:
   # The amount of variables that describe the robot's state
   # These are x position, y position and current angle theta

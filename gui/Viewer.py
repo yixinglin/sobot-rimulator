@@ -58,6 +58,7 @@ class Viewer:
         self.drawing_area.set_size_request(self.view_width_pixels, self.view_height_pixels)
         self.drawing_area.connect('draw', self.on_expose)
 
+        # TODO: Improve this shit (more configurable)
         self.drawing_area2 = gtk.DrawingArea()
         self.drawing_area2.set_size_request(self.view_width_pixels, self.view_height_pixels)
         self.drawing_area2.connect('draw', self.on_expose2)
