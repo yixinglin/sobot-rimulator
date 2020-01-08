@@ -45,7 +45,13 @@ class Supervisor:
         # proximity sensor information
         self.proximity_sensor_placements = [Pose(rawpose[0], rawpose[1], radians(rawpose[2])) for rawpose in
                                             self.robot_cfg["sensor"]["poses"]]
+        self.proximity_sensor_min_range = self.robot_cfg["sensor"]["min_range"]
         self.proximity_sensor_max_range = self.robot_cfg["sensor"]["max_range"]
+        self.proximity_sensor_min_read_value = self.robot_cfg["sensor"]["min_read_value"]
+        self.proximity_sensor_max_read_value = self.robot_cfg["sensor"]["max_read_value"]
+        self.sensor_conversion_factor = log(
+            self.proximity_sensor_min_read_value / self.proximity_sensor_max_read_value) / (
+                self.proximity_sensor_max_range - self.proximity_sensor_min_range)
 
         # odometry information
         self.robot_wheel_radius = self.robot_cfg["wheel"]["radius"]
@@ -64,7 +70,7 @@ class Supervisor:
 
         # slam
         self.slam = EKFSlam(controller_interface, cfg["map"]["obstacle"]["radius"], cfg["slam"])
-        #self.slam = FastSlam(controller_interface, step_time=1/20)
+        # self.slam = FastSlam(controller_interface, step_time=1/20)
 
         # state machine
         self.state_machine = SupervisorStateMachine(self, self.control_cfg)
@@ -105,7 +111,7 @@ class Supervisor:
         self.current_controller.execute()  # apply the current controller
         v, yaw = self._diff_to_uni(self.v_l, self.v_r)
         self.slam.ekf_slam(np.array([[v], [yaw]]), self.proximity_sensor_distances, dt)
-        #self.slam.fast_slam(np.array([[v], [yaw]]), self.proximity_sensor_distances)
+        # self.slam.fast_slam(np.array([[v], [yaw]]), self.proximity_sensor_distances)
         self._send_robot_commands()  # output the generated control signals to the robot
 
     # update the estimated robot state and the control state
@@ -129,8 +135,14 @@ class Supervisor:
 
     # update the distances indicated by the proximity sensors
     def _update_proximity_sensor_distances(self):
-        self.proximity_sensor_distances = [0.02 - (log(readval / 3960.0)) / 30.0
-                                           for readval in self.robot.read_proximity_sensors()]
+        self.proximity_sensor_distances = \
+            [self.proximity_sensor_min_range + (
+                log(readval / self.proximity_sensor_max_read_value)) / self.sensor_conversion_factor
+             for readval in self.robot.read_proximity_sensors()]
+        print("Sensor readings")
+        print(self.proximity_sensor_distances)
+        print("Raw values")
+        print(self.robot.read_proximity_sensors())
 
     # update the estimated position of the robot using it's wheel encoder readings
     def _update_odometry(self):

@@ -1,0 +1,124 @@
+# Disrecte time
+period: 0.05
+# Configures the robot
+# These values are inspired by the Khepera III robot
+robot:
+  # Maximum translational velocity in m/s
+  max_transl_vel: 0.3148
+  # Maximum angular velocity in rad/s
+  max_ang_vel: 2.2763
+  # Polygon specifying the shape of the robot
+  bottom_plate: [[-0.024, 0.064],
+                 [0.033, 0.064],
+                 [0.057, 0.043],
+                 [0.074, 0.010],
+                 [0.074, -0.010],
+                 [0.057, -0.043],
+                 [0.033, -0.064],
+                 [-0.025, -0.064],
+                 [-0.042, -0.043],
+                 [-0.048, -0.010],
+                 [-0.048, 0.010],
+                 [-0.042, 0.043]]
+  # Polygon specifying the top view of the robot, used solely for plotting
+  top_plate: [[-0.031, 0.043],
+              [-0.031, -0.043],
+              [0.033, -0.043],
+              [0.052, -0.021],
+              [0.057, 0.000],
+              [0.052, 0.021],
+              [0.033, 0.043]]
+  # Configures the sensors used by the robot
+  sensor:
+    # Minimum detection range of the sensor in meters
+    min_range: 0.02
+    # Maximum detection range of the sensor in meters
+    max_range: 1
+    # Value that is read at minimum range
+    min_read_value: 18
+    # Value that is read at maximum range
+    max_read_value: 3960
+    # Specificies the poses and number of sensors
+    # Each pose is composed of x position, y position and angle in degrees
+    poses: [[-0.038, 0.048, 128],
+            [0.019, 0.064, 75],
+            [0.050, 0.050, 42],
+            [0.070, 0.017, 13],
+            [0.070, -0.017, -13],
+            [0.050, -0.050, -42],
+            [0.019, -0.064, -75],
+            [-0.038, -0.048, -128],
+            [-0.048, 0.000, 180]]
+    # Degree of the plotted cone angle of the sensor
+    # Careful: the sensor only has a single detection line! The cone is purely for plotting.
+    cone_angle: 10
+  # Configures the wheels of the robot
+  wheel:
+    # Wheel radius
+    radius: 0.021
+    # Distance between the two centers of the wheels
+    base_length: 0.0885
+    # Value returned by wheel odometry per revolution
+    ticks_per_rev: 2765
+    # Maximum speed of the wheel in rad/s
+    max_speed: 50.0
+
+# Configures the GUI
+viewer:
+  # Number of frames
+  num_frames: 2
+  # Number of pixels per row
+  pixels_width: 700
+  # Number of pixels per column
+  pixels_height: 600
+  # Pixels per meter
+  zoom: 100
+  # Distance in meters of the major gridlines
+  major_gridline_interval: 1
+  # Between the major gridline there are this many minor divisions
+  major_gridline_subdivisions: 5
+
+# Configures the random map generation
+map:
+  # Configures the generated obstacles
+  obstacle:
+    # Radius of obstacles
+    radius: 0.1
+    # Minimum amount of generated obstacles
+    min_count: 5
+    # Maximum amount of generated obstacles
+    max_count: 15
+    # Minimum distance to origin
+    min_distance: 0.2
+    # Maximum distance to origin
+    max_distance: 2
+  # Configures the goal generation
+  goal:
+    # Minimum distance to origin
+    min_distance: 0
+    # Maximum distance to origin
+    max_distance: 2
+    # Minimum distance to all obstacles
+    min_clearance: 0.2
+
+# Configures the control of the robot
+control:
+  # If robot is closer than this distance to the goal, it is considered as reached
+  goal_reached_distance: 0.05
+  # TODO: Add comments
+  caution_distance: 0.15
+  danger_distance: 0.04
+  progress_epsilon: 0.05
+
+# Configures the SLAM system
+slam:
+  # The amount of variables that describe the robot's state
+  # These are x position, y position and current angle theta
+  # Currently only supports 3
+  robot_state_size: 3
+  # The amount of variables that describe a landmark's state
+  # These are x position and y position
+  # Currently only supports 2
+  landmark_state_size: 2
+  # The mahalanobis distance threshold used in data association
+  distance_threshold: 0.3
