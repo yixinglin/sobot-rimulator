@@ -73,7 +73,7 @@ class Simulator:
         # create the robot
         robot = Robot(self.cfg["robot"])
         # Assign supervisor to the robot
-        robot.supervisor = Supervisor(RobotSupervisorInterface(robot), self.cfg["robot"], self.cfg["control"])
+        robot.supervisor = Supervisor(RobotSupervisorInterface(robot), self.cfg)
         self.world.add_robot(robot)
 
         # generate a random environment

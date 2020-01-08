@@ -8,9 +8,6 @@ motion_noise = np.diag([0.05, 0.05, np.deg2rad(1)]) ** 2
 
 STATE_SIZE = 3  # State size [x,y,theta]
 LM_SIZE = 2  # LM state size [x,y]
-M_DIST_TH = 0.3  # Threshold of Mahalanobis distance for data association.
-
-OBS_RADIUS = 0.04  # Keep this in sync with the one in the main
 
 
 def pi_2_pi(angle):
@@ -68,7 +65,7 @@ def get_landmark_position_from_state(x, ind):
     return lm
 
 
-def search_correspond_landmark_id(xAug, PAug, zi):
+def search_correspond_landmark_id(xAug, PAug, zi, distance_threshold):
     """
     Landmark association with Mahalanobis distance
     """
@@ -83,16 +80,20 @@ def search_correspond_landmark_id(xAug, PAug, zi):
         distance = y.T @ np.linalg.inv(S) @ y
         mdist.append(distance)
 
-    mdist.append(M_DIST_TH)  # new landmark
+    mdist.append(distance_threshold)  # new landmark
     minid = mdist.index(min(mdist))
     return minid
 
 
 class EKFSlam:
 
-    def __init__(self, supervisor_interface):
+    def __init__(self, supervisor_interface, obs_radius, slam_cfg):
         # bind the supervisor
         self.supervisor = supervisor_interface
+
+        # Extract relevant configurations
+        self.obs_radius = obs_radius
+        self.distance_threshold = slam_cfg["distance_threshold"]
 
         self.xEst = np.zeros((STATE_SIZE, 1))
         self.PEst = np.zeros((STATE_SIZE, STATE_SIZE))  # TODO: Initialize with identity or 0 matrix??
@@ -109,8 +110,8 @@ class EKFSlam:
         for iz, (distance, theta) in enumerate(z):
             if distance >= self.supervisor.proximity_sensor_max_range() - 0.01:  # only execute if landmark is observed
                 continue
-            distance += OBS_RADIUS
-            minid = search_correspond_landmark_id(self.xEst, self.PEst, [distance, theta])
+            distance += self.obs_radius  # TODO: Rethink this
+            minid = search_correspond_landmark_id(self.xEst, self.PEst, [distance, theta], self.distance_threshold)
 
             nLM = get_n_lm(self.xEst)
             if minid == nLM:   # If the landmark is new

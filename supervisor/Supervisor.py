@@ -27,10 +27,13 @@ from supervisor.SupervisorStateMachine import *
 class Supervisor:
 
     def __init__(self, robot_interface,  # the interface through which this supervisor will interact with the robot
-                 robot_cfg,
-                 control_cfg,
+                 cfg,
                  goal=[0.0, 0.0],  # the goal to which this supervisor will guide the robot
                  initial_pose_args=[0.0, 0.0, 0.0]):  # the pose the robot will have when control begins
+
+        # Extract relevant configs
+        self.robot_cfg = cfg["robot"]
+        self.control_cfg = cfg["control"]
 
         # internal clock time in seconds
         self.time = 0.0
@@ -41,13 +44,13 @@ class Supervisor:
 
         # proximity sensor information
         self.proximity_sensor_placements = [Pose(rawpose[0], rawpose[1], radians(rawpose[2])) for rawpose in
-                                            robot_cfg["sensor"]["poses"]]
-        self.proximity_sensor_max_range = robot_cfg["sensor"]["max_range"]
+                                            self.robot_cfg["sensor"]["poses"]]
+        self.proximity_sensor_max_range = self.robot_cfg["sensor"]["max_range"]
 
         # odometry information
-        self.robot_wheel_radius = robot_cfg["wheel"]["radius"]
-        self.robot_wheel_base_length = robot_cfg["wheel"]["base_length"]
-        self.wheel_encoder_ticks_per_revolution = robot_cfg["wheel"]["ticks_per_rev"]
+        self.robot_wheel_radius = self.robot_cfg["wheel"]["radius"]
+        self.robot_wheel_base_length = self.robot_cfg["wheel"]["base_length"]
+        self.wheel_encoder_ticks_per_revolution = self.robot_cfg["wheel"]["ticks_per_rev"]
         self.prev_ticks_left = 0
         self.prev_ticks_right = 0
 
@@ -60,15 +63,14 @@ class Supervisor:
         self.follow_wall_controller = FollowWallController(controller_interface)
 
         # slam
-        # TODO: FIX THIS SHIT
-        self.slam = EKFSlam(controller_interface)
+        self.slam = EKFSlam(controller_interface, cfg["map"]["obstacle"]["radius"], cfg["slam"])
         #self.slam = FastSlam(controller_interface, step_time=1/20)
 
         # state machine
-        self.state_machine = SupervisorStateMachine(self, control_cfg)
+        self.state_machine = SupervisorStateMachine(self, self.control_cfg)
 
         # state
-        self.proximity_sensor_distances = [0.0, 0.0] * len(robot_cfg["sensor"]["poses"])  # sensor distances
+        self.proximity_sensor_distances = [0.0, 0.0] * len(self.robot_cfg["sensor"]["poses"])  # sensor distances
         self.estimated_pose = Pose(*initial_pose_args)  # estimated pose
         self.current_controller = self.go_to_goal_controller  # current controller
 
@@ -76,8 +78,8 @@ class Supervisor:
         self.goal = goal
 
         # control bounds
-        self.v_max = robot_cfg["max_transl_vel"]
-        self.omega_max = robot_cfg["max_ang_vel"]
+        self.v_max = self.robot_cfg["max_transl_vel"]
+        self.omega_max = self.robot_cfg["max_ang_vel"]
 
         # CONTROL OUTPUTS - UNICYCLE
         self.v_output = 0.0
