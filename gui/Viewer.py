@@ -53,15 +53,15 @@ class Viewer:
         self.window.set_resizable(False)
         self.window.connect('delete_event', self.on_delete)
 
-        # initialize the drawing_area
-        self.drawing_area = gtk.DrawingArea()
-        self.drawing_area.set_size_request(self.view_width_pixels, self.view_height_pixels)
-        self.drawing_area.connect('draw', self.on_expose)
-
-        # TODO: Improve this shit (more configurable)
-        self.drawing_area2 = gtk.DrawingArea()
-        self.drawing_area2.set_size_request(self.view_width_pixels, self.view_height_pixels)
-        self.drawing_area2.connect('draw', self.on_expose2)
+        # initialize the drawing_areas
+        self.drawing_areas = []
+        # This list contains the drawing functions for the frames. The list has same length as number of frames.
+        on_expose_functions = [self.on_expose, self.on_expose2][:self.num_frames]
+        for on_expose in on_expose_functions:
+            drawing_area = gtk.DrawingArea()
+            drawing_area.set_size_request(self.view_width_pixels, self.view_height_pixels)
+            drawing_area.connect('draw', on_expose)
+            self.drawing_areas.append(drawing_area)
 
         # initialize the painter
         self.painter = Painter(self.pixels_per_meter)
@@ -140,8 +140,8 @@ class Viewer:
         # == lay out the window
 
         plots_box = gtk.HBox(spacing=5)
-        plots_box.pack_start(self.drawing_area, False, False, 0)
-        plots_box.pack_start(self.drawing_area2, False, False, 0)
+        for drawing_area in self.drawing_areas:
+            plots_box.pack_start(drawing_area, False, False, 0)
         plots_alignment = gtk.Alignment(xalign=0.5, yalign=0.5, xscale=0, yscale=0)
         plots_alignment.add(plots_box)
 
@@ -192,8 +192,8 @@ class Viewer:
         self.current_frames = [Frame() for _ in range(self.num_frames)]
 
     def draw_frame(self):
-        self.drawing_area.queue_draw_area(0, 0, self.view_width_pixels, self.view_height_pixels)
-        self.drawing_area2.queue_draw_area(0, 0, self.view_width_pixels, self.view_height_pixels)
+        for drawing_area in self.drawing_areas:
+            drawing_area.queue_draw_area(0, 0, self.view_width_pixels, self.view_height_pixels)
 
     def control_panel_state_init(self):
         self.alert_box.set_text('')
