@@ -45,9 +45,12 @@ class Simulator:
     def __init__(self, cfg):
         # create the GUI
         self.viewer = gui.Viewer.Viewer(self, cfg["viewer"])
+        self.slam_plotter = None
+        self.world_plotter = None
 
         # create the map manager
         self.map_manager = MapManager(cfg["map"])
+        self.world = None
 
         # timing control
         self.period = cfg["period"]
@@ -81,7 +84,8 @@ class Simulator:
 
         # create the world view
         self.world_plotter = WorldPlotter(self.world, self.viewer)
-        self.slam_plotter = SlamPlotter(self.world.supervisors[0].slam, self.viewer, self.cfg["map"]["obstacle"]["radius"], self.cfg["robot"])
+        if cfg["viewer"]["num_frames"] > 1:
+            self.slam_plotter = SlamPlotter(self.world.supervisors[0].slam, self.viewer, self.cfg["map"]["obstacle"]["radius"], self.cfg["robot"])
 
         # render the initial world
         self.draw_world()
@@ -122,7 +126,8 @@ class Simulator:
     def draw_world(self):
         self.viewer.new_frame()  # start a fresh frame
         self.world_plotter.draw_world_to_frame()  # draw the world onto the frame
-        self.slam_plotter.draw_slam_to_frame()
+        if self.slam_plotter is not None:
+            self.slam_plotter.draw_slam_to_frame()
         self.viewer.draw_frame()  # render the frame
 
     def _run_sim(self):

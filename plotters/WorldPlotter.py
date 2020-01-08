@@ -51,7 +51,6 @@ class WorldPlotter:
         # draw all the robots
         for robot_plotter in self.robot_plotters:
             robot_plotter.draw_robot_to_frame(self.viewer.current_frames[0], self.viewer.draw_invisibles)
-            #robot_plotter.draw_robot_to_frame(self.viewer.current_frames[1], draw_invisibles=False)
 
         # draw all the obstacles
         for obstacle_plotter in self.obstacle_plotters:
