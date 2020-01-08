@@ -114,9 +114,11 @@ control:
 slam:
   # The amount of variables that describe the robot's state
   # These are x position, y position and current angle theta
+  # Currently only supports 3
   robot_state_size: 3
   # The amount of variables that describe a landmark's state
   # These are x position and y position
+  # Currently only supports 2
   landmark_state_size: 2
   # The mahalanobis distance threshold used in data association
   distance_threshold: 0.3
