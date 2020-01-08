@@ -39,7 +39,7 @@ class MapManager:
         # OBSTACLE PARAMS
         obs_radius = self.cfg["obstacle"]["radius"]
         obs_min_count = self.cfg["obstacle"]["min_count"]
-        obs_max_count = self.cfg["obstacle"]["min_count"]
+        obs_max_count = self.cfg["obstacle"]["max_count"]
         obs_min_dist = self.cfg["obstacle"]["min_distance"]
         obs_max_dist = self.cfg["obstacle"]["max_distance"]
 

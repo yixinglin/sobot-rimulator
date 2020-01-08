@@ -139,10 +139,6 @@ class Supervisor:
             [self.proximity_sensor_min_range + (
                 log(readval / self.proximity_sensor_max_read_value)) / self.sensor_conversion_factor
              for readval in self.robot.read_proximity_sensors()]
-        print("Sensor readings")
-        print(self.proximity_sensor_distances)
-        print("Raw values")
-        print(self.robot.read_proximity_sensors())
 
     # update the estimated position of the robot using it's wheel encoder readings
     def _update_odometry(self):
