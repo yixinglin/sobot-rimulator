@@ -4,7 +4,7 @@ period: 0.05
 # These values are inspired by the Khepera III robot
 robot:
   # Maximum translational velocity in m/s
-  max_transl_vel: 0.3148
+  max_transl_vel: 1
   # Maximum angular velocity in rad/s
   max_ang_vel: 2.2763
   # Polygon specifying the shape of the robot
