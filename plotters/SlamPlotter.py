@@ -42,7 +42,7 @@ class SlamPlotter:
             obstacle_plotter = ObstaclePlotter(obstacle)
             obstacle_plotter.draw_obstacle_to_frame(frame)
 
-        if self.viewer.draw_invisibles:
+        if self.viewer.draw_invisibles and True is False:
             self.__draw_confidence_ellipse(frame)
 
     def plot_covariances(self):

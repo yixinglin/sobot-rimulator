@@ -154,6 +154,7 @@ class EKFSlam:
                           [u[0, 0] / u[1, 0] * (-cos(x[2, 0] + dt * u[1, 0]) + cos(x[2, 0]))],
                           [u[1, 0] * dt]])
         res = x + B
+        res[2] = pi_2_pi(res[2])
         return res
 
     def jacob_motion(self, x, u, dt):

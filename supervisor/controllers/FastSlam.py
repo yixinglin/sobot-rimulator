@@ -29,7 +29,7 @@ class Particle:
         self.y = 0.0
         self.yaw = 0.0
         # landmark x-y positions
-        self.lm = np.zeros((N_LM, LM_SIZE))
+        self.lm = np.zeros((N_LM, LM_SIZE)) # TODO: Change to same format as before
         # landmark position covariance
         self.lmP = np.zeros((N_LM * LM_SIZE, LM_SIZE))
 
@@ -54,11 +54,12 @@ class FastSlam:
 
     def get_estimated_pose(self):
         xEst = self.calc_final_state(self.particles)
+        print(xEst)
         return Pose(xEst[0, 0], xEst[1, 0], xEst[2, 0])
 
     def get_landmarks(self):
-        xEst = self.calc_final_state(self.particles)
-        return [(x, y) for (x, y) in zip(xEst[STATE_SIZE::2], xEst[STATE_SIZE+1::2])]
+        xEst = self.calc_final_landmarks(self.particles)
+        return [(x, y) for (x, y) in zip(xEst[:, 0], xEst[:, 1])]
 
     def normalize_weight(self, particles):
         sumw = sum([p.w for p in particles])
@@ -89,14 +90,24 @@ class FastSlam:
 
         return xEst
 
+    def calc_final_landmarks(self, particles):
+        lmEst = np.zeros((20, LM_SIZE))
+
+        particles = self.normalize_weight(particles)
+
+        for i in range(N_PARTICLE):
+            lmEst += particles[i].w * particles[i].lm
+
+        return lmEst
+
     def predict_particles(self, particles, u):
         for i in range(N_PARTICLE):
             px = np.zeros((STATE_SIZE, 1))
             px[0, 0] = particles[i].x
             px[1, 0] = particles[i].y
             px[2, 0] = particles[i].yaw
-            ud = u + (np.random.randn(1, 2) @ R ** 0.5).T  # add noise
-            px = self.motion_model(px, ud)
+            # u += (np.random.randn(1, 2) @ R ** 0.5).T  # TODO : Think if adding this noise makes sense
+            px = self.motion_model(px, u)
             particles[i].x = px[0, 0]
             particles[i].y = px[1, 0]
             particles[i].yaw = px[2, 0]
@@ -252,16 +263,19 @@ class FastSlam:
 
         return particles
 
+    # The motion model for a motion command u = (velocity, angular velocity)
     def motion_model(self, x, u):
-        B = np.array([[self.dt * math.cos(x[2, 0]), 0],
-                      [self.dt * math.sin(x[2, 0]), 0],
-                      [0.0, self.dt]])
-
-        x = x + B @ u
-
-        x[2, 0] = self.pi_2_pi(x[2, 0])
-
-        return x
+        if u[1, 0] == 0:
+            B = np.array([[self.dt * math.cos(x[2, 0]) * u[0, 0]],
+                          [self.dt * math.sin(x[2, 0]) * u[0, 0]],
+                          [0.0]])
+        else:
+            B = np.array([[u[0, 0] / u[1, 0] * (math.sin(x[2, 0] + self.dt * u[1, 0]) - math.sin(x[2, 0]))],
+                          [u[0, 0] / u[1, 0] * (-math.cos(x[2, 0] + self.dt * u[1, 0]) + math.cos(x[2, 0]))],
+                          [u[1, 0] * self.dt]])
+        res = x + B
+        res[2] = self.pi_2_pi(res[2])
+        return res
 
     def pi_2_pi(self, angle):
         return (angle + math.pi) % (2 * math.pi) - math.pi

@@ -6,7 +6,7 @@ robot:
   # Maximum translational velocity in m/s
   max_transl_vel: 1
   # Maximum angular velocity in rad/s
-  max_ang_vel: 2.2763
+  max_ang_vel: 5
   # Polygon specifying the shape of the robot
   bottom_plate: [[-0.024, 0.064],
                  [0.033, 0.064],
