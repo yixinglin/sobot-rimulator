@@ -11,14 +11,15 @@ import numpy as np
 # Fast SLAM covariance
 from models.Pose import Pose
 
-Q = np.diag([3.0, np.deg2rad(10.0)]) ** 2
-R = np.diag([1.0, np.deg2rad(20.0)]) ** 2
+sensor_noise = np.diag([0.2, np.deg2rad(30.0)]) ** 2
+motion_noise = np.diag([0.1, np.deg2rad(20.0)]) ** 2
 
-M_DIST_TH = 2.0  # Threshold of Mahalanobis distance for data association.
+M_DIST_TH = 0.15  # Threshold of Mahalanobis distance for data association.
 STATE_SIZE = 3  # State size [x,y,yaw]
 LM_SIZE = 2  # LM srate size [x,y]
 N_PARTICLE = 100  # number of particle
 NTH = N_PARTICLE / 1.5  # Number of particle for re-sampling
+MAX_LMS = 200
 
 
 class Particle:
@@ -29,7 +30,7 @@ class Particle:
         self.y = 0.0
         self.yaw = 0.0
         # landmark x-y positions
-        self.lm = np.zeros((N_LM, LM_SIZE)) # TODO: Change to same format as before
+        self.lm = np.zeros((N_LM, LM_SIZE))
         # landmark position covariance
         self.lmP = np.zeros((N_LM * LM_SIZE, LM_SIZE))
 
@@ -41,7 +42,7 @@ class FastSlam:
     def __init__(self, supervisor_interface, step_time):
         self.supervisor = supervisor_interface
         self.dt = step_time
-        self.particles = [Particle(20) for _ in range(N_PARTICLE)]
+        self.particles = [Particle(MAX_LMS) for _ in range(N_PARTICLE)]
 
     def fast_slam(self, u, z):
         self.particles = self.predict_particles(self.particles, u)
@@ -54,64 +55,51 @@ class FastSlam:
 
     def get_estimated_pose(self):
         xEst = self.calc_final_state(self.particles)
-        print(xEst)
         return Pose(xEst[0, 0], xEst[1, 0], xEst[2, 0])
 
     def get_landmarks(self):
-        xEst = self.calc_final_landmarks(self.particles)
-        return [(x, y) for (x, y) in zip(xEst[:, 0], xEst[:, 1])]
+        lmEst = self.calc_final_landmarks(self.particles)
+        n_lms = get_n_lms(lmEst)
+        return [(x, y) for (x, y) in zip(lmEst[:n_lms, 0], lmEst[:n_lms, 1])]
 
     def normalize_weight(self, particles):
         sumw = sum([p.w for p in particles])
-
         try:
-            for i in range(N_PARTICLE):
-                particles[i].w /= sumw
+            for particle in particles:
+                particle.w /= sumw
         except ZeroDivisionError:
-            for i in range(N_PARTICLE):
-                particles[i].w = 1.0 / N_PARTICLE
-
-            return particles
-
+            for particle in particles:
+                particle.w = 1.0 / N_PARTICLE
         return particles
 
     def calc_final_state(self, particles):
         xEst = np.zeros((STATE_SIZE, 1))
-
         particles = self.normalize_weight(particles)
-
-        for i in range(N_PARTICLE):
-            xEst[0, 0] += particles[i].w * particles[i].x
-            xEst[1, 0] += particles[i].w * particles[i].y
-            xEst[2, 0] += particles[i].w * particles[i].yaw
-
+        for particle in particles:
+            xEst[0, 0] += particle.w * particle.x
+            xEst[1, 0] += particle.w * particle.y
+            xEst[2, 0] += particle.w * particle.yaw
         xEst[2, 0] = self.pi_2_pi(xEst[2, 0])
-        #  print(xEst)
-
         return xEst
 
     def calc_final_landmarks(self, particles):
-        lmEst = np.zeros((20, LM_SIZE))
-
+        lmEst = np.zeros((MAX_LMS, LM_SIZE))
         particles = self.normalize_weight(particles)
-
-        for i in range(N_PARTICLE):
-            lmEst += particles[i].w * particles[i].lm
-
+        for particle in particles:
+            lmEst += particle.w * particle.lm
         return lmEst
 
     def predict_particles(self, particles, u):
-        for i in range(N_PARTICLE):
+        for particle in particles:
             px = np.zeros((STATE_SIZE, 1))
-            px[0, 0] = particles[i].x
-            px[1, 0] = particles[i].y
-            px[2, 0] = particles[i].yaw
-            # u += (np.random.randn(1, 2) @ R ** 0.5).T  # TODO : Think if adding this noise makes sense
+            px[0, 0] = particle.x
+            px[1, 0] = particle.y
+            px[2, 0] = particle.yaw
+            # u += (np.random.randn(1, 2) @ motion_noise ** 0.5).T  # TODO : Think if adding this noise makes sense
             px = self.motion_model(px, u)
-            particles[i].x = px[0, 0]
-            particles[i].y = px[1, 0]
-            particles[i].yaw = px[2, 0]
-
+            particle.x = px[0, 0]
+            particle.y = px[1, 0]
+            particle.yaw = px[2, 0]
         return particles
 
     def add_new_lm(self, particle, z, Q_cov):
@@ -172,7 +160,7 @@ class FastSlam:
         xf = np.array(particle.lm[lm_id, :]).reshape(2, 1)
         Pf = np.array(particle.lmP[2 * lm_id:2 * lm_id + 2, :])
 
-        zp, Hv, Hf, Sf = self.compute_jacobians(particle, xf, Pf, Q)
+        zp, Hv, Hf, Sf = self.compute_jacobians(particle, xf, Pf, sensor_noise)
 
         dz = z[0:2].reshape(2, 1) - zp
         dz[1, 0] = self.pi_2_pi(dz[1, 0])
@@ -207,20 +195,22 @@ class FastSlam:
         return w
 
     def update_with_observation(self, particles, z):
-        z = zip(z, [pose.theta for pose in self.supervisor.proximity_sensor_placements()], range(len(z)))
-        for iz, (distance, theta, lmid) in enumerate(z):
+        z = zip(z, [pose.theta for pose in self.supervisor.proximity_sensor_placements()])
+        for (distance, theta) in z:
             if distance >= self.supervisor.proximity_sensor_max_range() - 0.01:  # only execute if landmark is observed
                 continue
 
-            for ip in range(N_PARTICLE):
-                # new landmark
-                if abs(particles[ip].lm[lmid, 0]) <= 0.01:
-                    particles[ip] = self.add_new_lm(particles[ip], np.asarray([distance, theta, lmid]), Q)
-                # known landmark
+            for particle in particles:
+                x = np.array([particle.x, particle.y, particle.yaw]).reshape(3, 1)
+                minid = search_correspond_landmark_id(x, particle.lm, [distance, theta])
+                nLM = get_n_lms(particle.lm)
+
+                if minid == nLM:   # If the landmark is new
+                    self.add_new_lm(particle, np.asarray([distance, theta, minid]), sensor_noise)
                 else:
-                    w = self.compute_weight(particles[ip], np.asarray([distance, theta, lmid]), Q)
-                    particles[ip].w *= w
-                    particles[ip] = self.update_landmark(particles[ip], np.asarray([distance, theta, lmid]), Q)
+                    w = self.compute_weight(particle, np.asarray([distance, theta, minid]), sensor_noise)
+                    particle.w *= w
+                    self.update_landmark(particle, np.asarray([distance, theta, minid]), sensor_noise)
 
         return particles
 
@@ -231,11 +221,7 @@ class FastSlam:
 
         particles = self.normalize_weight(particles)
 
-        pw = []
-        for i in range(N_PARTICLE):
-            pw.append(particles[i].w)
-
-        pw = np.array(pw)
+        pw = np.array([particle.w for particle in particles])
 
         Neff = 1.0 / (pw @ pw.T)  # Effective particle number
         # print(Neff)
@@ -279,3 +265,40 @@ class FastSlam:
 
     def pi_2_pi(self, angle):
         return (angle + math.pi) % (2 * math.pi) - math.pi
+
+
+
+def search_correspond_landmark_id(x, lm, z):
+    """
+    Landmark association with Mahalanobis distance
+    """
+
+    nLM = get_n_lms(lm)
+
+    mdist = []
+    measured_lm = calc_landmark_position(x, z)
+
+    for i in range(nLM):
+        lm_i = lm[i]
+        delta = lm_i - measured_lm
+        distance = math.sqrt(delta[0, 0] ** 2 + delta[0, 1] ** 2)
+        mdist.append(distance)
+
+    mdist.append(M_DIST_TH)  # new landmark
+    minid = mdist.index(min(mdist))
+    #
+    return minid
+
+
+def calc_landmark_position(x, z):
+    zp = np.zeros((1, 2))
+    zp[0, 0] = x[0, 0] + z[0] * math.cos(z[1] + x[2, 0])
+    zp[0, 1] = x[1, 0] + z[0] * math.sin(z[1] + x[2, 0])
+    return zp
+
+
+def get_n_lms(lm):
+    n = 0
+    while lm[n, 0] != 0 or lm[n, 1] != 0:
+        n += 1
+    return n
