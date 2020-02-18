@@ -42,7 +42,7 @@ from simulation.exceptions import CollisionException
 
 class Simulator:
 
-    def __init__(self, cfg):
+    def __init__(self, cfg, useEKF=True):
         # create the GUI
         self.viewer = gui.Viewer.Viewer(self, cfg["viewer"])
         self.slam_plotter = None
@@ -56,6 +56,7 @@ class Simulator:
         self.period = cfg["period"]
 
         self.cfg = cfg
+        self.useEKF = useEKF
 
         # gtk simulation event source - for simulation control
         self.sim_event_source = GLib.idle_add(self.initialize_sim, True)  # we use this opportunity to initialize the sim
@@ -73,7 +74,7 @@ class Simulator:
         # create the robot
         robot = Robot(self.cfg["robot"])
         # Assign supervisor to the robot
-        robot.supervisor = Supervisor(RobotSupervisorInterface(robot), self.cfg)
+        robot.supervisor = Supervisor(RobotSupervisorInterface(robot), self.cfg, useEKF=self.useEKF)
         self.world.add_robot(robot)
 
         # generate a random environment
@@ -152,4 +153,4 @@ if __name__ == "__main__":
     filename = "config.yaml" if len(sys.argv) == 1 else sys.argv[1]
     with open(filename, 'r') as ymlfile:
         cfg = yaml.safe_load(ymlfile)
-    Simulator(cfg)
+    Simulator(cfg, useEKF=False)

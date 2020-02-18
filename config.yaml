@@ -112,6 +112,9 @@ control:
 
 # Configures the SLAM system
 slam:
+  # The type of algorithm that should be used
+  # Supported are currently "EKFSLAM" and "FASTSLAM"
+  algorithm: "EKFSLAM"
   # The amount of variables that describe the robot's state
   # These are x position, y position and current angle theta
   # Currently only supports 3

@@ -13,7 +13,6 @@ from models.Pose import Pose
 sensor_noise = np.diag([0.2, np.deg2rad(30.0)]) ** 2
 motion_noise = np.diag([0.01, 0.01]) ** 2
 
-M_DIST_TH = 0.15  # Threshold of Mahalanobis distance for data association.
 STATE_SIZE = 3  # State size [x,y,yaw]
 LM_SIZE = 2  # LM srate size [x,y]
 N_PARTICLE = 100  # number of particle
@@ -35,12 +34,13 @@ class Particle:
 
 class FastSlam:
 
-    def __init__(self, supervisor_interface, step_time):
+    def __init__(self, supervisor_interface, slam_cfg, step_time):
         self.supervisor = supervisor_interface
         self.dt = step_time
+        self.distance_threshold = slam_cfg["distance_threshold"] / 2  # Dividing by 2, since different data association is used
         self.particles = [Particle() for _ in range(N_PARTICLE)]
 
-    def fast_slam(self, u, z):
+    def execute(self, u, z):
         self.particles = self.predict_particles(self.particles, u)
 
         self.particles = self.update_with_observation(self.particles, z)
@@ -199,7 +199,7 @@ class FastSlam:
 
             for particle in particles:
                 x = np.array([particle.x, particle.y, particle.yaw]).reshape(3, 1)
-                minid = search_correspond_landmark_id(x, particle.lm, [distance, theta])
+                minid = self.search_correspond_landmark_id(x, particle.lm, [distance, theta])
                 nLM = get_n_lms(particle.lm)
 
                 if minid == nLM:   # If the landmark is new
@@ -263,28 +263,26 @@ class FastSlam:
     def pi_2_pi(self, angle):
         return (angle + pi) % (2 * pi) - pi
 
+    def search_correspond_landmark_id(self, x, lm, z):
+        """
+        Landmark association with Mahalanobis distance
+        """
 
+        nLM = get_n_lms(lm)
 
-def search_correspond_landmark_id(x, lm, z):
-    """
-    Landmark association with Mahalanobis distance
-    """
+        mdist = []
+        measured_lm = calc_landmark_position(x, z)
 
-    nLM = get_n_lms(lm)
+        for i in range(nLM):
+            lm_i = lm[i]
+            delta = lm_i - measured_lm
+            distance = sqrt(delta[0, 0] ** 2 + delta[0, 1] ** 2)
+            mdist.append(distance)
 
-    mdist = []
-    measured_lm = calc_landmark_position(x, z)
-
-    for i in range(nLM):
-        lm_i = lm[i]
-        delta = lm_i - measured_lm
-        distance = sqrt(delta[0, 0] ** 2 + delta[0, 1] ** 2)
-        mdist.append(distance)
-
-    mdist.append(M_DIST_TH)  # new landmark
-    minid = mdist.index(min(mdist))
-    #
-    return minid
+        mdist.append(self.distance_threshold)  # new landmark
+        minid = mdist.index(min(mdist))
+        #
+        return minid
 
 
 def calc_landmark_position(x, z):

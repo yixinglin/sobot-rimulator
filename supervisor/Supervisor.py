@@ -29,7 +29,8 @@ class Supervisor:
     def __init__(self, robot_interface,  # the interface through which this supervisor will interact with the robot
                  cfg,
                  goal=[0.0, 0.0],  # the goal to which this supervisor will guide the robot
-                 initial_pose_args=[0.0, 0.0, 0.0]):  # the pose the robot will have when control begins
+                 initial_pose_args=[0.0, 0.0, 0.0],
+                 useEKF=True):  # the pose the robot will have when control begins
 
         # Extract relevant configs
         self.robot_cfg = cfg["robot"]
@@ -69,8 +70,12 @@ class Supervisor:
         self.follow_wall_controller = FollowWallController(controller_interface)
 
         # slam
-        # self.slam = EKFSlam(controller_interface, cfg["map"]["obstacle"]["radius"], cfg["slam"])
-        self.slam = FastSlam(controller_interface, step_time=1/20)
+        if useEKF:
+            print("Using EKFSlam")
+            self.slam = EKFSlam(controller_interface, cfg["map"]["obstacle"]["radius"], cfg["slam"], step_time=cfg["period"])
+        else:
+            print("Using FastSlam")
+            self.slam = FastSlam(controller_interface, cfg["slam"], step_time=cfg["period"])
 
         # state machine
         self.state_machine = SupervisorStateMachine(self, self.control_cfg)
@@ -103,15 +108,14 @@ class Supervisor:
         # although technically this is not likely to be realistic, it is a good simplificiation
 
         # execute one full control loop
-        self._execute(dt)
+        self._execute()
 
     # execute one control loop
-    def _execute(self, dt):
+    def _execute(self):
         self._update_state()  # update state
         self.current_controller.execute()  # apply the current controller
         v, yaw = self._diff_to_uni(self.v_l, self.v_r)
-        # self.slam.ekf_slam(np.array([[v], [yaw]]), self.proximity_sensor_distances, dt)
-        self.slam.fast_slam(np.array([[v], [yaw]]), self.proximity_sensor_distances)
+        self.slam.execute(np.array([[v], [yaw]]), self.proximity_sensor_distances)
         self._send_robot_commands()  # output the generated control signals to the robot
 
     # update the estimated robot state and the control state

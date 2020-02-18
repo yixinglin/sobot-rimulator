@@ -87,22 +87,23 @@ def search_correspond_landmark_id(xAug, PAug, zi, distance_threshold):
 
 class EKFSlam:
 
-    def __init__(self, supervisor_interface, obs_radius, slam_cfg):
+    def __init__(self, supervisor_interface, obs_radius, slam_cfg, step_time):
         # bind the supervisor
         self.supervisor = supervisor_interface
 
         # Extract relevant configurations
+        self.dt = step_time
         self.obs_radius = obs_radius
         self.distance_threshold = slam_cfg["distance_threshold"]
 
         self.xEst = np.zeros((STATE_SIZE, 1))
         self.PEst = np.zeros((STATE_SIZE, STATE_SIZE))  # TODO: Initialize with identity or 0 matrix??
 
-    def ekf_slam(self, u, z, dt):
+    def execute(self, u, z):
         # Predict
         S = STATE_SIZE
-        self.xEst[0:S] = self.motion_model(self.xEst[0:S], u, dt)
-        G = self.jacob_motion(self.xEst[0:S], u, dt)
+        self.xEst[0:S] = self.motion_model(self.xEst[0:S], u, self.dt)
+        G = self.jacob_motion(self.xEst[0:S], u, self.dt)
         self.PEst[0:S, 0:S] = G.T @ self.PEst[0:S, 0:S] @ G + motion_noise
         # Update
         assert len(z) == len(self.supervisor.proximity_sensor_placements())
