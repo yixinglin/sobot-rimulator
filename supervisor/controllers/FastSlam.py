@@ -12,7 +12,7 @@ import numpy as np
 from models.Pose import Pose
 
 sensor_noise = np.diag([0.2, np.deg2rad(30.0)]) ** 2
-motion_noise = np.diag([0.1, np.deg2rad(20.0)]) ** 2
+motion_noise = np.diag([0.01, 0.01]) ** 2
 
 M_DIST_TH = 0.15  # Threshold of Mahalanobis distance for data association.
 STATE_SIZE = 3  # State size [x,y,yaw]
@@ -95,7 +95,7 @@ class FastSlam:
             px[0, 0] = particle.x
             px[1, 0] = particle.y
             px[2, 0] = particle.yaw
-            # u += (np.random.randn(1, 2) @ motion_noise ** 0.5).T  # TODO : Think if adding this noise makes sense
+            u += (np.random.randn(1, 2) @ motion_noise ** 0.5).T  # TODO : Think if adding this noise makes sense
             px = self.motion_model(px, u)
             particle.x = px[0, 0]
             particle.y = px[1, 0]
