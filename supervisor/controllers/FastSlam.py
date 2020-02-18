@@ -3,9 +3,8 @@ FastSLAM 1.0 example
 author: Atsushi Sakai (@Atsushi_twi)
 """
 
-import math
+from math import cos, sin, sqrt, atan2, exp, pi
 
-import matplotlib.pyplot as plt
 import numpy as np
 
 # Fast SLAM covariance
@@ -19,22 +18,19 @@ STATE_SIZE = 3  # State size [x,y,yaw]
 LM_SIZE = 2  # LM srate size [x,y]
 N_PARTICLE = 100  # number of particle
 NTH = N_PARTICLE / 1.5  # Number of particle for re-sampling
-MAX_LMS = 200
 
 
 class Particle:
 
-    def __init__(self, N_LM):
+    def __init__(self):
         self.w = 1.0 / N_PARTICLE
         self.x = 0.0
         self.y = 0.0
         self.yaw = 0.0
         # landmark x-y positions
-        self.lm = np.zeros((N_LM, LM_SIZE))
+        self.lm = np.zeros((0, LM_SIZE))
         # landmark position covariance
-        self.lmP = np.zeros((N_LM * LM_SIZE, LM_SIZE))
-
-# Technically FastSlam1
+        self.lmP = np.zeros((0, LM_SIZE))
 
 
 class FastSlam:
@@ -42,7 +38,7 @@ class FastSlam:
     def __init__(self, supervisor_interface, step_time):
         self.supervisor = supervisor_interface
         self.dt = step_time
-        self.particles = [Particle(MAX_LMS) for _ in range(N_PARTICLE)]
+        self.particles = [Particle() for _ in range(N_PARTICLE)]
 
     def fast_slam(self, u, z):
         self.particles = self.predict_particles(self.particles, u)
@@ -83,10 +79,12 @@ class FastSlam:
         return xEst
 
     def calc_final_landmarks(self, particles):
-        lmEst = np.zeros((MAX_LMS, LM_SIZE))
+        max_n_lms = max([get_n_lms(particle.lm) for particle in particles])
+        lmEst = np.zeros((max_n_lms, LM_SIZE))
         particles = self.normalize_weight(particles)
         for particle in particles:
-            lmEst += particle.w * particle.lm
+            n_lms = get_n_lms(particle.lm)
+            lmEst[:n_lms] += particle.w * particle.lm
         return lmEst
 
     def predict_particles(self, particles, u):
@@ -102,33 +100,32 @@ class FastSlam:
             particle.yaw = px[2, 0]
         return particles
 
-    def add_new_lm(self, particle, z, Q_cov):
+    def add_new_lm(self, particle, z):
         r = z[0]
         b = z[1]
-        lm_id = int(z[2])
 
-        s = math.sin(self.pi_2_pi(particle.yaw + b))
-        c = math.cos(self.pi_2_pi(particle.yaw + b))
+        s = sin(self.pi_2_pi(particle.yaw + b))
+        c = cos(self.pi_2_pi(particle.yaw + b))
 
-        particle.lm[lm_id, 0] = particle.x + r * c
-        particle.lm[lm_id, 1] = particle.y + r * s
+        new_lm = np.array([particle.x + r * c, particle.y + r * s]).reshape(1, LM_SIZE)
+        particle.lm = np.vstack((particle.lm, new_lm))
 
         # covariance
         Gz = np.array([[c, -r * s],
                        [s, r * c]])
 
-        particle.lmP[2 * lm_id:2 * lm_id + 2] = Gz @ Q_cov @ Gz.T
+        particle.lmP = np.vstack((particle.lmP, Gz @ sensor_noise @ Gz.T))
 
         return particle
 
-    def compute_jacobians(self, particle, xf, Pf, Q_cov):
+    def compute_jacobians(self, particle, xf, Pf):
         dx = xf[0, 0] - particle.x
         dy = xf[1, 0] - particle.y
         d2 = dx ** 2 + dy ** 2
-        d = math.sqrt(d2)
+        d = sqrt(d2)
 
         zp = np.array(
-            [d, self.pi_2_pi(math.atan2(dy, dx) - particle.yaw)]).reshape(2, 1)
+            [d, self.pi_2_pi(atan2(dy, dx) - particle.yaw)]).reshape(2, 1)
 
         Hv = np.array([[-dx / d, -dy / d, 0.0],
                        [dy / d2, -dx / d2, -1.0]])
@@ -136,13 +133,13 @@ class FastSlam:
         Hf = np.array([[dx / d, dy / d],
                        [-dy / d2, dx / d2]])
 
-        Sf = Hf @ Pf @ Hf.T + Q_cov
+        Sf = Hf @ Pf @ Hf.T + sensor_noise
 
         return zp, Hv, Hf, Sf
 
-    def update_kf_with_cholesky(self, xf, Pf, v, Q_cov, Hf):
+    def update_kf_with_cholesky(self, xf, Pf, v, Hf):
         PHt = Pf @ Hf.T
-        S = Hf @ PHt + Q_cov
+        S = Hf @ PHt + sensor_noise
 
         S = (S + S.T) * 0.5
         SChol = np.linalg.cholesky(S).T
@@ -155,28 +152,28 @@ class FastSlam:
 
         return x, P
 
-    def update_landmark(self, particle, z, Q_cov):
+    def update_landmark(self, particle, z):
         lm_id = int(z[2])
         xf = np.array(particle.lm[lm_id, :]).reshape(2, 1)
         Pf = np.array(particle.lmP[2 * lm_id:2 * lm_id + 2, :])
 
-        zp, Hv, Hf, Sf = self.compute_jacobians(particle, xf, Pf, sensor_noise)
+        zp, Hv, Hf, Sf = self.compute_jacobians(particle, xf, Pf)
 
         dz = z[0:2].reshape(2, 1) - zp
         dz[1, 0] = self.pi_2_pi(dz[1, 0])
 
-        xf, Pf = self.update_kf_with_cholesky(xf, Pf, dz, Q_cov, Hf)
+        xf, Pf = self.update_kf_with_cholesky(xf, Pf, dz, Hf)
 
         particle.lm[lm_id, :] = xf.T
         particle.lmP[2 * lm_id:2 * lm_id + 2, :] = Pf
 
         return particle
 
-    def compute_weight(self, particle, z, Q_cov):
+    def compute_weight(self, particle, z):
         lm_id = int(z[2])
         xf = np.array(particle.lm[lm_id, :]).reshape(2, 1)
         Pf = np.array(particle.lmP[2 * lm_id:2 * lm_id + 2])
-        zp, Hv, Hf, Sf = self.compute_jacobians(particle, xf, Pf, Q_cov)
+        zp, Hv, Hf, Sf = self.compute_jacobians(particle, xf, Pf)
 
         dx = z[0:2].reshape(2, 1) - zp
         dx[1, 0] = self.pi_2_pi(dx[1, 0])
@@ -187,8 +184,8 @@ class FastSlam:
             print("singuler")
             return 1.0
 
-        num = math.exp(-0.5 * dx.T @ invS @ dx)
-        den = 2.0 * math.pi * math.sqrt(np.linalg.det(Sf))
+        num = exp(-0.5 * dx.T @ invS @ dx)
+        den = 2.0 * pi * sqrt(np.linalg.det(Sf))
 
         w = num / den
 
@@ -206,11 +203,11 @@ class FastSlam:
                 nLM = get_n_lms(particle.lm)
 
                 if minid == nLM:   # If the landmark is new
-                    self.add_new_lm(particle, np.asarray([distance, theta, minid]), sensor_noise)
+                    self.add_new_lm(particle, np.asarray([distance, theta, minid]))
                 else:
-                    w = self.compute_weight(particle, np.asarray([distance, theta, minid]), sensor_noise)
+                    w = self.compute_weight(particle, np.asarray([distance, theta, minid]))
                     particle.w *= w
-                    self.update_landmark(particle, np.asarray([distance, theta, minid]), sensor_noise)
+                    self.update_landmark(particle, np.asarray([distance, theta, minid]))
 
         return particles
 
@@ -252,19 +249,19 @@ class FastSlam:
     # The motion model for a motion command u = (velocity, angular velocity)
     def motion_model(self, x, u):
         if u[1, 0] == 0:
-            B = np.array([[self.dt * math.cos(x[2, 0]) * u[0, 0]],
-                          [self.dt * math.sin(x[2, 0]) * u[0, 0]],
+            B = np.array([[self.dt * cos(x[2, 0]) * u[0, 0]],
+                          [self.dt * sin(x[2, 0]) * u[0, 0]],
                           [0.0]])
         else:
-            B = np.array([[u[0, 0] / u[1, 0] * (math.sin(x[2, 0] + self.dt * u[1, 0]) - math.sin(x[2, 0]))],
-                          [u[0, 0] / u[1, 0] * (-math.cos(x[2, 0] + self.dt * u[1, 0]) + math.cos(x[2, 0]))],
+            B = np.array([[u[0, 0] / u[1, 0] * (sin(x[2, 0] + self.dt * u[1, 0]) - sin(x[2, 0]))],
+                          [u[0, 0] / u[1, 0] * (-cos(x[2, 0] + self.dt * u[1, 0]) + cos(x[2, 0]))],
                           [u[1, 0] * self.dt]])
         res = x + B
         res[2] = self.pi_2_pi(res[2])
         return res
 
     def pi_2_pi(self, angle):
-        return (angle + math.pi) % (2 * math.pi) - math.pi
+        return (angle + pi) % (2 * pi) - pi
 
 
 
@@ -281,7 +278,7 @@ def search_correspond_landmark_id(x, lm, z):
     for i in range(nLM):
         lm_i = lm[i]
         delta = lm_i - measured_lm
-        distance = math.sqrt(delta[0, 0] ** 2 + delta[0, 1] ** 2)
+        distance = sqrt(delta[0, 0] ** 2 + delta[0, 1] ** 2)
         mdist.append(distance)
 
     mdist.append(M_DIST_TH)  # new landmark
@@ -292,13 +289,10 @@ def search_correspond_landmark_id(x, lm, z):
 
 def calc_landmark_position(x, z):
     zp = np.zeros((1, 2))
-    zp[0, 0] = x[0, 0] + z[0] * math.cos(z[1] + x[2, 0])
-    zp[0, 1] = x[1, 0] + z[0] * math.sin(z[1] + x[2, 0])
+    zp[0, 0] = x[0, 0] + z[0] * cos(z[1] + x[2, 0])
+    zp[0, 1] = x[1, 0] + z[0] * sin(z[1] + x[2, 0])
     return zp
 
 
 def get_n_lms(lm):
-    n = 0
-    while lm[n, 0] != 0 or lm[n, 1] != 0:
-        n += 1
-    return n
+    return lm.shape[0]
