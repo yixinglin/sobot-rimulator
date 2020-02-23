@@ -25,15 +25,16 @@ import numpy as np
 
 class SlamPlotter:
 
-    def __init__(self, slam, viewer, radius, robot_config):
+    def __init__(self, slam, viewer, radius, robot_config, frame_number):
         self.slam = slam
         self.viewer = viewer
+        self.frame_number = frame_number
         self.robot_bottom_shape = robot_config["bottom_plate"]
         self.robot_top_shape = robot_config["top_plate"]
         self.radius = radius
 
     def draw_slam_to_frame(self):
-        frame = self.viewer.current_frames[1]
+        frame = self.viewer.current_frames[self.frame_number]
         self.__draw_robot_to_frame(frame, self.slam.get_estimated_pose())
 
         # draw all the obstacles

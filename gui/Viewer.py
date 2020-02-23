@@ -56,7 +56,7 @@ class Viewer:
         # initialize the drawing_areas
         self.drawing_areas = []
         # This list contains the drawing functions for the frames. The list has same length as number of frames.
-        on_expose_functions = [self.on_expose, self.on_expose2][:self.num_frames]
+        on_expose_functions = [self.on_expose1, self.on_expose2, self.on_expose3][:self.num_frames]
         for on_expose in on_expose_functions:
             drawing_area = gtk.DrawingArea()
             drawing_area.set_size_request(self.view_width_pixels, self.view_height_pixels)
@@ -285,11 +285,14 @@ class Viewer:
     def on_plot_covariances(self, widget):
         self.simulator.slam_plotter.plot_covariances()
 
-    def on_expose(self, widget, context):
+    def on_expose1(self, widget, context):
         self.painter.draw_frame(self.current_frames[0], widget, context)
 
     def on_expose2(self, widget, context):
         self.painter.draw_frame(self.current_frames[1], widget, context)
+
+    def on_expose3(self, widget, context):
+        self.painter.draw_frame(self.current_frames[2], widget, context)
 
     def on_delete(self, widget, event):
         gtk.main_quit()

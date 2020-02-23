@@ -1,5 +1,8 @@
 # Disrecte time
 period: 0.05
+
+use_ekfslam: true
+use_fastslam: true
 # Configures the robot
 # These values are inspired by the Khepera III robot
 robot:
@@ -66,9 +69,9 @@ robot:
 # Configures the GUI
 viewer:
   # Number of frames
-  num_frames: 2
+  num_frames: 3
   # Number of pixels per row
-  pixels_width: 700
+  pixels_width: 500
   # Number of pixels per column
   pixels_height: 600
   # Pixels per meter

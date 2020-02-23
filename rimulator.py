@@ -42,10 +42,11 @@ from simulation.exceptions import CollisionException
 
 class Simulator:
 
-    def __init__(self, cfg, useEKF=True):
+    def __init__(self, cfg):
         # create the GUI
         self.viewer = gui.Viewer.Viewer(self, cfg["viewer"])
-        self.slam_plotter = None
+        self.ekfslam_plotter = None
+        self.fastslam_plotter = None
         self.world_plotter = None
 
         # create the map manager
@@ -56,7 +57,6 @@ class Simulator:
         self.period = cfg["period"]
 
         self.cfg = cfg
-        self.useEKF = useEKF
 
         # gtk simulation event source - for simulation control
         self.sim_event_source = GLib.idle_add(self.initialize_sim, True)  # we use this opportunity to initialize the sim
@@ -74,7 +74,7 @@ class Simulator:
         # create the robot
         robot = Robot(self.cfg["robot"])
         # Assign supervisor to the robot
-        robot.supervisor = Supervisor(RobotSupervisorInterface(robot), self.cfg, useEKF=self.useEKF)
+        robot.supervisor = Supervisor(RobotSupervisorInterface(robot), self.cfg)
         self.world.add_robot(robot)
 
         # generate a random environment
@@ -85,8 +85,10 @@ class Simulator:
 
         # create the world view
         self.world_plotter = WorldPlotter(self.world, self.viewer)
-        if cfg["viewer"]["num_frames"] > 1:
-            self.slam_plotter = SlamPlotter(self.world.supervisors[0].slam, self.viewer, self.cfg["map"]["obstacle"]["radius"], self.cfg["robot"])
+        if self.cfg["use_ekfslam"]:
+            self.ekfslam_plotter = SlamPlotter(self.world.supervisors[0].ekfslam, self.viewer, self.cfg["map"]["obstacle"]["radius"], self.cfg["robot"], 1)
+        if self.cfg["use_fastslam"]:
+            self.fastslam_plotter = SlamPlotter(self.world.supervisors[0].fastslam, self.viewer, self.cfg["map"]["obstacle"]["radius"], self.cfg["robot"], 2)
 
         # render the initial world
         self.draw_world()
@@ -127,8 +129,10 @@ class Simulator:
     def draw_world(self):
         self.viewer.new_frame()  # start a fresh frame
         self.world_plotter.draw_world_to_frame()  # draw the world onto the frame
-        if self.slam_plotter is not None:
-            self.slam_plotter.draw_slam_to_frame()
+        if self.ekfslam_plotter is not None:
+            self.ekfslam_plotter.draw_slam_to_frame()
+        if self.fastslam_plotter is not None:
+            self.fastslam_plotter.draw_slam_to_frame()
         self.viewer.draw_frame()  # render the frame
 
     def _run_sim(self):
@@ -153,4 +157,4 @@ if __name__ == "__main__":
     filename = "config.yaml" if len(sys.argv) == 1 else sys.argv[1]
     with open(filename, 'r') as ymlfile:
         cfg = yaml.safe_load(ymlfile)
-    Simulator(cfg, useEKF=False)
+    Simulator(cfg)
