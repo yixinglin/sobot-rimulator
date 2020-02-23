@@ -32,14 +32,14 @@ LS_DIALOG_RESPONSE_ACCEPT = 2
 
 class Viewer:
 
-    def __init__(self, simulator, viewer_config):
+    def __init__(self, simulator, viewer_config, num_frames):
         # bind the simulator
         self.simulator = simulator
 
         self.cfg = viewer_config
 
         # initialize camera parameters
-        self.num_frames = viewer_config["num_frames"]
+        self.num_frames = num_frames
         self.view_width_pixels = viewer_config["pixels_width"]
         self.view_height_pixels = viewer_config["pixels_height"]
         self.pixels_per_meter = viewer_config["zoom"]

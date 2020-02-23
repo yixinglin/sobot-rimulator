@@ -68,11 +68,9 @@ robot:
 
 # Configures the GUI
 viewer:
-  # Number of frames
-  num_frames: 3
-  # Number of pixels per row
+  # Number of pixels per row of a frame
   pixels_width: 500
-  # Number of pixels per column
+  # Number of pixels per column of a frame
   pixels_height: 600
   # Pixels per meter
   zoom: 100

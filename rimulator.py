@@ -44,7 +44,12 @@ class Simulator:
 
     def __init__(self, cfg):
         # create the GUI
-        self.viewer = gui.Viewer.Viewer(self, cfg["viewer"])
+        self.num_frames = 1
+        if cfg["use_ekfslam"]:
+            self.num_frames += 1
+        if cfg["use_fastslam"]:
+            self.num_frames += 1
+        self.viewer = gui.Viewer.Viewer(self, cfg["viewer"], self.num_frames)
         self.ekfslam_plotter = None
         self.fastslam_plotter = None
         self.world_plotter = None
@@ -88,7 +93,11 @@ class Simulator:
         if self.cfg["use_ekfslam"]:
             self.ekfslam_plotter = SlamPlotter(self.world.supervisors[0].ekfslam, self.viewer, self.cfg["map"]["obstacle"]["radius"], self.cfg["robot"], 1)
         if self.cfg["use_fastslam"]:
-            self.fastslam_plotter = SlamPlotter(self.world.supervisors[0].fastslam, self.viewer, self.cfg["map"]["obstacle"]["radius"], self.cfg["robot"], 2)
+            if self.num_frames == 3:
+                frame_num = 2
+            else:
+                frame_num = 1
+            self.fastslam_plotter = SlamPlotter(self.world.supervisors[0].fastslam, self.viewer, self.cfg["map"]["obstacle"]["radius"], self.cfg["robot"], frame_num)
 
         # render the initial world
         self.draw_world()
