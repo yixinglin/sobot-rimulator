@@ -34,9 +34,9 @@ robot:
     min_range: 0.02
     # Maximum detection range of the sensor in meters
     max_range: 1
-    # Value that is read at minimum range
-    min_read_value: 18
     # Value that is read at maximum range
+    min_read_value: 18
+    # Value that is read at minimum range
     max_read_value: 3960
     # Specificies the poses and number of sensors
     # Each pose is composed of x position, y position and angle in degrees
