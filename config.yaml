@@ -106,9 +106,12 @@ map:
 control:
   # If robot is closer than this distance to the goal, it is considered as reached
   goal_reached_distance: 0.05
-  # TODO: Add comments
-  caution_distance: 0.15
-  danger_distance: 0.04
+  # If a sensor measures a distance smaller than the danger distance, the robot immediately starts moving into the opposite direction
+  danger_distance: 0.06
+  # If a sensor measures a distance smaller than the caution distance, the robot will follow the wall of the obstacle
+  # Set to danger_distanceto disable wall following, since the map contains small, circle-like objects, where wall following can lead to looping around an object
+  caution_distance: 0.06
+  # Criterion for stopping the following of a wall
   progress_epsilon: 0.05
 
 # Configures the SLAM system

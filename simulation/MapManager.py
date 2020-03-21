@@ -23,7 +23,7 @@ from random import *
 import utils.geometrics_util as geometrics
 from models.obstacles.CircleObstacle import CircleObstacle
 from models.Pose import Pose
-from models.obstacles.RectangleObstacle import *
+from models.Polygon import Polygon
 
 seed(42)
 
