@@ -39,6 +39,10 @@ class SupervisorControllerInterface:
     def proximity_sensor_distances(self):
         return self.supervisor.proximity_sensor_distances
 
+    # get the robot's proximity sensor read values converted to real distances in meters
+    def proximity_sensor_distances_from_robot_center(self):
+        return self.supervisor.proximity_sensor_distances_from_robot_center
+
     def proximity_sensor_max_range(self):
         return self.supervisor.proximity_sensor_max_range
 

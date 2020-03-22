@@ -45,6 +45,7 @@ class Supervisor:
         # proximity sensor information
         self.proximity_sensor_placements = [Pose(rawpose[0], rawpose[1], radians(rawpose[2])) for rawpose in
                                             self.robot_cfg["sensor"]["poses"]]
+        self.proximity_sensor_placements_distances_to_robot_center = [sqrt(p.x ** 2 + p. y ** 2) for p in self.proximity_sensor_placements]  # Assumption: robot is centered at origin in config
         self.proximity_sensor_min_range = self.robot_cfg["sensor"]["min_range"]
         self.proximity_sensor_max_range = self.robot_cfg["sensor"]["max_range"]
         self.proximity_sensor_min_read_value = self.robot_cfg["sensor"]["min_read_value"]
@@ -82,7 +83,8 @@ class Supervisor:
         self.state_machine = SupervisorStateMachine(self, self.control_cfg)
 
         # state
-        self.proximity_sensor_distances = [0.0, 0.0] * len(self.robot_cfg["sensor"]["poses"])  # sensor distances
+        self.proximity_sensor_distances = [0.0] * len(self.robot_cfg["sensor"]["poses"])  # sensor distances
+        self.proximity_sensor_distances_from_robot_center = [0.0] * len(self.robot_cfg["sensor"]["poses"])  # measured distances from the robots center
         self.estimated_pose = Pose(*initial_pose_args)  # estimated pose
         self.current_controller = self.go_to_goal_controller  # current controller
 
@@ -117,9 +119,9 @@ class Supervisor:
         self.current_controller.execute()  # apply the current controller
         v, yaw = self._diff_to_uni(self.v_l, self.v_r)
         if self.ekfslam is not None:
-            self.ekfslam.execute(np.array([[v], [yaw]]), self.proximity_sensor_distances)
+            self.ekfslam.execute(np.array([[v], [yaw]]), self.proximity_sensor_distances_from_robot_center)
         if self.fastslam is not None:
-            self.fastslam.execute(np.array([[v], [yaw]]), self.proximity_sensor_distances)
+            self.fastslam.execute(np.array([[v], [yaw]]), self.proximity_sensor_distances_from_robot_center)
         self._send_robot_commands()  # output the generated control signals to the robot
 
     # update the estimated robot state and the control state
@@ -147,6 +149,10 @@ class Supervisor:
             [self.proximity_sensor_min_range + (
                 log(readval / self.proximity_sensor_max_read_value)) / self.sensor_conversion_factor
              for readval in self.robot.read_proximity_sensors()]
+        self.proximity_sensor_distances_from_robot_center = \
+            [measured_distance + sensor_placement_distance
+             for (measured_distance, sensor_placement_distance) in
+             zip(self.proximity_sensor_distances, self.proximity_sensor_placements_distances_to_robot_center)]
 
     # update the estimated position of the robot using it's wheel encoder readings
     def _update_odometry(self):
