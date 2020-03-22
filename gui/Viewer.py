@@ -299,7 +299,7 @@ class Viewer:
         self.simulator.draw_world()
 
     def on_plot_covariances(self, widget):
-        self.simulator.slam_plotter.plot_covariances()
+        self.simulator.ekfslam_plotter.plot_covariances()
 
     def on_expose1(self, widget, context):
         self.painter.draw_frame(self.current_frames[0], widget, context)
