@@ -16,7 +16,7 @@ def pi_2_pi(angle):
 
 def calc_landmark_position(x, z):
     zp = np.zeros((2, 1))
-    zp[0, 0] = x[0, 0] + z[0] * cos(z[1] + x[2, 0])  # TODO: See if adding a constant to z[0] helps to compensate for the robot size (but then add it to measurement instead)
+    zp[0, 0] = x[0, 0] + z[0] * cos(z[1] + x[2, 0])
     zp[1, 0] = x[1, 0] + z[0] * sin(z[1] + x[2, 0])
     return zp
 
@@ -97,7 +97,7 @@ class EKFSlam:
         self.distance_threshold = slam_cfg["distance_threshold"]
 
         self.xEst = np.zeros((STATE_SIZE, 1))
-        self.PEst = np.zeros((STATE_SIZE, STATE_SIZE))  # TODO: Initialize with identity or 0 matrix??
+        self.PEst = np.zeros((STATE_SIZE, STATE_SIZE))
 
     def execute(self, u, z):
         # Predict
