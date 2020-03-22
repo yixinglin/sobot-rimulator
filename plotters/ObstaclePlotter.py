@@ -22,7 +22,7 @@ class ObstaclePlotter:
     def __init__(self, obstacle):
         self.obstacle = obstacle
 
-    def draw_obstacle_to_frame(self, frame):
+    def draw_obstacle_to_frame(self, frame, color="dark red", alpha=0.4):
         obstacle = self.obstacle
 
         # grab the obstacle pose
@@ -31,8 +31,8 @@ class ObstaclePlotter:
         # draw the obstacle to the frame
         obstacle_poly = obstacle.global_geometry.vertexes
         frame.add_polygons([obstacle_poly],
-                           color="dark red",
-                           alpha=0.4)
+                           color=color,
+                           alpha=alpha)
 
         # === FOR DEBUGGING: ===
         # self._draw_bounding_circle_to_frame()
