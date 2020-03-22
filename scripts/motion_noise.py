@@ -25,10 +25,10 @@ def motion_model(vs, ws, dt):
 def set_axes(plt):
     axes = plt.gca()
     axes.set_xlim([-1, 0.2])
-    axes.set_ylim([0, 1])
+    axes.set_ylim([0, 1.2])
 
 
-def noisyCommand():
+def noiseBeforeCommand():
     set_axes(plt)
     v = vm + np.random.normal(scale=.05, size=N)
     w = wm + np.random.normal(scale=0.6, size=N)
@@ -37,18 +37,20 @@ def noisyCommand():
     x, y = motion_model(v, w, 1)
     plt.scatter(x, y, s=.2, c="black")
     plt.plot(motion_model(vm, wm, time)[0], motion_model(vm, wm, time)[1])
-    plt.show()
+    plt.savefig('noise_before_command.png')
+    plt.close()
 
 
-def noisyResult():
+def noiseAfterCommand():
     set_axes(plt)
     x, y = motion_model(vm, wm, 1)
-    x = x + np.random.normal(scale=.05, size=N)
-    y = y + np.random.normal(scale=.05, size=N)
+    x = x + np.random.normal(scale=.075, size=N)
+    y = y + np.random.normal(scale=.075, size=N)
     plt.scatter(x, y, s=.2, c="black")
     plt.plot(motion_model(vm, wm, time)[0], motion_model(vm, wm, time)[1])
-    plt.show()
+    plt.savefig('noise_after_command.png')
+    plt.close()
 
 
-noisyCommand()
-noisyResult()
+noiseBeforeCommand()
+noiseAfterCommand()
