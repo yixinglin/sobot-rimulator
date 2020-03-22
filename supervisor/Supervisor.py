@@ -116,12 +116,8 @@ class Supervisor:
     # execute one control loop
     def _execute(self):
         self._update_state()  # update state
+        self._update_slam()
         self.current_controller.execute()  # apply the current controller
-        v, yaw = self._diff_to_uni(self.v_l, self.v_r)
-        if self.ekfslam is not None:
-            self.ekfslam.execute(np.array([[v], [yaw]]), self.proximity_sensor_distances_from_robot_center)
-        if self.fastslam is not None:
-            self.fastslam.execute(np.array([[v], [yaw]]), self.proximity_sensor_distances_from_robot_center)
         self._send_robot_commands()  # output the generated control signals to the robot
 
     # update the estimated robot state and the control state
@@ -183,6 +179,13 @@ class Supervisor:
         # save the current tick count for the next iteration
         self.prev_ticks_left = ticks_left
         self.prev_ticks_right = ticks_right
+
+    def _update_slam(self):
+        v, yaw = self._diff_to_uni(self.v_l, self.v_r)  # Retrieve the previous motion command
+        if self.ekfslam is not None:
+            self.ekfslam.execute(np.array([[v], [yaw]]), self.proximity_sensor_distances_from_robot_center)
+        if self.fastslam is not None:
+            self.fastslam.execute(np.array([[v], [yaw]]), self.proximity_sensor_distances_from_robot_center)
 
     # generate and send the correct commands to the robot
     def _send_robot_commands(self):
