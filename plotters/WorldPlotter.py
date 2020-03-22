@@ -57,7 +57,7 @@ class WorldPlotter:
             obstacle_plotter.draw_obstacle_to_frame(self.viewer.current_frames[0])
             if self.viewer.draw_invisibles:
                 for frame in self.viewer.current_frames[1:]:
-                    obstacle_plotter.draw_obstacle_to_frame(frame, "black", alpha=0.8)
+                    obstacle_plotter.draw_obstacle_to_frame(frame)
 
     def _draw_grid_to_frame(self):
         # NOTE: THIS FORMULA ASSUMES THE FOLLOWING:

@@ -41,7 +41,7 @@ class SlamPlotter:
         for landmark in self.slam.get_landmarks():
             obstacle = CircleObstacle(self.radius, Pose(landmark[0], landmark[1], 0))
             obstacle_plotter = ObstaclePlotter(obstacle)
-            obstacle_plotter.draw_obstacle_to_frame(frame)
+            obstacle_plotter.draw_obstacle_to_frame(frame, "black", alpha=0.6)
 
         if self.viewer.draw_invisibles and True is False:
             self.__draw_confidence_ellipse(frame)
