@@ -15,11 +15,11 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # 
 # Email mccrea.engineering@gmail.com for questions, comments, or to report bugs.
-from supervisor.controllers.FastSlam import FastSlam
+from supervisor.slam.FastSlam import FastSlam
 from supervisor.controllers.GTGAndAOController import *
 from supervisor.controllers.FollowWallController import *
 from supervisor.controllers.GoToAngleController import *
-from supervisor.controllers.EKFSlam import *
+from supervisor.slam.EKFSlam import *
 from supervisor.SupervisorControllerInterface import *
 from supervisor.SupervisorStateMachine import *
 
