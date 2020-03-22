@@ -53,6 +53,15 @@ class Viewer:
         self.window.set_resizable(False)
         self.window.connect('delete_event', self.on_delete)
 
+        # Define labels of the drawing areas
+        label_strings = ["World", "EKF SLAM", "FastSLAM"][:self.num_frames]  # The second label is wrong if only 2 frames are used and FastSLAM is activated instead of EKFSLAM
+        self.labels = []
+        for label_string in label_strings:
+            label = gtk.Label()
+            label.set_text(label_string)
+            self.labels.append(label)
+
+
         # initialize the drawing_areas
         self.drawing_areas = []
         # This list contains the drawing functions for the frames. The list has same length as number of frames.
@@ -139,6 +148,12 @@ class Viewer:
 
         # == lay out the window
 
+        labels_box = gtk.HBox(spacing=self.view_width_pixels - 52)  # Subtract number of pixels that the text of the labels roughly need
+        for label in self.labels:
+            labels_box.pack_start(label, False, False, 0)
+        labels_alignment = gtk.Alignment(xalign=0.5, yalign=0.5, xscale=0, yscale=0)
+        labels_alignment.add(labels_box)
+
         plots_box = gtk.HBox(spacing=5)
         for drawing_area in self.drawing_areas:
             plots_box.pack_start(drawing_area, False, False, 0)
@@ -176,6 +191,7 @@ class Viewer:
 
         # lay out the simulation view and all of the controls
         layout_box = gtk.VBox()
+        layout_box.pack_start(labels_alignment, False, False, 5)
         layout_box.pack_start(plots_alignment, False, False, 0)
         layout_box.pack_start(self.alert_box, False, False, 5)
         layout_box.pack_start(sim_controls_alignment, False, False, 5)
