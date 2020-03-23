@@ -37,7 +37,7 @@ class FastSlam:
     def __init__(self, supervisor_interface, slam_cfg, step_time):
         self.supervisor = supervisor_interface
         self.dt = step_time
-        self.distance_threshold = slam_cfg["distance_threshold"] / 2  # Dividing by 2, since different data association is used
+        self.distance_threshold = slam_cfg["distance_threshold"] / 2  # TODO: Dividing by 2, since different data association is used
         self.particles = [Particle() for _ in range(N_PARTICLE)]
 
     def execute(self, u, z):

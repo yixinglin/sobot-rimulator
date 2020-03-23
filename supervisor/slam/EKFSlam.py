@@ -102,8 +102,8 @@ class EKFSlam:
     def execute(self, u, z):
         # Predict
         S = STATE_SIZE
-        self.xEst[0:S] = self.motion_model(self.xEst[0:S], u, self.dt)
         G = self.jacob_motion(self.xEst[0:S], u, self.dt)
+        self.xEst[0:S] = self.motion_model(self.xEst[0:S], u, self.dt)
         self.PEst[0:S, 0:S] = G.T @ self.PEst[0:S, 0:S] @ G + motion_noise
         # Update
         assert len(z) == len(self.supervisor.proximity_sensor_placements())
