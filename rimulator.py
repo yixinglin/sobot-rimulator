@@ -46,11 +46,11 @@ class Simulator:
     def __init__(self, cfg):
         # create the GUI
         self.num_frames = 1
-        if cfg["use_ekfslam"]:
+        if cfg["slam"]["ekf_slam"]["enabled"]:
             self.num_frames += 1
-        if cfg["use_fastslam"]:
+        if cfg["slam"]["fast_slam"]["enabled"]:
             self.num_frames += 1
-        self.viewer = gui.Viewer.Viewer(self, cfg["viewer"], self.num_frames, cfg["use_ekfslam"], cfg["slam"]["evaluation"]["enabled"])
+        self.viewer = gui.Viewer.Viewer(self, cfg["viewer"], self.num_frames, cfg["slam"]["ekf_slam"]["enabled"], cfg["slam"]["evaluation"]["enabled"])
         self.ekfslam_plotter = None
         self.fastslam_plotter = None
         self.ekfslam_evaluation = None
@@ -96,11 +96,11 @@ class Simulator:
 
         # create the world view
         self.world_plotter = WorldPlotter(self.world, self.viewer)
-        if self.cfg["use_ekfslam"]:
+        if cfg["slam"]["ekf_slam"]["enabled"]:
             self.ekfslam_plotter = SlamPlotter(self.world.supervisors[0].ekfslam, self.viewer, self.cfg["map"]["obstacle"]["radius"], self.cfg["robot"], 1)
             if self.cfg["slam"]["evaluation"]["enabled"]:
                 self.ekfslam_evaluation = SlamEvaluation(self.world.supervisors[0].ekfslam, self.cfg["slam"]["evaluation"], ekf=True)
-        if self.cfg["use_fastslam"]:
+        if cfg["slam"]["fast_slam"]["enabled"]:
             if self.num_frames == 3:
                 frame_num = 2
             else:

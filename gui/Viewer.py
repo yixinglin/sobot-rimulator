@@ -32,12 +32,12 @@ LS_DIALOG_RESPONSE_ACCEPT = 2
 
 class Viewer:
 
-    def __init__(self, simulator, viewer_config, num_frames, use_ekf=True, use_slam_evaluation=True):
+    def __init__(self, simulator, viewer_config, num_frames, ekf_enabled=True, use_slam_evaluation=True):
         # bind the simulator
         self.simulator = simulator
 
         self.cfg = viewer_config
-        self.use_ekf = use_ekf
+        self.ekf_enabled = ekf_enabled
         self.use_slam_evaluation = use_slam_evaluation
 
         # initialize camera parameters
@@ -56,7 +56,7 @@ class Viewer:
         self.window.connect('delete_event', self.on_delete)
 
         # Define labels of the drawing areas
-        if use_ekf:
+        if self.ekf_enabled:
             label_strings = ["World", "EKF SLAM", "FastSLAM"][:self.num_frames]
         else:
             label_strings = ["World", "FastSLAM"][:self.num_frames]
@@ -186,7 +186,7 @@ class Viewer:
         # pack the information buttons
         information_box = gtk.HBox()
         information_box.pack_start(self.button_draw_invisibles, False, False, 0)
-        if self.use_ekf:
+        if self.ekf_enabled:
             information_box.pack_start(self.button_plot_covariances, False, False, 0)
         if num_frames > 1 and self.use_slam_evaluation:
             information_box.pack_start(self.button_slam_evaluation, False, False, 0)

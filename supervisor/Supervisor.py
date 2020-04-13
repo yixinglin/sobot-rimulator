@@ -72,11 +72,11 @@ class Supervisor:
         # slam
         self.ekfslam = None
         self.fastslam = None
-        if cfg["use_ekfslam"]:
-            print("Using EKFSlam")
+        if cfg["slam"]["ekf_slam"]["enabled"]:
+            print("Using EKF SLAM")
             self.ekfslam = EKFSlam(controller_interface, cfg["slam"], step_time=cfg["period"])
-        if cfg["use_fastslam"]:
-            print("Using FastSlam")
+        if cfg["slam"]["fast_slam"]["enabled"]:
+            print("Using FastSLAM")
             self.fastslam = FastSlam(controller_interface, cfg["slam"], step_time=cfg["period"])
 
         # state machine

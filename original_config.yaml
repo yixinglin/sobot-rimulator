@@ -1,12 +1,13 @@
 # Disrecte time
 period: 0.05
+
 # Configures the robot
 # These values are inspired by the Khepera III robot
 robot:
   # Maximum translational velocity in m/s
-  max_transl_vel: 1
+  max_transl_vel: 0.3148
   # Maximum angular velocity in rad/s
-  max_ang_vel: 5
+  max_ang_vel: 2.2763
   # Polygon specifying the shape of the robot
   bottom_plate: [[-0.024, 0.064],
                  [0.033, 0.064],
@@ -33,7 +34,7 @@ robot:
     # Minimum detection range of the sensor in meters
     min_range: 0.02
     # Maximum detection range of the sensor in meters
-    max_range: 1
+    max_range: 0.2
     # Value that is read at maximum range
     min_read_value: 18
     # Value that is read at minimum range
@@ -61,15 +62,13 @@ robot:
     # Value returned by wheel odometry per revolution
     ticks_per_rev: 2765
     # Maximum speed of the wheel in rad/s
-    max_speed: 50.0
+    max_speed: 15.0
 
 # Configures the GUI
 viewer:
-  # Number of frames
-  num_frames: 2
-  # Number of pixels per row
-  pixels_width: 700
-  # Number of pixels per column
+  # Number of pixels per row of a frame
+  pixels_width: 500
+  # Number of pixels per column of a frame
   pixels_height: 600
   # Pixels per meter
   zoom: 100
@@ -83,11 +82,11 @@ map:
   # Configures the generated obstacles
   obstacle:
     # Radius of obstacles
-    radius: 0.1
+    radius: 0.04
     # Minimum amount of generated obstacles
-    min_count: 5
+    min_count: 25
     # Maximum amount of generated obstacles
-    max_count: 15
+    max_count: 50
     # Minimum distance to origin
     min_distance: 0.2
     # Maximum distance to origin
@@ -105,9 +104,12 @@ map:
 control:
   # If robot is closer than this distance to the goal, it is considered as reached
   goal_reached_distance: 0.05
-  # TODO: Update this config file
-  caution_distance: 0.15
-  danger_distance: 0.04
+  # If a sensor measures a distance smaller than the danger distance, the robot immediately starts moving into the opposite direction
+  danger_distance: 0.06
+  # If a sensor measures a distance smaller than the caution distance, the robot will follow the wall of the obstacle
+  # Set to danger_distanceto disable wall following, since the map contains small, circle-like objects, where wall following can lead to looping around an object
+  caution_distance: 0.06
+  # Criterion for stopping the following of a wall
   progress_epsilon: 0.05
 
 # Configures the SLAM system
@@ -120,5 +122,22 @@ slam:
   # These are x position and y position
   # Currently only supports 2
   landmark_state_size: 2
-  # The mahalanobis distance threshold used in data association
-  distance_threshold: 0.3
+  ekf_slam:
+    # Determines whether the EKF SLAM algorithm shall be executed
+    enabled: true
+    # The mahalanobis distance threshold used in data association
+    distance_threshold: 1
+  fast_slam:
+    # Determines whether the FastSLAM algorithm shall be executed
+    enabled: true
+    # The mahalanobis distance threshold used in data association
+    distance_threshold: 0.15
+    # The number of used particles
+    n_particles: 100
+  # Configures the evaluation of the slam algorithms
+  evaluation:
+    # Determines whether the accuracy of the generated maps shall be evaluated
+    enabled: true
+    # Determines the period of when the accuracy of the generated maps is calculated
+    # A low period (for example 1) causes performance problems
+    period: 20

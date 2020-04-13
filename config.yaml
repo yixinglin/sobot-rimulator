@@ -1,8 +1,6 @@
 # Disrecte time
 period: 0.05
 
-use_ekfslam: true
-use_fastslam: true
 # Configures the robot
 # These values are inspired by the Khepera III robot
 robot:
@@ -125,9 +123,13 @@ slam:
   # Currently only supports 2
   landmark_state_size: 2
   ekf_slam:
+    # Determines whether the EKF SLAM algorithm shall be executed
+    enabled: false
     # The mahalanobis distance threshold used in data association
     distance_threshold: 1
   fast_slam:
+    # Determines whether the FastSLAM algorithm shall be executed
+    enabled: true
     # The mahalanobis distance threshold used in data association
     distance_threshold: 0.15
     # The number of used particles
