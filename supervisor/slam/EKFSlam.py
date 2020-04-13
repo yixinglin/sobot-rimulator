@@ -87,7 +87,7 @@ class EKFSlam:
         # Extract relevant configurations
         self.dt = step_time
         self.obs_radius = obs_radius
-        self.distance_threshold = slam_cfg["distance_threshold"]
+        self.distance_threshold = slam_cfg["ekf_slam"]["distance_threshold"]
 
         self.xEst = np.zeros((STATE_SIZE, 1))
         self.PEst = np.zeros((STATE_SIZE, STATE_SIZE))
@@ -103,7 +103,7 @@ class EKFSlam:
         for iz, (distance, theta) in enumerate(z):
             if distance >= self.supervisor.proximity_sensor_max_range() - 0.01:  # only execute if landmark is observed
                 continue
-            distance += self.obs_radius  # TODO: Rethink this
+            distance += self.obs_radius  # TODO: Remove this
             minid = search_correspond_landmark_id(self.xEst, self.PEst, [distance, theta], self.distance_threshold)
 
             nLM = get_n_lm(self.xEst)

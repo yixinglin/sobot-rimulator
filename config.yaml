@@ -1,7 +1,7 @@
 # Disrecte time
 period: 0.05
 
-use_ekfslam: true
+use_ekfslam: false
 use_fastslam: true
 # Configures the robot
 # These values are inspired by the Khepera III robot
@@ -124,12 +124,18 @@ slam:
   # These are x position and y position
   # Currently only supports 2
   landmark_state_size: 2
-  # The mahalanobis distance threshold used in data association
-  distance_threshold: 0.3
+  ekf_slam:
+    # The mahalanobis distance threshold used in data association
+    distance_threshold: 1
+  fast_slam:
+    # The mahalanobis distance threshold used in data association
+    distance_threshold: 0.15
+    # The number of used particles
+    n_particles: 100
   # Configures the evaluation of the slam algorithms
   evaluation:
-    # Determines whether the accuracy of the the generated maps shall be evaluated
+    # Determines whether the accuracy of the generated maps shall be evaluated
     enabled: true
     # Determines the period of when the accuracy of the generated maps is calculated
-    # A low cost (for example 1) causes performance problems
+    # A low period (for example 1) causes performance problems
     period: 20

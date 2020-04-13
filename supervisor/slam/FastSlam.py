@@ -15,14 +15,12 @@ motion_noise = np.diag([0.01, 0.01]) ** 2
 
 STATE_SIZE = 3  # State size [x,y,yaw]
 LM_SIZE = 2  # LM srate size [x,y]
-N_PARTICLE = 100  # number of particle
-NTH = N_PARTICLE / 1.5  # Number of particle for re-sampling
 
 
 class Particle:
 
     def __init__(self):
-        self.w = 1.0 / N_PARTICLE
+        self.w = 1.0
         self.x = 0.0
         self.y = 0.0
         self.yaw = 0.0
@@ -37,8 +35,9 @@ class FastSlam:
     def __init__(self, supervisor_interface, slam_cfg, step_time):
         self.supervisor = supervisor_interface
         self.dt = step_time
-        self.distance_threshold = slam_cfg["distance_threshold"] / 2  # TODO: Dividing by 2, since different data association is used
-        self.particles = [Particle() for _ in range(N_PARTICLE)]
+        self.distance_threshold = slam_cfg["fast_slam"]["distance_threshold"]
+        self.n_particles = slam_cfg["fast_slam"]["n_particles"]
+        self.particles = [Particle() for _ in range(self.n_particles)]
 
     def execute(self, u, z):
         self.particles = self.predict_particles(self.particles, u)
@@ -64,7 +63,7 @@ class FastSlam:
                 particle.w /= sumw
         except ZeroDivisionError:
             for particle in particles:
-                particle.w = 1.0 / N_PARTICLE
+                particle.w = 1.0 / self.n_particles
         return particles
 
     def get_best_particle(self):
@@ -136,14 +135,13 @@ class FastSlam:
 
         return x, P
 
-    def update_landmark(self, particle, z):
-        lm_id = int(z[2])
+    def update_landmark(self, particle, z, lm_id):
         xf = np.array(particle.lm[lm_id, :]).reshape(2, 1)
         Pf = np.array(particle.lmP[2 * lm_id:2 * lm_id + 2, :])
 
         zp, Hv, Hf, Sf = self.compute_jacobians(particle, xf, Pf)
 
-        dz = z[0:2].reshape(2, 1) - zp
+        dz = z.reshape(2, 1) - zp
         dz[1, 0] = self.pi_2_pi(dz[1, 0])
 
         xf, Pf = self.update_kf_with_cholesky(xf, Pf, dz, Hf)
@@ -153,13 +151,12 @@ class FastSlam:
 
         return particle
 
-    def compute_weight(self, particle, z):
-        lm_id = int(z[2])
+    def compute_weight(self, particle, z, lm_id):
         xf = np.array(particle.lm[lm_id, :]).reshape(2, 1)
         Pf = np.array(particle.lmP[2 * lm_id:2 * lm_id + 2])
         zp, Hv, Hf, Sf = self.compute_jacobians(particle, xf, Pf)
 
-        dx = z[0:2].reshape(2, 1) - zp
+        dx = z.reshape(2, 1) - zp
         dx[1, 0] = self.pi_2_pi(dx[1, 0])
 
         try:
@@ -169,7 +166,7 @@ class FastSlam:
             return 1.0
 
         num = exp(-0.5 * dx.T @ invS @ dx)
-        den = 2.0 * pi * sqrt(np.linalg.det(Sf))
+        den = sqrt(2.0 * pi * np.linalg.det(Sf))
 
         w = num / den
 
@@ -178,20 +175,18 @@ class FastSlam:
     def update_with_observation(self, particles, z):
         z = zip(z, [pose.theta for pose in self.supervisor.proximity_sensor_placements()])
         for (distance, theta) in z:
+            measurement = np.asarray([distance, theta])
             if distance >= self.supervisor.proximity_sensor_max_range() - 0.01:  # only execute if landmark is observed
                 continue
 
             for particle in particles:
-                x = np.array([particle.x, particle.y, particle.yaw]).reshape(3, 1)
-                minid = self.search_correspond_landmark_id(x, particle.lm, [distance, theta])
+                lm_id = self.data_association(particle, measurement)
                 nLM = get_n_lms(particle.lm)
-
-                if minid == nLM:   # If the landmark is new
-                    self.add_new_lm(particle, np.asarray([distance, theta, minid]))
+                if lm_id == nLM:   # If the landmark is new
+                    self.add_new_lm(particle, measurement)
                 else:
-                    w = self.compute_weight(particle, np.asarray([distance, theta, minid]))
-                    particle.w *= w
-                    self.update_landmark(particle, np.asarray([distance, theta, minid]))
+                    particle.w *= self.compute_weight(particle, measurement, lm_id)
+                    self.update_landmark(particle, measurement, lm_id)
 
         return particles
 
@@ -207,14 +202,14 @@ class FastSlam:
         Neff = 1.0 / (pw @ pw.T)  # Effective particle number
         # print(Neff)
 
-        if Neff < NTH:  # resampling
+        if Neff < self.n_particles / 1.5:  # resampling
             wcum = np.cumsum(pw)
-            base = np.cumsum(pw * 0.0 + 1 / N_PARTICLE) - 1 / N_PARTICLE
-            resampleid = base + np.random.rand(base.shape[0]) / N_PARTICLE
+            base = np.cumsum(pw * 0.0 + 1 / self.n_particles) - 1 / self.n_particles
+            resampleid = base + np.random.rand(base.shape[0]) / self.n_particles
 
             inds = []
             ind = 0
-            for ip in range(N_PARTICLE):
+            for ip in range(self.n_particles):
                 while (ind < wcum.shape[0] - 1) and (resampleid[ip] > wcum[ind]):
                     ind += 1
                 inds.append(ind)
@@ -226,7 +221,7 @@ class FastSlam:
                 particles[i].yaw = tparticles[inds[i]].yaw
                 particles[i].lm = tparticles[inds[i]].lm[:, :]
                 particles[i].lmP = tparticles[inds[i]].lmP[:, :]
-                particles[i].w = 1.0 / N_PARTICLE
+                particles[i].w = 1.0 / self.n_particles
 
         return particles
 
@@ -247,32 +242,24 @@ class FastSlam:
     def pi_2_pi(self, angle):
         return (angle + pi) % (2 * pi) - pi
 
-    def search_correspond_landmark_id(self, x, lm, z):
-        """
-        Landmark association with Mahalanobis distance
-        """
-
-        nLM = get_n_lms(lm)
-
+    def data_association(self, particle, z):
+        nLM = get_n_lms(particle.lm)
         mdist = []
-        measured_lm = calc_landmark_position(x, z)
-
+        measured_lm = calc_landmark_position(particle, z)
         for i in range(nLM):
-            lm_i = lm[i]
+            lm_i = particle.lm[i]
             delta = lm_i - measured_lm
             distance = sqrt(delta[0, 0] ** 2 + delta[0, 1] ** 2)
             mdist.append(distance)
-
         mdist.append(self.distance_threshold)  # new landmark
-        minid = mdist.index(min(mdist))
-        #
-        return minid
+        min_id = mdist.index(min(mdist))
+        return min_id
 
 
-def calc_landmark_position(x, z):
+def calc_landmark_position(particle, z):
     zp = np.zeros((1, 2))
-    zp[0, 0] = x[0, 0] + z[0] * cos(z[1] + x[2, 0])
-    zp[0, 1] = x[1, 0] + z[0] * sin(z[1] + x[2, 0])
+    zp[0, 0] = particle.x + z[0] * cos(z[1] + particle.yaw)
+    zp[0, 1] = particle.y + z[0] * sin(z[1] + particle.yaw)
     return zp
 
 
