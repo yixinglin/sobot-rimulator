@@ -18,12 +18,15 @@ class SlamEvaluation:
         fig, ax = plt.subplots()
         sim_cycles = len(self.average_distances) * self.cfg["period"]
         ax.plot(range(0, sim_cycles, self.cfg["period"]), self.average_distances)
+        ax.grid()
         if self.ekf:
             ax.set(xlabel='Simulation cycles', ylabel='Average distance to true landmark',
                    title='Evaluation of EKF SLAM')
+            plt.savefig('ekf_slam_evaluation.png')
         else:
             ax.set(xlabel='Simulation cycles', ylabel='Average distance to true landmark',
                    title='Evaluation of FastSLAM')
+            plt.savefig('fast_slam_evaluation.png')
         ax.grid()
 
         plt.show()

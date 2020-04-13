@@ -7,3 +7,7 @@
 
 # intellij stuff
 .idea
+
+# Generated figures
+ekf_slam_evaluation.png
+fast_slam_evaluation.png
