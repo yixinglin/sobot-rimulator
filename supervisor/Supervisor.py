@@ -74,7 +74,7 @@ class Supervisor:
         self.fastslam = None
         if cfg["use_ekfslam"]:
             print("Using EKFSlam")
-            self.ekfslam = EKFSlam(controller_interface, cfg["map"]["obstacle"]["radius"], cfg["slam"], step_time=cfg["period"])
+            self.ekfslam = EKFSlam(controller_interface, cfg["slam"], step_time=cfg["period"])
         if cfg["use_fastslam"]:
             print("Using FastSlam")
             self.fastslam = FastSlam(controller_interface, cfg["slam"], step_time=cfg["period"])
