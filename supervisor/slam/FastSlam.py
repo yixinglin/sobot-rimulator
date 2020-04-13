@@ -174,9 +174,9 @@ class FastSlam:
 
     def update_with_observation(self, particles, z):
         z = zip(z, [pose.theta for pose in self.supervisor.proximity_sensor_placements()])
-        for (distance, theta) in z:
+        for i, (distance, theta) in enumerate(z):
             measurement = np.asarray([distance, theta])
-            if distance >= self.supervisor.proximity_sensor_max_range() - 0.01:  # only execute if landmark is observed
+            if not self.supervisor.proximity_sensor_positive_detections()[i]:  # only execute if landmark is observed
                 continue
 
             for particle in particles:

@@ -1,7 +1,7 @@
 # Disrecte time
 period: 0.05
 
-use_ekfslam: false
+use_ekfslam: true
 use_fastslam: true
 # Configures the robot
 # These values are inspired by the Khepera III robot

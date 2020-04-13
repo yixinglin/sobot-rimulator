@@ -99,8 +99,8 @@ class EKFSlam:
         self.PEst[0:S, 0:S] = G.T @ self.PEst[0:S, 0:S] @ G + motion_noise
         # Update
         z = zip(z, [pose.theta for pose in self.supervisor.proximity_sensor_placements()])
-        for iz, (distance, theta) in enumerate(z):
-            if distance >= self.supervisor.proximity_sensor_max_range() - 0.01:  # only execute if landmark is observed
+        for i, (distance, theta) in enumerate(z):
+            if not self.supervisor.proximity_sensor_positive_detections()[i]:  # only execute if landmark is observed
                 continue
             minid = search_correspond_landmark_id(self.xEst, self.PEst, [distance, theta], self.distance_threshold)
 
@@ -118,8 +118,6 @@ class EKFSlam:
             y, S, H = calc_innovation(lm, self.xEst, self.PEst, [distance, theta], minid)
 
             K = (self.PEst @ H.T) @ np.linalg.inv(S)
-            #print("Kalman gain:", K)
-            #print("Correction:", K @ y)
             self.xEst = self.xEst + (K @ y)
             self.PEst = (np.identity(len(self.xEst)) - (K @ H)) @ self.PEst
 
