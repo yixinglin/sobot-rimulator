@@ -56,7 +56,10 @@ class Viewer:
         self.window.connect('delete_event', self.on_delete)
 
         # Define labels of the drawing areas
-        label_strings = ["World", "EKF SLAM", "FastSLAM"][:self.num_frames]  # The second label is wrong if only 2 frames are used and FastSLAM is activated instead of EKFSLAM
+        if use_ekf:
+            label_strings = ["World", "EKF SLAM", "FastSLAM"][:self.num_frames]
+        else:
+            label_strings = ["World", "FastSLAM"][:self.num_frames]
         self.labels = []
         for label_string in label_strings:
             label = gtk.Label()
