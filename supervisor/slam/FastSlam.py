@@ -50,13 +50,12 @@ class FastSlam:
         return self.particles
 
     def get_estimated_pose(self):
-        xEst = self.calc_final_state(self.particles)
-        return Pose(xEst[0, 0], xEst[1, 0], xEst[2, 0])
+        particle = self.get_best_particle()
+        return Pose(particle.x, particle.y, particle.yaw)
 
     def get_landmarks(self):
-        lmEst = self.calc_final_landmarks(self.particles)
-        n_lms = get_n_lms(lmEst)
-        return [(x, y) for (x, y) in zip(lmEst[:n_lms, 0], lmEst[:n_lms, 1])]
+        particle = self.get_best_particle()
+        return [(x, y) for (x, y) in zip(particle.lm[:, 0], particle.lm[:, 1])]
 
     def normalize_weight(self, particles):
         sumw = sum([p.w for p in particles])
@@ -68,24 +67,9 @@ class FastSlam:
                 particle.w = 1.0 / N_PARTICLE
         return particles
 
-    def calc_final_state(self, particles):
-        xEst = np.zeros((STATE_SIZE, 1))
-        particles = self.normalize_weight(particles)
-        for particle in particles:
-            xEst[0, 0] += particle.w * particle.x
-            xEst[1, 0] += particle.w * particle.y
-            xEst[2, 0] += particle.w * particle.yaw
-        xEst[2, 0] = self.pi_2_pi(xEst[2, 0])
-        return xEst
-
-    def calc_final_landmarks(self, particles):
-        max_n_lms = max([get_n_lms(particle.lm) for particle in particles])
-        lmEst = np.zeros((max_n_lms, LM_SIZE))
-        particles = self.normalize_weight(particles)
-        for particle in particles:
-            n_lms = get_n_lms(particle.lm)
-            lmEst[:n_lms] += particle.w * particle.lm
-        return lmEst
+    def get_best_particle(self):
+        get_weight = lambda particle: particle.w
+        return max(self.particles, key=get_weight)
 
     def predict_particles(self, particles, u):
         for particle in particles:
