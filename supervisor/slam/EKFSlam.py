@@ -27,23 +27,16 @@ def get_n_lm(x):
     return n
 
 
-def jacob_sensor(q, delta, x, i):
+def jacob_sensor(q, delta, nLM, i):
     sq = sqrt(q)
-    G = np.array([[-sq * delta[0, 0], - sq * delta[1, 0], 0, sq * delta[0, 0], sq * delta[1, 0]],
-                  [delta[1, 0], - delta[0, 0], -q, - delta[1, 0], delta[0, 0]]])
-
-    G = G / q
-    nLM = get_n_lm(x)
-    F1 = np.hstack((np.eye(3), np.zeros((3, 2 * nLM))))
-    F2 = np.hstack((np.zeros((2, 3)), np.zeros((2, 2 * (i - 1))),
-                    np.eye(2), np.zeros((2, 2 * (nLM - i)))))
-
-    F = np.vstack((F1, F2))
-
-    H = G @ F
-
-    # H is just G, but with many extra [0, 0] columns for all landmarks with id different i, and the last 2 columns of G at the position of i
-
+    H = np.zeros((2, 3 + nLM * 2))
+    # Setting the values dependent on the robots pose
+    H[:, :3] = np.array([[-sq * delta[0, 0], - sq * delta[1, 0], 0],
+                         [delta[1, 0], - delta[0, 0], -q]])
+    # Setting the values dependent on the landmark location
+    H[:, 3 + i * 2: 3 + (i+1) * 2] = np.array([[sq * delta[0, 0], sq * delta[1, 0]],
+                                              [- delta[1, 0], delta[0, 0]]])
+    H = H / q
     return H
 
 
@@ -54,7 +47,7 @@ def calc_innovation(lm, xEst, PEst, z, LMid):
     zp = np.array([[sqrt(q), pi_2_pi(zangle)]])
     y = (z - zp).T
     y[1] = pi_2_pi(y[1])
-    H = jacob_sensor(q, delta, xEst, LMid + 1)
+    H = jacob_sensor(q, delta, get_n_lm(xEst), LMid)
     S = H @ PEst @ H.T + sensor_noise
 
     return y, S, H
@@ -106,7 +99,6 @@ class EKFSlam:
         self.xEst[0:S] = self.motion_model(self.xEst[0:S], u, self.dt)
         self.PEst[0:S, 0:S] = G.T @ self.PEst[0:S, 0:S] @ G + motion_noise
         # Update
-        assert len(z) == len(self.supervisor.proximity_sensor_placements())
         z = zip(z, [pose.theta for pose in self.supervisor.proximity_sensor_placements()])
         for iz, (distance, theta) in enumerate(z):
             if distance >= self.supervisor.proximity_sensor_max_range() - 0.01:  # only execute if landmark is observed
