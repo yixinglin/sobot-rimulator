@@ -67,9 +67,9 @@ robot:
 # Configures the GUI
 viewer:
   # Number of pixels per row of a frame
-  pixels_width: 500
+  pixels_width: 800
   # Number of pixels per column of a frame
-  pixels_height: 600
+  pixels_height: 800
   # Pixels per meter
   zoom: 100
   # Distance in meters of the major gridlines
@@ -81,18 +81,42 @@ viewer:
 map:
   # Configures the generated obstacles
   obstacle:
-    # Radius of obstacles
-    radius: 0.04
-    # Minimum amount of generated obstacles
-    min_count: 25
-    # Maximum amount of generated obstacles
-    max_count: 50
-    # Minimum distance to origin
-    min_distance: 0.2
-    # Maximum distance to origin
-    max_distance: 2
+    # Configures octagon obstacles
+    octagon:
+      # Determines whether octagon obstacles shall be generated
+      enabled: false
+      # Radius of obstacles
+      radius: 0.04
+      # Minimum amount of generated obstacles
+      min_count: 25
+      # Maximum amount of generated obstacles
+      max_count: 50
+      # Minimum distance to origin
+      min_distance: 0.2
+      # Maximum distance to origin
+      max_distance: 2
+    # Configures rectangle obstacles
+    rectangle:
+      # Determines whether rectangle obstacles shall be generated
+      enabled: true
+      # Minimum side length of a rectangle
+      min_dim: 0.1
+      # Maximum side length of a rectangle
+      max_dim: 2.5
+      # Maximum sum of the two side lengths of a rectangle
+      max_combined_dim: 2.6
+      # Minimum amount of generated obstacles
+      min_count: 10
+      # Maximum amount of generated obstacles
+      max_count: 50
+      # Minimum distance to origin
+      min_distance: 0.4
+      # Maximum distance to origin
+      max_distance: 6
   # Configures the goal generation
   goal:
+    # Determines if a new goal is generated once the robot reaches its current goal
+    endless: true
     # Minimum distance to origin
     min_distance: 0
     # Maximum distance to origin
@@ -105,10 +129,10 @@ control:
   # If robot is closer than this distance to the goal, it is considered as reached
   goal_reached_distance: 0.05
   # If a sensor measures a distance smaller than the danger distance, the robot immediately starts moving into the opposite direction
-  danger_distance: 0.06
+  danger_distance: 0.04
   # If a sensor measures a distance smaller than the caution distance, the robot will follow the wall of the obstacle
   # Set to danger_distanceto disable wall following, since the map contains small, circle-like objects, where wall following can lead to looping around an object
-  caution_distance: 0.06
+  caution_distance: 0.15
   # Criterion for stopping the following of a wall
   progress_epsilon: 0.05
 
@@ -124,12 +148,12 @@ slam:
   landmark_state_size: 2
   ekf_slam:
     # Determines whether the EKF SLAM algorithm shall be executed
-    enabled: true
+    enabled: false
     # The mahalanobis distance threshold used in data association
     distance_threshold: 1
   fast_slam:
     # Determines whether the FastSLAM algorithm shall be executed
-    enabled: true
+    enabled: false
     # The mahalanobis distance threshold used in data association
     distance_threshold: 0.15
     # The number of used particles

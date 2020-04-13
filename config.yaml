@@ -81,16 +81,38 @@ viewer:
 map:
   # Configures the generated obstacles
   obstacle:
-    # Radius of obstacles
-    radius: 0.04
-    # Minimum amount of generated obstacles
-    min_count: 25
-    # Maximum amount of generated obstacles
-    max_count: 50
-    # Minimum distance to origin
-    min_distance: 0.2
-    # Maximum distance to origin
-    max_distance: 2
+    # Configures octagon obstacles
+    octagon:
+      # Determines whether octagon obstacles shall be generated
+      enabled: true
+      # Radius of obstacles
+      radius: 0.04
+      # Minimum amount of generated obstacles
+      min_count: 25
+      # Maximum amount of generated obstacles
+      max_count: 50
+      # Minimum distance to origin
+      min_distance: 0.2
+      # Maximum distance to origin
+      max_distance: 2
+    # Configures rectangle obstacles
+    rectangle:
+      # Determines whether rectangle obstacles shall be generated
+      enabled: false
+      # Minimum side length of a rectangle
+      min_dim: 0.1
+      # Maximum side length of a rectangle
+      max_dim: 2.5
+      # Maximum sum of the two side lengths of a rectangle
+      max_combined_dim: 2.6
+      # Minimum amount of generated obstacles
+      min_count: 10
+      # Maximum amount of generated obstacles
+      max_count: 50
+      # Minimum distance to origin
+      min_distance: 0.4
+      # Maximum distance to origin
+      max_distance: 6
   # Configures the goal generation
   goal:
     # Determines if a new goal is generated once the robot reaches its current goal

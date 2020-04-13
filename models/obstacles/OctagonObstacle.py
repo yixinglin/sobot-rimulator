@@ -20,7 +20,7 @@
 from models.Polygon import *
 
 
-class CircleObstacle:
+class OctagonObstacle:
 
     def __init__(self, radius, pose):
         self.pose = pose

@@ -21,9 +21,10 @@ from math import *
 from random import *
 
 import utils.geometrics_util as geometrics
-from models.obstacles.CircleObstacle import CircleObstacle
+from models.obstacles.OctagonObstacle import OctagonObstacle
 from models.Pose import Pose
 from models.Polygon import Polygon
+from models.obstacles.RectangleObstacle import RectangleObstacle
 
 seed(42)
 
@@ -36,14 +37,33 @@ class MapManager:
         self.cfg = map_config
 
     def random_map(self, world):
-        # OBSTACLE PARAMS
-        obs_radius = self.cfg["obstacle"]["radius"]
-        obs_min_count = self.cfg["obstacle"]["min_count"]
-        obs_max_count = self.cfg["obstacle"]["max_count"]
-        obs_min_dist = self.cfg["obstacle"]["min_distance"]
-        obs_max_dist = self.cfg["obstacle"]["max_distance"]
+        obstacles = []
+        if self.cfg["obstacle"]["octagon"]["enabled"]:
+            obstacles += self.__generate_octagon_obstacles(world)
+        if self.cfg["obstacle"]["rectangle"]["enabled"]:
+            obstacles += self.__generate_rectangle_obstacles(world)
 
-        # BUILD RANDOM ELEMENTS
+        # update the current obstacles and goal
+        self.current_obstacles = obstacles
+        self.add_new_goal()
+
+        # apply the new obstacles and goal to the world
+        self.apply_to_world(world)
+
+    def add_new_goal(self):
+        while True:
+            goal = self.__generate_new_goal()
+            intersects = self.__check_obstacle_intersections(goal)
+            if not intersects:
+                self.current_goal = goal
+                break
+
+    def __generate_octagon_obstacles(self, world):
+        obs_radius = self.cfg["obstacle"]["octagon"]["radius"]
+        obs_min_count = self.cfg["obstacle"]["octagon"]["min_count"]
+        obs_max_count = self.cfg["obstacle"]["octagon"]["max_count"]
+        obs_min_dist = self.cfg["obstacle"]["octagon"]["min_distance"]
+        obs_max_dist = self.cfg["obstacle"]["octagon"]["max_distance"]
 
         # generate the obstacles
         obstacles = []
@@ -63,27 +83,54 @@ class MapManager:
             theta = -pi + (random() * 2 * pi)
 
             # test if the obstacle overlaps the robots or the goal
-            obstacle = CircleObstacle(obs_radius, Pose(x, y, theta))
+            obstacle = OctagonObstacle(obs_radius, Pose(x, y, theta))
             intersects = False
             for test_geometry in test_geometries:
                 intersects |= geometrics.convex_polygon_intersect_test(test_geometry, obstacle.global_geometry)
             if not intersects:
                 obstacles.append(obstacle)
+        return obstacles
 
-        # update the current obstacles and goal
-        self.current_obstacles = obstacles
-        self.add_new_goal()
+    def __generate_rectangle_obstacles(self, world):
+        obs_min_dim = self.cfg["obstacle"]["rectangle"]["min_dim"]
+        obs_max_dim = self.cfg["obstacle"]["rectangle"]["max_dim"]
+        obs_max_combined_dim = self.cfg["obstacle"]["rectangle"]["max_combined_dim"]
+        obs_min_count = self.cfg["obstacle"]["rectangle"]["min_count"]
+        obs_max_count = self.cfg["obstacle"]["rectangle"]["max_count"]
+        obs_min_dist = self.cfg["obstacle"]["rectangle"]["min_distance"]
+        obs_max_dist = self.cfg["obstacle"]["rectangle"]["max_distance"]
 
-        # apply the new obstacles and goal to the world
-        self.apply_to_world(world)
+        # generate the obstacles
+        obstacles = []
+        obs_dim_range = obs_max_dim - obs_min_dim
+        obs_dist_range = obs_max_dist - obs_min_dist
+        num_obstacles = randrange(obs_min_count, obs_max_count + 1)
 
-    def add_new_goal(self):
-        while True:
-            goal = self.__generate_new_goal()
-            intersects = self.__check_obstacle_intersections(goal)
+        test_geometries = [r.global_geometry for r in world.robots]
+        while len(obstacles) < num_obstacles:
+            # generate dimensions
+            width = obs_min_dim + (random() * obs_dim_range )
+            height = obs_min_dim + (random() * obs_dim_range )
+            while width + height > obs_max_combined_dim:
+                height = obs_min_dim + (random() * obs_dim_range )
+
+            # generate position
+            dist = obs_min_dist + (random() * obs_dist_range)
+            phi = -pi + (random() * 2 * pi)
+            x = dist * sin(phi)
+            y = dist * cos(phi)
+
+            # generate orientation
+            theta = -pi + (random() * 2 * pi)
+
+            # test if the obstacle overlaps the robots or the goal
+            obstacle = RectangleObstacle(width, height, Pose(x, y, theta))
+            intersects = False
+            for test_geometry in test_geometries:
+                intersects |= geometrics.convex_polygon_intersect_test(test_geometry, obstacle.global_geometry)
             if not intersects:
-                self.current_goal = goal
-                break
+                obstacles.append(obstacle)
+        return obstacles
 
     def __generate_new_goal(self):
         min_dist = self.cfg["goal"]["min_distance"]

@@ -15,7 +15,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # 
 # Email mccrea.engineering@gmail.com for questions, comments, or to report bugs.
-from models.obstacles.CircleObstacle import CircleObstacle
+from models.obstacles.OctagonObstacle import OctagonObstacle
 from models.Pose import Pose
 from plotters.ObstaclePlotter import *
 from plotters.RobotPlotter import *
@@ -39,7 +39,7 @@ class SlamPlotter:
 
         # draw all the obstacles
         for landmark in self.slam.get_landmarks():
-            obstacle = CircleObstacle(self.radius, Pose(landmark[0], landmark[1], 0))
+            obstacle = OctagonObstacle(self.radius, Pose(landmark[0], landmark[1], 0))
             obstacle_plotter = ObstaclePlotter(obstacle)
             obstacle_plotter.draw_obstacle_to_frame(frame, "black", alpha=0.6)
 
