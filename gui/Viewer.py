@@ -32,11 +32,13 @@ LS_DIALOG_RESPONSE_ACCEPT = 2
 
 class Viewer:
 
-    def __init__(self, simulator, viewer_config, num_frames):
+    def __init__(self, simulator, viewer_config, num_frames, use_ekf=True, use_slam_evaluation=True):
         # bind the simulator
         self.simulator = simulator
 
         self.cfg = viewer_config
+        self.use_ekf = use_ekf
+        self.use_slam_evaluation = use_slam_evaluation
 
         # initialize camera parameters
         self.num_frames = num_frames
@@ -181,8 +183,10 @@ class Viewer:
         # pack the information buttons
         information_box = gtk.HBox()
         information_box.pack_start(self.button_draw_invisibles, False, False, 0)
-        information_box.pack_start(self.button_plot_covariances, False, False, 0)
-        information_box.pack_start(self.button_slam_evaluation, False, False, 0)
+        if self.use_ekf:
+            information_box.pack_start(self.button_plot_covariances, False, False, 0)
+        if num_frames > 1 and self.use_slam_evaluation:
+            information_box.pack_start(self.button_slam_evaluation, False, False, 0)
 
         # align the controls
         sim_controls_alignment = gtk.Alignment(xalign=0.5, yalign=0.5, xscale=0, yscale=0)
@@ -305,8 +309,10 @@ class Viewer:
         self.simulator.draw_world()
 
     def on_slam_evaluation(self, widget):
-        self.simulator.ekfslam_evaluation.plot()
-        self.simulator.fastslam_evaluation.plot()
+        if self.simulator.ekfslam_evaluation is not None:
+            self.simulator.ekfslam_evaluation.plot()
+        if self.simulator.fastslam_evaluation is not None:
+            self.simulator.fastslam_evaluation.plot()
 
     def on_plot_covariances(self, widget):
         self.simulator.ekfslam_plotter.plot_covariances()

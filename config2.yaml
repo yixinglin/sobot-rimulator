@@ -105,7 +105,7 @@ map:
 control:
   # If robot is closer than this distance to the goal, it is considered as reached
   goal_reached_distance: 0.05
-  # TODO: Add comments
+  # TODO: Update this config file
   caution_distance: 0.15
   danger_distance: 0.04
   progress_epsilon: 0.05

@@ -126,3 +126,10 @@ slam:
   landmark_state_size: 2
   # The mahalanobis distance threshold used in data association
   distance_threshold: 0.3
+  # Configures the evaluation of the slam algorithms
+  evaluation:
+    # Determines whether the accuracy of the the generated maps shall be evaluated
+    enabled: true
+    # Determines the period of when the accuracy of the generated maps is calculated
+    # A low cost (for example 1) causes performance problems
+    period: 20

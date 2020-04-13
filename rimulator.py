@@ -50,7 +50,7 @@ class Simulator:
             self.num_frames += 1
         if cfg["use_fastslam"]:
             self.num_frames += 1
-        self.viewer = gui.Viewer.Viewer(self, cfg["viewer"], self.num_frames)
+        self.viewer = gui.Viewer.Viewer(self, cfg["viewer"], self.num_frames, cfg["use_ekfslam"], cfg["slam"]["evaluation"]["enabled"])
         self.ekfslam_plotter = None
         self.fastslam_plotter = None
         self.ekfslam_evaluation = None
@@ -98,14 +98,16 @@ class Simulator:
         self.world_plotter = WorldPlotter(self.world, self.viewer)
         if self.cfg["use_ekfslam"]:
             self.ekfslam_plotter = SlamPlotter(self.world.supervisors[0].ekfslam, self.viewer, self.cfg["map"]["obstacle"]["radius"], self.cfg["robot"], 1)
-            self.ekfslam_evaluation = SlamEvaluation(self.world.supervisors[0].ekfslam, ekf=True)
+            if self.cfg["slam"]["evaluation"]["enabled"]:
+                self.ekfslam_evaluation = SlamEvaluation(self.world.supervisors[0].ekfslam, ekf=True)
         if self.cfg["use_fastslam"]:
             if self.num_frames == 3:
                 frame_num = 2
             else:
                 frame_num = 1
             self.fastslam_plotter = SlamPlotter(self.world.supervisors[0].fastslam, self.viewer, self.cfg["map"]["obstacle"]["radius"], self.cfg["robot"], frame_num)
-            self.fastslam_evaluation = SlamEvaluation(self.world.supervisors[0].fastslam, ekf=False)
+            if self.cfg["slam"]["evaluation"]["enabled"]:
+                self.fastslam_evaluation = SlamEvaluation(self.world.supervisors[0].fastslam, ekf=False)
 
         # render the initial world
         self.draw_world()
@@ -157,8 +159,7 @@ class Simulator:
         self._step_sim()
 
     def _update_slam_accuracies(self):
-        # Only update on every twentieth cycle to save computation cost
-        if self.num_cycles % 20 == 0:
+        if self.num_cycles % self.cfg["slam"]["evaluation"]["period"] == 0:
             if self.ekfslam_evaluation is not None:
                 self.ekfslam_evaluation.step(self.world.obstacles)
             if self.fastslam_evaluation is not None:
