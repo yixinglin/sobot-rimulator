@@ -185,7 +185,7 @@ class FastSlam:
                 if lm_id == nLM:   # If the landmark is new
                     self.add_new_lm(particle, measurement)
                 else:
-                    particle.w *= self.compute_weight(particle, measurement, lm_id)
+                    particle.w = self.compute_weight(particle, measurement, lm_id)
                     self.update_landmark(particle, measurement, lm_id)
 
         return particles
@@ -221,7 +221,7 @@ class FastSlam:
                 particles[i].yaw = tparticles[inds[i]].yaw
                 particles[i].lm = tparticles[inds[i]].lm[:, :]
                 particles[i].lmP = tparticles[inds[i]].lmP[:, :]
-                particles[i].w = 1.0 / self.n_particles
+                particles[i].w = tparticles[inds[i]].w
 
         return particles
 
