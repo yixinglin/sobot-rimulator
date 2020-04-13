@@ -1,6 +1,9 @@
 """
-FastSLAM 1.0 example
-author: Atsushi Sakai (@Atsushi_twi)
+FastSLAM 1.0
+Based on implementation of Atsushi Sakai (https://github.com/AtsushiSakai/PythonRobotics)
+Most significant changes made:
+- Add support for a flexible number of landmarks
+- Add support for unknown data association
 """
 
 from math import cos, sin, sqrt, atan2, exp, pi

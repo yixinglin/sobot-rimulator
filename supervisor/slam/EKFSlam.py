@@ -1,3 +1,9 @@
+"""
+EKF SLAM
+Based on implementation of Atsushi Sakai (https://github.com/AtsushiSakai/PythonRobotics),
+which I have also made contributions to, see pull requests #255, #258 and #305
+"""
+
 import numpy as np
 from math import *
 from models.Pose import Pose
