@@ -177,7 +177,8 @@ class SupervisorStateMachine:
 
     # === helper methods ===
     def _forward_sensor_distances(self):
-        return self.supervisor.proximity_sensor_distances[1:7]  # TODO: Fix this
+        # TODO: Should be based on the configuration, not hardcoded
+        return self.supervisor.proximity_sensor_distances[1:7]
 
     def _distance_to_goal(self):
         return linalg.distance(self.supervisor.estimated_pose.vposition(), self.supervisor.goal)
