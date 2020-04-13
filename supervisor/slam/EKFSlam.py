@@ -10,7 +10,7 @@ from models.Pose import Pose
 
 # EKF state covariance
 sensor_noise = np.diag([0.2, np.deg2rad(30)]) ** 2
-motion_noise = np.diag([0.05, 0.05, np.deg2rad(1)]) ** 2
+motion_noise = np.diag([0.005, 0.005, np.deg2rad(1)]) ** 2
 
 STATE_SIZE = 3  # State size [x,y,theta]
 LM_SIZE = 2  # LM state size [x,y]

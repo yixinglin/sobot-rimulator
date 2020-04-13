@@ -14,7 +14,7 @@ import numpy as np
 from models.Pose import Pose
 
 sensor_noise = np.diag([0.2, np.deg2rad(30.0)]) ** 2
-motion_noise = np.diag([0.01, 0.01]) ** 2
+motion_noise = np.diag([0.005, 0.005]) ** 2
 
 STATE_SIZE = 3  # State size [x,y,yaw]
 LM_SIZE = 2  # LM srate size [x,y]

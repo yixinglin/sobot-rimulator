@@ -155,7 +155,7 @@ slam:
     # Determines whether the FastSLAM algorithm shall be executed
     enabled: true
     # The mahalanobis distance threshold used in data association
-    distance_threshold: 0.15
+    distance_threshold: 0.125
     # The number of used particles
     n_particles: 100
   # Configures the evaluation of the slam algorithms
