@@ -140,6 +140,11 @@ class Viewer:
         self.button_draw_invisibles.set_image_position(gtk.PositionType.LEFT)
         self.button_draw_invisibles.connect('clicked', self.on_draw_invisibles)
 
+        # build the plot slam evaluation button
+        self.button_slam_evaluation = gtk.Button("Plot Slam Evaluation")
+        self.button_slam_evaluation.set_image_position(gtk.PositionType.LEFT)
+        self.button_slam_evaluation.connect('clicked', self.on_slam_evaluation)
+
         # build the plot-covariance-matrix button
         self.button_plot_covariances = gtk.Button("Plot Covariance Matrix")
         self.button_plot_covariances.set_image_position(gtk.PositionType.LEFT)
@@ -173,10 +178,11 @@ class Viewer:
         map_controls_box.pack_start(self.button_load_map, False, False, 0)
         map_controls_box.pack_start(self.button_random_map, False, False, 0)
 
-        # pack the invisibles button
-        invisibles_button_box = gtk.HBox()
-        invisibles_button_box.pack_start(self.button_draw_invisibles, False, False, 0)
-        invisibles_button_box.pack_start(self.button_plot_covariances, False, False, 0)
+        # pack the information buttons
+        information_box = gtk.HBox()
+        information_box.pack_start(self.button_draw_invisibles, False, False, 0)
+        information_box.pack_start(self.button_plot_covariances, False, False, 0)
+        information_box.pack_start(self.button_slam_evaluation, False, False, 0)
 
         # align the controls
         sim_controls_alignment = gtk.Alignment(xalign=0.5, yalign=0.5, xscale=0, yscale=0)
@@ -184,7 +190,7 @@ class Viewer:
         invisibles_button_alignment = gtk.Alignment(xalign=0.5, yalign=0.5, xscale=0, yscale=0)
         sim_controls_alignment.add(sim_controls_box)
         map_controls_alignment.add(map_controls_box)
-        invisibles_button_alignment.add(invisibles_button_box)
+        invisibles_button_alignment.add(information_box)
 
         # create the alert box
         self.alert_box = gtk.Label()
@@ -297,6 +303,10 @@ class Viewer:
         else:
             self._decorate_draw_invisibles_button_inactive()
         self.simulator.draw_world()
+
+    def on_slam_evaluation(self, widget):
+        self.simulator.ekfslam_evaluation.plot()
+        self.simulator.fastslam_evaluation.plot()
 
     def on_plot_covariances(self, widget):
         self.simulator.ekfslam_plotter.plot_covariances()

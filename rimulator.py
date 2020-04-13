@@ -24,6 +24,7 @@ import gi
 from gi.repository import GLib
 
 from plotters.SlamPlotter import SlamPlotter
+from supervisor.slam.SlamEvaluation import SlamEvaluation
 
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk as gtk
@@ -52,6 +53,8 @@ class Simulator:
         self.viewer = gui.Viewer.Viewer(self, cfg["viewer"], self.num_frames)
         self.ekfslam_plotter = None
         self.fastslam_plotter = None
+        self.ekfslam_evaluation = None
+        self.fastslam_evaluation = None
         self.world_plotter = None
 
         # create the map manager
@@ -60,6 +63,9 @@ class Simulator:
 
         # timing control
         self.period = cfg["period"]
+
+        # Counts the number of simulation cycles
+        self.num_cycles = 0
 
         self.cfg = cfg
 
@@ -92,12 +98,14 @@ class Simulator:
         self.world_plotter = WorldPlotter(self.world, self.viewer)
         if self.cfg["use_ekfslam"]:
             self.ekfslam_plotter = SlamPlotter(self.world.supervisors[0].ekfslam, self.viewer, self.cfg["map"]["obstacle"]["radius"], self.cfg["robot"], 1)
+            self.ekfslam_evaluation = SlamEvaluation(self.world.supervisors[0].ekfslam, ekf=True)
         if self.cfg["use_fastslam"]:
             if self.num_frames == 3:
                 frame_num = 2
             else:
                 frame_num = 1
             self.fastslam_plotter = SlamPlotter(self.world.supervisors[0].fastslam, self.viewer, self.cfg["map"]["obstacle"]["radius"], self.cfg["robot"], frame_num)
+            self.fastslam_evaluation = SlamEvaluation(self.world.supervisors[0].fastslam, ekf=False)
 
         # render the initial world
         self.draw_world()
@@ -148,7 +156,16 @@ class Simulator:
         self.sim_event_source = GLib.timeout_add(int(self.period * 1000), self._run_sim)
         self._step_sim()
 
+    def _update_slam_accuracies(self):
+        # Only update on every twentieth cycle to save computation cost
+        if self.num_cycles % 20 == 0:
+            if self.ekfslam_evaluation is not None:
+                self.ekfslam_evaluation.step(self.world.obstacles)
+            if self.fastslam_evaluation is not None:
+                self.fastslam_evaluation.step(self.world.obstacles)
+
     def _step_sim(self):
+        self.num_cycles += 1
         # increment the simulation
         try:
             self.world.step()
@@ -157,6 +174,9 @@ class Simulator:
         except GoalReachedException:
             self.map_manager.add_new_goal()
             self.map_manager.apply_to_world(self.world)
+
+        # Evaluate accuracies of slam
+        self._update_slam_accuracies()
 
         # draw the resulting world
         self.draw_world()
