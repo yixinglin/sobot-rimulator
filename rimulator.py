@@ -173,8 +173,11 @@ class Simulator:
         except CollisionException:
             self.end_sim('Collision!')
         except GoalReachedException:
-            self.map_manager.add_new_goal()
-            self.map_manager.apply_to_world(self.world)
+            if self.cfg["map"]["goal"]["endless"]:
+                self.map_manager.add_new_goal()
+                self.map_manager.apply_to_world(self.world)
+            else:
+                self.end_sim("Goal Reached!")
 
         # Evaluate accuracies of slam
         self._update_slam_accuracies()

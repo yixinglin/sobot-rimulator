@@ -93,6 +93,8 @@ map:
     max_distance: 2
   # Configures the goal generation
   goal:
+    # Determines if a new goal is generated once the robot reaches its current goal
+    endless: true
     # Minimum distance to origin
     min_distance: 0
     # Maximum distance to origin
@@ -124,7 +126,7 @@ slam:
   landmark_state_size: 2
   ekf_slam:
     # Determines whether the EKF SLAM algorithm shall be executed
-    enabled: false
+    enabled: true
     # The mahalanobis distance threshold used in data association
     distance_threshold: 1
   fast_slam:
