@@ -93,7 +93,7 @@ class FastSlam:
             px[0, 0] = particle.x
             px[1, 0] = particle.y
             px[2, 0] = particle.yaw
-            u += (np.random.randn(1, 2) @ motion_noise ** 0.5).T  # TODO : Think if adding this noise makes sense
+            u += (np.random.randn(1, 2) @ motion_noise ** 0.5).T
             px = self.motion_model(px, u)
             particle.x = px[0, 0]
             particle.y = px[1, 0]
