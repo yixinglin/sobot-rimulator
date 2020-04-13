@@ -3,9 +3,10 @@ from matplotlib import pyplot as plt
 
 
 class SlamEvaluation:
-    def __init__(self, slam, ekf=True):
+    def __init__(self, slam, evaluation_cfg, ekf=True):
         self.slam = slam
         self.ekf = ekf
+        self.cfg = evaluation_cfg
         self.average_distances = []
 
     def step(self, obstacles):
@@ -15,7 +16,8 @@ class SlamEvaluation:
 
     def plot(self):
         fig, ax = plt.subplots()
-        ax.plot(range(len(self.average_distances)), self.average_distances)
+        sim_cycles = len(self.average_distances) * self.cfg["period"]
+        ax.plot(range(0, sim_cycles, self.cfg["period"]), self.average_distances)
         if self.ekf:
             ax.set(xlabel='Simulation cycles', ylabel='Average distance to true landmark',
                    title='Evaluation of EKF SLAM')

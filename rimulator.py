@@ -99,7 +99,7 @@ class Simulator:
         if self.cfg["use_ekfslam"]:
             self.ekfslam_plotter = SlamPlotter(self.world.supervisors[0].ekfslam, self.viewer, self.cfg["map"]["obstacle"]["radius"], self.cfg["robot"], 1)
             if self.cfg["slam"]["evaluation"]["enabled"]:
-                self.ekfslam_evaluation = SlamEvaluation(self.world.supervisors[0].ekfslam, ekf=True)
+                self.ekfslam_evaluation = SlamEvaluation(self.world.supervisors[0].ekfslam, self.cfg["slam"]["evaluation"], ekf=True)
         if self.cfg["use_fastslam"]:
             if self.num_frames == 3:
                 frame_num = 2
@@ -107,7 +107,7 @@ class Simulator:
                 frame_num = 1
             self.fastslam_plotter = SlamPlotter(self.world.supervisors[0].fastslam, self.viewer, self.cfg["map"]["obstacle"]["radius"], self.cfg["robot"], frame_num)
             if self.cfg["slam"]["evaluation"]["enabled"]:
-                self.fastslam_evaluation = SlamEvaluation(self.world.supervisors[0].fastslam, ekf=False)
+                self.fastslam_evaluation = SlamEvaluation(self.world.supervisors[0].fastslam, self.cfg["slam"]["evaluation"], ekf=False)
 
         # render the initial world
         self.draw_world()
