@@ -98,6 +98,15 @@ class EKFSlam(Slam):
         self.xEst = np.zeros((STATE_SIZE, 1))
         self.PEst = np.zeros((STATE_SIZE, STATE_SIZE))
 
+    def get_estimated_pose(self):
+        return Pose(self.xEst[0, 0], self.xEst[1, 0], self.xEst[2, 0])
+
+    def get_landmarks(self):
+        return [(x, y) for (x, y) in zip(self.xEst[STATE_SIZE::2], self.xEst[STATE_SIZE+1::2])]
+
+    def get_covariances(self):
+        return self.PEst
+
     def execute(self, u, z):
         self.prediction_step(u)
         self.correction_step(z)
@@ -137,15 +146,6 @@ class EKFSlam(Slam):
         self.PEst = np.vstack((np.hstack((self.PEst, np.zeros((len(self.xEst), LM_SIZE)))),
                                np.hstack((np.zeros((LM_SIZE, len(self.xEst))), np.identity(LM_SIZE)))))
         self.xEst = xEstTemp
-
-    def get_estimated_pose(self):
-        return Pose(self.xEst[0, 0], self.xEst[1, 0], self.xEst[2, 0])
-
-    def get_covariances(self):
-        return self.PEst
-
-    def get_landmarks(self):
-        return [(x, y) for (x, y) in zip(self.xEst[STATE_SIZE::2], self.xEst[STATE_SIZE+1::2])]
 
     # The motion model for a motion command u = (velocity, angular velocity)
     def motion_model(self, x, u, dt):
