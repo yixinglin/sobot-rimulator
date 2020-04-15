@@ -81,7 +81,7 @@ class FastSlam(Slam):
         particle = self.get_best_particle()
         return [(x, y) for (x, y) in zip(particle.lm[:, 0], particle.lm[:, 1])]
 
-    def execute(self, u, z):
+    def update(self, u, z):
         """
         Performs a full update step of the FastSLAM algorithm
         :param u: Motion command

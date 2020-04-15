@@ -186,9 +186,9 @@ class Supervisor:
         measured_distances = self.proximity_sensor_distances_from_robot_center
         sensor_angles = [pose.theta for pose in self.proximity_sensor_placements]
         if self.ekfslam is not None:
-            self.ekfslam.execute(motion_command, zip(measured_distances, sensor_angles))
+            self.ekfslam.update(motion_command, zip(measured_distances, sensor_angles))
         if self.fastslam is not None:
-            self.fastslam.execute(motion_command, zip(measured_distances, sensor_angles))
+            self.fastslam.update(motion_command, zip(measured_distances, sensor_angles))
 
     # generate and send the correct commands to the robot
     def _send_robot_commands(self):

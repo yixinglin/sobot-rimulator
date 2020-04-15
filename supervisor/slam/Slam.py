@@ -16,7 +16,7 @@ class Slam:
         """
         raise NotImplementedError()
 
-    def execute(self, u, z):
+    def update(self, u, z):
         """
         Executes an update cycle of the SLAM algorithm
         :param u: motion command
