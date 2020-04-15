@@ -49,16 +49,16 @@ def calc_innovation(lm, xEst, PEst, z, LMid):
     delta = lm - xEst[0:2]
     q = (delta.T @ delta)[0, 0]
     zangle = atan2(delta[1, 0], delta[0, 0]) - xEst[2, 0]
-    zp = np.array([[sqrt(q), normalize_angle(zangle)]])
-    y = (z - zp).T
+    innovation = np.array([[sqrt(q), normalize_angle(zangle)]])
+    y = (z - innovation).T
     y[1] = normalize_angle(y[1])
     H = jacob_sensor(q, delta, get_n_lm(xEst), LMid)
-    S = H @ PEst @ H.T + sensor_noise
+    Psi = H @ PEst @ H.T + sensor_noise
 
-    return y, S, H
+    return y, Psi, H
 
 
-def get_landmark_position_from_state(x, ind):
+def get_landmark_position(x, ind):
     lm = x[STATE_SIZE + LM_SIZE * ind: STATE_SIZE + LM_SIZE * (ind + 1), :]
     return lm
 
@@ -73,7 +73,7 @@ def data_association(xAug, PAug, zi, distance_threshold):
     mdist = []
 
     for i in range(nLM):
-        lm = get_landmark_position_from_state(xAug, i)
+        lm = get_landmark_position(xAug, i)
         y, S, H = calc_innovation(lm, xAug, PAug, zi, i)
         distance = y.T @ np.linalg.inv(S) @ y
         mdist.append(distance)
@@ -126,16 +126,16 @@ class EKFSlam(Slam):
             # Only execute if sensor observed landmark
             if not self.supervisor.proximity_sensor_positive_detections()[i]:
                 continue
-            minid = data_association(self.xEst, self.PEst, measurement, self.distance_threshold)
+            lm_id = data_association(self.xEst, self.PEst, measurement, self.distance_threshold)
             nLM = get_n_lm(self.xEst)
-            if minid == nLM:  # If the landmark is new
+            if lm_id == nLM:  # If the landmark is new
                 self.add_new_landmark(measurement)
-            lm = get_landmark_position_from_state(self.xEst, minid)
-            y, Psi, H = calc_innovation(lm, self.xEst, self.PEst, measurement, minid)
+            lm = get_landmark_position(self.xEst, lm_id)
+            y, Psi, H = calc_innovation(lm, self.xEst, self.PEst, measurement, lm_id)
 
             K = (self.PEst @ H.T) @ np.linalg.inv(Psi)
             self.xEst = self.xEst + (K @ y)
-            # Normalize robot angle so it is between -Pi and Pi
+            # Normalize robot angle so it is between -pi and pi
             self.xEst[2] = normalize_angle(self.xEst[2])
             self.PEst = (np.identity(len(self.xEst)) - (K @ H)) @ self.PEst
 
