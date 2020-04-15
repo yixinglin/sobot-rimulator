@@ -12,6 +12,7 @@ import numpy as np
 
 # Fast SLAM covariance
 from models.Pose import Pose
+from supervisor.slam.Slam import Slam
 
 sensor_noise = np.diag([0.2, np.deg2rad(30.0)]) ** 2
 motion_noise = np.diag([0.005, 0.005]) ** 2
@@ -33,7 +34,7 @@ class Particle:
         self.lmP = np.zeros((0, LM_SIZE))
 
 
-class FastSlam:
+class FastSlam(Slam):
 
     def __init__(self, supervisor_interface, slam_cfg, step_time):
         self.supervisor = supervisor_interface

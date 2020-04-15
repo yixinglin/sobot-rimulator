@@ -9,6 +9,8 @@ from math import *
 from models.Pose import Pose
 
 # EKF state covariance
+from supervisor.slam.Slam import Slam
+
 sensor_noise = np.diag([0.2, np.deg2rad(30)]) ** 2
 motion_noise = np.diag([0.005, 0.005, np.deg2rad(1)]) ** 2
 
@@ -84,7 +86,7 @@ def search_correspond_landmark_id(xAug, PAug, zi, distance_threshold):
     return minid
 
 
-class EKFSlam:
+class EKFSlam(Slam):
 
     def __init__(self, supervisor_interface, slam_cfg, step_time):
         # bind the supervisor
