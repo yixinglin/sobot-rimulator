@@ -79,9 +79,16 @@ class FastSlam(Slam):
         # prediction step
         self.particles = self.predict_particles(self.particles, u)
         # correction step
-        self.particles = self.update_with_observation(self.particles, z)
-        self.particles = self.resampling(self.particles)
+        self.correction_step(z)
         return self.particles
+
+    def correction_step(self, z):
+        """
+        Performs the correction step
+        :param z: Measurement
+        """
+        self.particles = self.measurement_update(self.particles, z)
+        self.particles = self.resampling(self.particles)
 
     def predict_particles(self, particles, u):
         """
@@ -106,6 +113,59 @@ class FastSlam(Slam):
             particle.theta = px[2, 0]
         return particles
 
+    def measurement_update(self, particles, z):
+        """
+        Performs the measurement update of the algorithm, which consists of data association
+        1. data association
+        2. adding a new landmark or
+           computing importance factor and performing an EKF update for an already encountered landmark
+        :param particles:
+        :param z:
+        :return:
+        """
+        # Removing the importance factors of the previous cycle
+        particles = self.clear_importance_factors(particles)
+        for i, (distance, theta) in enumerate(z):
+            measurement = np.asarray([distance, theta])
+            # Skip the measuremnt if no landmark was detected
+            if not self.supervisor.proximity_sensor_positive_detections()[i]:
+                continue
+            for particle in particles:
+                lm_id = self.data_association(particle, measurement)
+                nLM = get_n_lms(particle.lm)
+                if lm_id == nLM:   # If the landmark is new
+                    self.add_new_lm(particle, measurement)
+                else:
+                    # Multiplying importance factors, since we iterate over multiple sensor measurements
+                    particle.w *= self.compute_importance_factor(particle, measurement, lm_id)
+                    self.update_landmark(particle, measurement, lm_id)
+
+        return particles
+
+    def data_association(self, particle, z):
+        """
+        Associates the measurement to a landmark.
+        Chooses the closest landmark to the measured location
+        :param particle: Particle that will be updated
+        :param z: Measurement
+        :return: The id of the landmark that is associated to the measurement
+        """
+        nLM = get_n_lms(particle.lm)
+        mdist = []
+        # Calculate measured landmark position
+        measured_lm = calc_landmark_position(particle, z)
+        # Calculate distance from measured landmark position to all other landmark positions
+        for i in range(nLM):
+            lm_i = particle.lm[i]
+            delta = lm_i - measured_lm
+            distance = sqrt(delta[0, 0] ** 2 + delta[0, 1] ** 2)
+            mdist.append(distance)
+        # Use distance threshold as criterium for spotting new landmark
+        mdist.append(self.distance_threshold)
+        # Choose the landmark that is closest to the measured location
+        min_id = mdist.index(min(mdist))
+        return min_id
+
     def normalize_weight(self, particles):
         """
         Normalizes the importance factors of the particles so that their sum is 1
@@ -120,6 +180,16 @@ class FastSlam(Slam):
         except ZeroDivisionError:
             for particle in particles:
                 particle.w = 1.0 / self.n_particles
+        return particles
+
+    def clear_importance_factors(self, particles):
+        """
+        Sets all importance factors to the same value
+        :param particles: List of particles
+        :return: List of particles with same importance factors
+        """
+        for particle in particles:
+            particle.w = 1.0 / self.n_particles
         return particles
 
     def get_best_particle(self):
@@ -200,18 +270,18 @@ class FastSlam(Slam):
 
         return particle
 
-    def compute_weight(self, particle, z, lm_id):
+    def compute_importance_factor(self, particle, z, lm_id):
         xf = np.array(particle.lm[lm_id, :]).reshape(2, 1)
         Pf = np.array(particle.lmP[2 * lm_id:2 * lm_id + 2])
-        zp, Hf, Sf = self.compute_jacobians(particle, xf, Pf)
+        innovation, Hf, Sf = self.compute_jacobians(particle, xf, Pf)
 
-        dx = z.reshape(2, 1) - zp
+        dx = z.reshape(2, 1) - innovation
         dx[1, 0] = normalize_angle(dx[1, 0])
 
         try:
             invS = np.linalg.inv(Sf)
         except np.linalg.linalg.LinAlgError:
-            print("singuler")
+            print("Singular matrix")
             return 1.0
 
         num = exp(-0.5 * dx.T @ invS @ dx)
@@ -221,30 +291,17 @@ class FastSlam(Slam):
 
         return w
 
-    def update_with_observation(self, particles, z):
-        for i, (distance, theta) in enumerate(z):
-            measurement = np.asarray([distance, theta])
-            if not self.supervisor.proximity_sensor_positive_detections()[i]:  # only execute if landmark is observed
-                continue
-            for particle in particles:
-                lm_id = self.data_association(particle, measurement)
-                nLM = get_n_lms(particle.lm)
-                if lm_id == nLM:   # If the landmark is new
-                    self.add_new_lm(particle, measurement)
-                else:
-                    particle.w = self.compute_weight(particle, measurement, lm_id)
-                    self.update_landmark(particle, measurement, lm_id)
-
-        return particles
-
     def resampling(self, particles):
-
+        """
+        Resamples the particles based on their importance factors.
+        :param particles: list Particles with importance factors
+        :return: List of particles resampled based on their importance factors
+        """
         particles = self.normalize_weight(particles)
 
         pw = np.array([particle.w for particle in particles])
 
         Neff = 1.0 / (pw @ pw.T)  # Effective particle number
-        # print(Neff)
 
         if Neff < self.n_particles / 1.5:  # resampling
             wcum = np.cumsum(pw)
@@ -282,19 +339,6 @@ class FastSlam(Slam):
         res = x + B
         res[2] = normalize_angle(res[2])
         return res
-
-    def data_association(self, particle, z):
-        nLM = get_n_lms(particle.lm)
-        mdist = []
-        measured_lm = calc_landmark_position(particle, z)
-        for i in range(nLM):
-            lm_i = particle.lm[i]
-            delta = lm_i - measured_lm
-            distance = sqrt(delta[0, 0] ** 2 + delta[0, 1] ** 2)
-            mdist.append(distance)
-        mdist.append(self.distance_threshold)  # new landmark
-        min_id = mdist.index(min(mdist))
-        return min_id
 
 
 def calc_landmark_position(particle, z):
