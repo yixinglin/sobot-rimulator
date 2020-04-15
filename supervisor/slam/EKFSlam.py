@@ -66,7 +66,7 @@ def get_landmark_position_from_state(x, ind):
     return lm
 
 
-def search_correspond_landmark_id(xAug, PAug, zi, distance_threshold):
+def data_association(xAug, PAug, zi, distance_threshold):
     """
     Landmark association with Mahalanobis distance
     """
@@ -100,19 +100,23 @@ class EKFSlam(Slam):
         self.PEst = np.zeros((STATE_SIZE, STATE_SIZE))
 
     def execute(self, u, z):
-        # Predict
+        self.prediction_step(u)
+        self.correction_step(z)
+
+    def prediction_step(self, u):
         S = STATE_SIZE
         G = self.jacob_motion(self.xEst[0:S], u, self.dt)
         self.xEst[0:S] = self.motion_model(self.xEst[0:S], u, self.dt)
         self.PEst[0:S, 0:S] = G.T @ self.PEst[0:S, 0:S] @ G + motion_noise
-        # Update
+
+    def correction_step(self, z):
         for i, measurement in enumerate(z):
             if not self.supervisor.proximity_sensor_positive_detections()[i]:  # only execute if landmark is observed
                 continue
-            minid = search_correspond_landmark_id(self.xEst, self.PEst, measurement, self.distance_threshold)
+            minid = data_association(self.xEst, self.PEst, measurement, self.distance_threshold)
 
             nLM = get_n_lm(self.xEst)
-            if minid == nLM:   # If the landmark is new
+            if minid == nLM:  # If the landmark is new
                 # Extend state and covariance matrix
                 landmark_position = calc_landmark_position(self.xEst, measurement)
                 xAug = np.vstack((self.xEst, landmark_position))
@@ -127,7 +131,6 @@ class EKFSlam(Slam):
             K = (self.PEst @ H.T) @ np.linalg.inv(S)
             self.xEst = self.xEst + (K @ y)
             self.PEst = (np.identity(len(self.xEst)) - (K @ H)) @ self.PEst
-
         self.xEst[2] = pi_2_pi(self.xEst[2])
 
     def get_estimated_pose(self):
@@ -155,15 +158,15 @@ class EKFSlam(Slam):
 
     def jacob_motion(self, x, u, dt):
         if u[1, 0] == 0:
-            jF = np.array([[0, 0, -dt * u[0] * sin(x[2, 0])],
+            G = np.array([[0, 0, -dt * u[0] * sin(x[2, 0])],
                            [0, 0, dt * u[0] * cos(x[2, 0])],
                            [0, 0, 0]])
         else:
-            jF = np.array([[0, 0, u[0, 0] / u[1, 0] * (cos(x[2, 0] + dt * u[1, 0]) - cos(x[2, 0]))],
+            G = np.array([[0, 0, u[0, 0] / u[1, 0] * (cos(x[2, 0] + dt * u[1, 0]) - cos(x[2, 0]))],
                           [0, 0, u[0, 0] / u[1, 0] * (sin(x[2, 0] + dt * u[1, 0]) - sin(x[2, 0]))],
                           [0, 0, 0]])
 
-        G = np.identity(STATE_SIZE) + jF
+        G = np.identity(STATE_SIZE) + G
         return G
 
 
