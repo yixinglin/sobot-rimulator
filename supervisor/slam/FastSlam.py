@@ -177,12 +177,10 @@ class FastSlam(Slam):
         return w
 
     def update_with_observation(self, particles, z):
-        z = zip(z, [pose.theta for pose in self.supervisor.proximity_sensor_placements()])
         for i, (distance, theta) in enumerate(z):
             measurement = np.asarray([distance, theta])
             if not self.supervisor.proximity_sensor_positive_detections()[i]:  # only execute if landmark is observed
                 continue
-
             for particle in particles:
                 lm_id = self.data_association(particle, measurement)
                 nLM = get_n_lms(particle.lm)

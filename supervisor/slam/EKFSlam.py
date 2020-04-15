@@ -106,16 +106,15 @@ class EKFSlam(Slam):
         self.xEst[0:S] = self.motion_model(self.xEst[0:S], u, self.dt)
         self.PEst[0:S, 0:S] = G.T @ self.PEst[0:S, 0:S] @ G + motion_noise
         # Update
-        z = zip(z, [pose.theta for pose in self.supervisor.proximity_sensor_placements()])
-        for i, (distance, theta) in enumerate(z):
+        for i, measurement in enumerate(z):
             if not self.supervisor.proximity_sensor_positive_detections()[i]:  # only execute if landmark is observed
                 continue
-            minid = search_correspond_landmark_id(self.xEst, self.PEst, [distance, theta], self.distance_threshold)
+            minid = search_correspond_landmark_id(self.xEst, self.PEst, measurement, self.distance_threshold)
 
             nLM = get_n_lm(self.xEst)
             if minid == nLM:   # If the landmark is new
                 # Extend state and covariance matrix
-                landmark_position = calc_landmark_position(self.xEst, [distance, theta])
+                landmark_position = calc_landmark_position(self.xEst, measurement)
                 xAug = np.vstack((self.xEst, landmark_position))
                 PAug = np.vstack((np.hstack((self.PEst, np.zeros((len(self.xEst), LM_SIZE)))),
                                   np.hstack((np.zeros((LM_SIZE, len(self.xEst))), np.identity(LM_SIZE)))))
@@ -123,7 +122,7 @@ class EKFSlam(Slam):
                 self.PEst = PAug
 
             lm = get_landmark_position_from_state(self.xEst, minid)
-            y, S, H = calc_innovation(lm, self.xEst, self.PEst, [distance, theta], minid)
+            y, S, H = calc_innovation(lm, self.xEst, self.PEst, measurement, minid)
 
             K = (self.PEst @ H.T) @ np.linalg.inv(S)
             self.xEst = self.xEst + (K @ y)

@@ -182,10 +182,13 @@ class Supervisor:
 
     def _update_slam(self):
         v, yaw = self._diff_to_uni(self.v_l, self.v_r)  # Retrieve the previous motion command
+        motion_command = np.array([[v], [yaw]])
+        measured_distances = self.proximity_sensor_distances_from_robot_center
+        sensor_angles = [pose.theta for pose in self.proximity_sensor_placements]
         if self.ekfslam is not None:
-            self.ekfslam.execute(np.array([[v], [yaw]]), self.proximity_sensor_distances_from_robot_center)
+            self.ekfslam.execute(motion_command, zip(measured_distances, sensor_angles))
         if self.fastslam is not None:
-            self.fastslam.execute(np.array([[v], [yaw]]), self.proximity_sensor_distances_from_robot_center)
+            self.fastslam.execute(motion_command, zip(measured_distances, sensor_angles))
 
     # generate and send the correct commands to the robot
     def _send_robot_commands(self):
