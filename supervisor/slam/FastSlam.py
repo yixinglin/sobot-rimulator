@@ -18,24 +18,22 @@ from utils.math_util import normalize_angle
 sensor_noise = np.diag([0.2, np.deg2rad(30.0)]) ** 2
 motion_noise = np.diag([0.005, 0.005]) ** 2
 
-STATE_SIZE = 3  # State size [x,y,theta]
-LM_SIZE = 2  # LM srate size [x,y]
-
 
 class Particle:
 
-    def __init__(self):
+    def __init__(self, lm_state_size):
         """
         A particle is initialized at the origin position with no observed landmarks and an importance factor of 1
+        :param lm_state_size: The state size for a landmark
         """
         self.w = 1.0
         self.x = 0.0
         self.y = 0.0
         self.theta = 0.0
         # landmark x-y positions
-        self.lm = np.zeros((0, LM_SIZE))
+        self.lm = np.zeros((0, lm_state_size))
         # landmark position covariance
-        self.lmP = np.zeros((0, LM_SIZE))
+        self.lmP = np.zeros((0, lm_state_size))
 
 
 class FastSlam(Slam):
@@ -51,7 +49,9 @@ class FastSlam(Slam):
         self.dt = step_time
         self.distance_threshold = slam_cfg["fast_slam"]["distance_threshold"]
         self.n_particles = slam_cfg["fast_slam"]["n_particles"]
-        self.particles = [Particle() for _ in range(self.n_particles)]
+        self.robot_state_size = slam_cfg["robot_state_size"]
+        self.landmark_state_size = slam_cfg["landmark_state_size"]
+        self.particles = [Particle(self.landmark_state_size) for _ in range(self.n_particles)]
 
     def get_estimated_pose(self):
         """
@@ -98,7 +98,7 @@ class FastSlam(Slam):
         :return: List of predicted particles after applying motion command
         """
         for particle in particles:
-            px = np.zeros((STATE_SIZE, 1))
+            px = np.zeros((self.robot_state_size, 1))
             # Copy the current particle
             px[0, 0] = particle.x
             px[1, 0] = particle.y
@@ -136,7 +136,6 @@ class FastSlam(Slam):
                 if lm_id == nLM:  # If the landmark is new
                     self.add_new_lm(particle, measurement)
                 else:
-                    # Multiplying importance factors, since we iterate over multiple sensor measurements
                     self.update_landmark(particle, measurement, lm_id)
 
         return particles
@@ -212,7 +211,7 @@ class FastSlam(Slam):
         measured_x = cos(normalize_angle(particle.theta + b))
         measured_y = sin(normalize_angle(particle.theta + b))
         # Calculate landmark location
-        new_lm = np.array([particle.x + r * measured_x, particle.y + r * measured_y]).reshape(1, LM_SIZE)
+        new_lm = np.array([particle.x + r * measured_x, particle.y + r * measured_y]).reshape(1, self.landmark_state_size)
         particle.lm = np.vstack((particle.lm, new_lm))
 
         # Calculate initial covariance
@@ -222,38 +221,14 @@ class FastSlam(Slam):
 
         return particle
 
-    def compute_jacobians(self, particle, xf, Pf):
-        dx = xf[0, 0] - particle.x
-        dy = xf[1, 0] - particle.y
-        d2 = dx ** 2 + dy ** 2
-        d = sqrt(d2)
-
-        zp = np.array(
-            [d, normalize_angle(atan2(dy, dx) - particle.theta)]).reshape(2, 1)
-
-        Hf = np.array([[dx / d, dy / d],
-                       [-dy / d2, dx / d2]])
-
-        Sf = Hf @ Pf @ Hf.T + sensor_noise
-
-        return zp, Hf, Sf
-
-    def update_kf_with_cholesky(self, xf, Pf, v, Hf):
-        PHt = Pf @ Hf.T
-        S = Hf @ PHt + sensor_noise
-
-        S = (S + S.T) * 0.5
-        SChol = np.linalg.cholesky(S).T
-        SCholInv = np.linalg.inv(SChol)
-        W1 = PHt @ SCholInv
-        W = W1 @ SCholInv.T
-
-        x = xf + W @ v
-        P = Pf - W1 @ W1.T
-
-        return x, P
-
     def update_landmark(self, particle, z, lm_id):
+        """
+        Updates the estimated landmark position and uncertainties as well as the particles importance factor
+        :param particle: Particle that is being updated
+        :param z: Measurement
+        :param lm_id: Id of the landmark that is associated to the measurement
+        :return: Updated particle
+        """
         landmark = np.array(particle.lm[lm_id, :]).reshape(2, 1)
         landmark_cov = np.array(particle.lmP[2 * lm_id:2 * lm_id + 2, :])
 
@@ -275,10 +250,10 @@ class FastSlam(Slam):
         dz = z.reshape(2, 1) - innovation
         dz[1, 0] = normalize_angle(dz[1, 0])
 
-        landmark, landmark_cov = self.update_kf_with_cholesky(landmark, landmark_cov, dz, H)
-
+        landmark, landmark_cov = self.ekf_update(landmark, landmark_cov, dz, H, Psi)
         particle.lm[lm_id, :] = landmark.T
         particle.lmP[2 * lm_id:2 * lm_id + 2, :] = landmark_cov
+        # Multiplying importance factors, since this is just the weight for a single sensor measurement
         particle.w *= self.compute_importance_factor(dz, Psi)
 
         return particle
@@ -290,16 +265,25 @@ class FastSlam(Slam):
         :param Psi: Covariance matrix for measurement
         :return: Importance factor
         """
-        try:
-            invPsi = np.linalg.inv(Psi)
-        except np.linalg.linalg.LinAlgError:
-            print("Singular matrix")
-            return 1.0
-
-        num = exp(-0.5 * dz.T @ invPsi @ dz)
+        num = exp(-0.5 * dz.T @ np.linalg.inv(Psi) @ dz)
         den = sqrt(2.0 * pi * np.linalg.det(Psi))
         w = num / den
         return w
+
+    def ekf_update(self, landmark, landmark_cov, dz, H, Psi):
+        """
+        Updates the landmark position and covariance
+        :param landmark: Estimated landmark position
+        :param landmark_cov: Landmark covariance
+        :param dz: Difference between actual measurement and innovation (expected measurement)
+        :param H: Jacobian of the measurement
+        :param Psi: Covariance of the measurement
+        :return: updated estimated landmark position, updated landmark covariance
+        """
+        K = (landmark_cov @ H.T) @ np.linalg.inv(Psi)
+        landmark += K @ dz
+        landmark_cov = (np.identity(len(landmark_cov)) - (K @ H)) @ landmark_cov
+        return landmark, landmark_cov
 
     def resampling(self, particles):
         """

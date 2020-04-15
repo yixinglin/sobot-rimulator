@@ -134,7 +134,7 @@ class EKFSlam(Slam):
             y, Psi, H = calc_innovation(lm, self.xEst, self.PEst, measurement, lm_id)
 
             K = (self.PEst @ H.T) @ np.linalg.inv(Psi)
-            self.xEst = self.xEst + (K @ y)
+            self.xEst += K @ y
             # Normalize robot angle so it is between -pi and pi
             self.xEst[2] = normalize_angle(self.xEst[2])
             self.PEst = (np.identity(len(self.xEst)) - (K @ H)) @ self.PEst
