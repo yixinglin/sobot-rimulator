@@ -4,6 +4,8 @@ Based on implementation of Atsushi Sakai (https://github.com/AtsushiSakai/Python
 Most significant changes made:
 - Add support for a flexible number of landmarks
 - Add support for unknown data association
+- Change ekf update
+- Change resampling algorithm
 """
 
 from math import cos, sin, sqrt, atan2, exp, pi
@@ -292,32 +294,23 @@ class FastSlam(Slam):
         :return: List of particles resampled based on their importance factors
         """
         particles = self.normalize_weight(particles)
-
-        pw = np.array([particle.w for particle in particles])
-
-        Neff = 1.0 / (pw @ pw.T)  # Effective particle number
-
-        if Neff < self.n_particles / 1.5:  # resampling
-            wcum = np.cumsum(pw)
-            base = np.cumsum(pw * 0.0 + 1 / self.n_particles) - 1 / self.n_particles
-            resampleid = base + np.random.rand(base.shape[0]) / self.n_particles
-
-            inds = []
-            ind = 0
-            for ip in range(self.n_particles):
-                while (ind < wcum.shape[0] - 1) and (resampleid[ip] > wcum[ind]):
-                    ind += 1
-                inds.append(ind)
-
-            tparticles = particles[:]
-            for i in range(len(inds)):
-                particles[i].x = tparticles[inds[i]].x
-                particles[i].y = tparticles[inds[i]].y
-                particles[i].theta = tparticles[inds[i]].theta
-                particles[i].lm = tparticles[inds[i]].lm[:, :]
-                particles[i].lmP = tparticles[inds[i]].lmP[:, :]
-                particles[i].w = tparticles[inds[i]].w
-
+        weights = np.array([particle.w for particle in particles])
+        wcum = np.cumsum(weights)
+        unif = np.random.rand(self.n_particles)
+        inds = []
+        for random in unif:
+            i = 0
+            while random > wcum[i]:
+                i += 1
+            inds.append(i)
+        tparticles = particles
+        for i in range(len(inds)):
+            particles[i].x = tparticles[inds[i]].x
+            particles[i].y = tparticles[inds[i]].y
+            particles[i].theta = tparticles[inds[i]].theta
+            particles[i].lm = tparticles[inds[i]].lm[:, :]
+            particles[i].lmP = tparticles[inds[i]].lmP[:, :]
+            particles[i].w = tparticles[inds[i]].w
         return particles
 
     # The motion model for a motion command u = (velocity, angular velocity)
