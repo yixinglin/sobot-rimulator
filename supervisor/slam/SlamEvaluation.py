@@ -33,8 +33,8 @@ class SlamEvaluation:
         """
         fig, ax = plt.subplots()
         # Calculates number of elapsed simulation cycles
-        sim_cycles = len(self.average_distances) * self.cfg["period"]
-        ax.plot(range(0, sim_cycles, self.cfg["period"]), self.average_distances)
+        sim_cycles = len(self.average_distances) * self.cfg["interval"]
+        ax.plot(range(0, sim_cycles, self.cfg["interval"]), self.average_distances)
         ax.grid()
         if isinstance(self.slam, EKFSlam):
             ax.set(xlabel='Simulation cycles', ylabel='Average distance to true landmark',

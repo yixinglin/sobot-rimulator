@@ -160,7 +160,7 @@ class Simulator:
 
     def _update_slam_accuracies(self):
         # Only perform the SLAM evaluation on specific simulation cycles. The period is configurable.
-        if self.num_cycles % self.cfg["slam"]["evaluation"]["period"] == 0:
+        if self.num_cycles % self.cfg["slam"]["evaluation"]["interval"] == 0:
             if self.ekfslam_evaluation is not None:
                 self.ekfslam_evaluation.evaluate(self.world.obstacles)
             if self.fastslam_evaluation is not None:

@@ -162,6 +162,6 @@ slam:
   evaluation:
     # Determines whether the accuracy of the generated maps shall be evaluated
     enabled: true
-    # Determines the period of when the accuracy of the generated maps is calculated
-    # A low period (for example 1) causes performance problems
-    period: 20
+    # Determines the interval of when the accuracy of the generated maps is calculated
+    # A low interval (for example 1) causes performance problems
+    interval: 20
