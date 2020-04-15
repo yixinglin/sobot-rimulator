@@ -60,13 +60,13 @@ def calc_innovation(lm, xEst, PEst, z, LMid):
     delta = lm - xEst[0:2]
     q = (delta.T @ delta)[0, 0]
     zangle = atan2(delta[1, 0], delta[0, 0]) - xEst[2, 0]
-    innovation = np.array([[sqrt(q), normalize_angle(zangle)]])
-    y = (z - innovation).T
-    y[1] = normalize_angle(y[1])
+    expected_measurement = np.array([[sqrt(q), normalize_angle(zangle)]])
+    innovation = (z - expected_measurement).T
+    innovation[1] = normalize_angle(innovation[1])
     H = jacob_sensor(q, delta, get_n_lm(xEst), LMid)
     Psi = H @ PEst @ H.T + sensor_noise
 
-    return y, Psi, H
+    return innovation, Psi, H
 
 
 def get_landmark_position(x, ind):
@@ -85,8 +85,8 @@ def data_association(xAug, PAug, zi, distance_threshold):
 
     for i in range(nLM):
         lm = get_landmark_position(xAug, i)
-        y, S, H = calc_innovation(lm, xAug, PAug, zi, i)
-        distance = y.T @ np.linalg.inv(S) @ y
+        innovation, S, H = calc_innovation(lm, xAug, PAug, zi, i)
+        distance = innovation.T @ np.linalg.inv(S) @ innovation
         mdist.append(distance)
 
     mdist.append(distance_threshold)  # new landmark
@@ -142,10 +142,10 @@ class EKFSlam(Slam):
             if lm_id == nLM:  # If the landmark is new
                 self.add_new_landmark(measurement)
             lm = get_landmark_position(self.xEst, lm_id)
-            y, Psi, H = calc_innovation(lm, self.xEst, self.PEst, measurement, lm_id)
+            innovation, Psi, H = calc_innovation(lm, self.xEst, self.PEst, measurement, lm_id)
 
             K = (self.PEst @ H.T) @ np.linalg.inv(Psi)
-            self.xEst += K @ y
+            self.xEst += K @ innovation
             # Normalize robot angle so it is between -pi and pi
             self.xEst[2] = normalize_angle(self.xEst[2])
             self.PEst = (np.identity(len(self.xEst)) - (K @ H)) @ self.PEst

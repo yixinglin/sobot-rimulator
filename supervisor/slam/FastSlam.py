@@ -251,49 +251,49 @@ class FastSlam(Slam):
         q = delta_x ** 2 + delta_y ** 2
         sq = sqrt(q)
         # Computing the measurement that would be expected
-        innovation = np.array(
+        expected_measurement = np.array(
             [sq, normalize_angle(atan2(delta_y, delta_x) - particle.theta)]).reshape(2, 1)
         # Computing the Jacobian
         H = np.array([[delta_x / sq, delta_y / sq],
                       [-delta_y / q, delta_x / q]])
         # Computing the covariance of the measurement
         Psi = H @ landmark_cov @ H.T + sensor_noise
-        # Computing difference between actual measurement and expected measurement
-        dz = z.reshape(2, 1) - innovation
-        dz[1, 0] = normalize_angle(dz[1, 0])
+        # Computing the innovation, the difference between actual measurement and expected measurement
+        innovation = z.reshape(2, 1) - expected_measurement
+        innovation[1, 0] = normalize_angle(innovation[1, 0])
 
-        landmark, landmark_cov = self.ekf_update(landmark, landmark_cov, dz, H, Psi)
+        landmark, landmark_cov = self.ekf_update(landmark, landmark_cov, innovation, H, Psi)
         particle.lm[lm_id, :] = landmark.T
         particle.lmP[2 * lm_id:2 * lm_id + 2, :] = landmark_cov
         # Multiplying importance factors, since this is just the weight for a single sensor measurement
-        particle.w *= self.compute_importance_factor(dz, Psi)
+        particle.w *= self.compute_importance_factor(innovation, Psi)
 
         return particle
 
-    def compute_importance_factor(self, dz, Psi):
+    def compute_importance_factor(self, innovation, Psi):
         """
         Computes an importance factor.
-        :param dz: Difference between actual measurement and innovation (expected measurement)
+        :param innovation: The innovation, the difference between actual measurement and expected measurement
         :param Psi: Covariance matrix for measurement
         :return: Importance factor
         """
-        num = exp(-0.5 * dz.T @ np.linalg.inv(Psi) @ dz)
+        num = exp(-0.5 * innovation.T @ np.linalg.inv(Psi) @ innovation)
         den = sqrt(2.0 * pi * np.linalg.det(Psi))
         w = num / den
         return w
 
-    def ekf_update(self, landmark, landmark_cov, dz, H, Psi):
+    def ekf_update(self, landmark, landmark_cov, innovation, H, Psi):
         """
         Updates the landmark position and covariance
         :param landmark: Estimated landmark position
         :param landmark_cov: Landmark covariance
-        :param dz: Difference between actual measurement and innovation (expected measurement)
+        :param innovation: The innovation, the difference between actual measurement and expected measurement
         :param H: Jacobian of the measurement
         :param Psi: Covariance of the measurement
         :return: updated estimated landmark position, updated landmark covariance
         """
         K = (landmark_cov @ H.T) @ np.linalg.inv(Psi)
-        landmark += K @ dz
+        landmark += K @ innovation
         landmark_cov = (np.identity(len(landmark_cov)) - (K @ H)) @ landmark_cov
         return landmark, landmark_cov
 
