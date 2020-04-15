@@ -95,6 +95,8 @@ class EKFSlam(Slam):
         # Extract relevant configurations
         self.dt = step_time
         self.distance_threshold = slam_cfg["ekf_slam"]["distance_threshold"]
+        self.robot_state_size = slam_cfg["robot_state_size"]
+        self.landmark_state_size = slam_cfg["landmark_state_size"]
 
         self.xEst = np.zeros((STATE_SIZE, 1))
         self.PEst = np.zeros((STATE_SIZE, STATE_SIZE))
@@ -104,34 +106,39 @@ class EKFSlam(Slam):
         self.correction_step(z)
 
     def prediction_step(self, u):
-        S = STATE_SIZE
+        S = self.robot_state_size
+        # Compute the Jacobian matrix G
         G = self.jacob_motion(self.xEst[0:S], u, self.dt)
+        # Predict the robots pose by executing noisefree motion
         self.xEst[0:S] = self.motion_model(self.xEst[0:S], u, self.dt)
+        # Update the uncertainty of the robots pose using Jacobian G
         self.PEst[0:S, 0:S] = G.T @ self.PEst[0:S, 0:S] @ G + motion_noise
 
     def correction_step(self, z):
+        # Iterate through all sensor readings
         for i, measurement in enumerate(z):
-            if not self.supervisor.proximity_sensor_positive_detections()[i]:  # only execute if landmark is observed
+            # Only execute if sensor observed landmark
+            if not self.supervisor.proximity_sensor_positive_detections()[i]:
                 continue
             minid = data_association(self.xEst, self.PEst, measurement, self.distance_threshold)
-
             nLM = get_n_lm(self.xEst)
             if minid == nLM:  # If the landmark is new
-                # Extend state and covariance matrix
-                landmark_position = calc_landmark_position(self.xEst, measurement)
-                xAug = np.vstack((self.xEst, landmark_position))
-                PAug = np.vstack((np.hstack((self.PEst, np.zeros((len(self.xEst), LM_SIZE)))),
-                                  np.hstack((np.zeros((LM_SIZE, len(self.xEst))), np.identity(LM_SIZE)))))
-                self.xEst = xAug
-                self.PEst = PAug
-
+                self.add_new_landmark(measurement)
             lm = get_landmark_position_from_state(self.xEst, minid)
-            y, S, H = calc_innovation(lm, self.xEst, self.PEst, measurement, minid)
+            y, Psi, H = calc_innovation(lm, self.xEst, self.PEst, measurement, minid)
 
-            K = (self.PEst @ H.T) @ np.linalg.inv(S)
+            K = (self.PEst @ H.T) @ np.linalg.inv(Psi)
             self.xEst = self.xEst + (K @ y)
             self.PEst = (np.identity(len(self.xEst)) - (K @ H)) @ self.PEst
         self.xEst[2] = pi_2_pi(self.xEst[2])
+
+    def add_new_landmark(self, measurement):
+        landmark_position = calc_landmark_position(self.xEst, measurement)
+        # Extend state and covariance matrix
+        xEstTemp = np.vstack((self.xEst, landmark_position))
+        self.PEst = np.vstack((np.hstack((self.PEst, np.zeros((len(self.xEst), LM_SIZE)))),
+                               np.hstack((np.zeros((LM_SIZE, len(self.xEst))), np.identity(LM_SIZE)))))
+        self.xEst = xEstTemp
 
     def get_estimated_pose(self):
         return Pose(self.xEst[0, 0], self.xEst[1, 0], self.xEst[2, 0])
