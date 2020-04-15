@@ -99,7 +99,7 @@ class Simulator:
         if cfg["slam"]["ekf_slam"]["enabled"]:
             self.ekfslam_plotter = SlamPlotter(self.world.supervisors[0].ekfslam, self.viewer, self.cfg["map"]["obstacle"]["octagon"]["radius"], self.cfg["robot"], 1)
             if self.cfg["slam"]["evaluation"]["enabled"]:
-                self.ekfslam_evaluation = SlamEvaluation(self.world.supervisors[0].ekfslam, self.cfg["slam"]["evaluation"], ekf=True)
+                self.ekfslam_evaluation = SlamEvaluation(self.world.supervisors[0].ekfslam, self.cfg["slam"]["evaluation"])
         if cfg["slam"]["fast_slam"]["enabled"]:
             if self.num_frames == 3:
                 frame_num = 2
@@ -107,7 +107,7 @@ class Simulator:
                 frame_num = 1
             self.fastslam_plotter = SlamPlotter(self.world.supervisors[0].fastslam, self.viewer, self.cfg["map"]["obstacle"]["octagon"]["radius"], self.cfg["robot"], frame_num)
             if self.cfg["slam"]["evaluation"]["enabled"]:
-                self.fastslam_evaluation = SlamEvaluation(self.world.supervisors[0].fastslam, self.cfg["slam"]["evaluation"], ekf=False)
+                self.fastslam_evaluation = SlamEvaluation(self.world.supervisors[0].fastslam, self.cfg["slam"]["evaluation"])
 
         # render the initial world
         self.draw_world()
@@ -159,11 +159,12 @@ class Simulator:
         self._step_sim()
 
     def _update_slam_accuracies(self):
+        # Only perform the SLAM evaluation on specific simulation cycles. The period is configurable.
         if self.num_cycles % self.cfg["slam"]["evaluation"]["period"] == 0:
             if self.ekfslam_evaluation is not None:
-                self.ekfslam_evaluation.step(self.world.obstacles)
+                self.ekfslam_evaluation.evaluate(self.world.obstacles)
             if self.fastslam_evaluation is not None:
-                self.fastslam_evaluation.step(self.world.obstacles)
+                self.fastslam_evaluation.evaluate(self.world.obstacles)
 
     def _step_sim(self):
         self.num_cycles += 1
