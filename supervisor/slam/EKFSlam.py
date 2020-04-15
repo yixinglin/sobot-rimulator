@@ -10,16 +10,13 @@ from models.Pose import Pose
 
 # EKF state covariance
 from supervisor.slam.Slam import Slam
+from utils.math_util import normalize_angle
 
 sensor_noise = np.diag([0.2, np.deg2rad(30)]) ** 2
 motion_noise = np.diag([0.005, 0.005, np.deg2rad(1)]) ** 2
 
 STATE_SIZE = 3  # State size [x,y,theta]
 LM_SIZE = 2  # LM state size [x,y]
-
-
-def pi_2_pi(angle):
-    return (angle + pi) % (2 * pi) - pi
 
 
 def calc_landmark_position(x, z):
@@ -52,9 +49,9 @@ def calc_innovation(lm, xEst, PEst, z, LMid):
     delta = lm - xEst[0:2]
     q = (delta.T @ delta)[0, 0]
     zangle = atan2(delta[1, 0], delta[0, 0]) - xEst[2, 0]
-    zp = np.array([[sqrt(q), pi_2_pi(zangle)]])
+    zp = np.array([[sqrt(q), normalize_angle(zangle)]])
     y = (z - zp).T
-    y[1] = pi_2_pi(y[1])
+    y[1] = normalize_angle(y[1])
     H = jacob_sensor(q, delta, get_n_lm(xEst), LMid)
     S = H @ PEst @ H.T + sensor_noise
 
@@ -129,8 +126,9 @@ class EKFSlam(Slam):
 
             K = (self.PEst @ H.T) @ np.linalg.inv(Psi)
             self.xEst = self.xEst + (K @ y)
+            # Normalize robot angle so it is between -Pi and Pi
+            self.xEst[2] = normalize_angle(self.xEst[2])
             self.PEst = (np.identity(len(self.xEst)) - (K @ H)) @ self.PEst
-        self.xEst[2] = pi_2_pi(self.xEst[2])
 
     def add_new_landmark(self, measurement):
         landmark_position = calc_landmark_position(self.xEst, measurement)
@@ -160,7 +158,7 @@ class EKFSlam(Slam):
                           [u[0, 0] / u[1, 0] * (-cos(x[2, 0] + dt * u[1, 0]) + cos(x[2, 0]))],
                           [u[1, 0] * dt]])
         res = x + B
-        res[2] = pi_2_pi(res[2])
+        res[2] = normalize_angle(res[2])
         return res
 
     def jacob_motion(self, x, u, dt):

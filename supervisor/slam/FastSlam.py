@@ -13,6 +13,7 @@ import numpy as np
 # Fast SLAM covariance
 from models.Pose import Pose
 from supervisor.slam.Slam import Slam
+from utils.math_util import normalize_angle
 
 sensor_noise = np.diag([0.2, np.deg2rad(30.0)]) ** 2
 motion_noise = np.diag([0.005, 0.005]) ** 2
@@ -91,8 +92,8 @@ class FastSlam(Slam):
         r = z[0]
         b = z[1]
 
-        s = sin(self.pi_2_pi(particle.yaw + b))
-        c = cos(self.pi_2_pi(particle.yaw + b))
+        s = sin(normalize_angle(particle.yaw + b))
+        c = cos(normalize_angle(particle.yaw + b))
 
         new_lm = np.array([particle.x + r * c, particle.y + r * s]).reshape(1, LM_SIZE)
         particle.lm = np.vstack((particle.lm, new_lm))
@@ -112,7 +113,7 @@ class FastSlam(Slam):
         d = sqrt(d2)
 
         zp = np.array(
-            [d, self.pi_2_pi(atan2(dy, dx) - particle.yaw)]).reshape(2, 1)
+            [d, normalize_angle(atan2(dy, dx) - particle.yaw)]).reshape(2, 1)
 
         Hv = np.array([[-dx / d, -dy / d, 0.0],
                        [dy / d2, -dx / d2, -1.0]])
@@ -146,7 +147,7 @@ class FastSlam(Slam):
         zp, Hv, Hf, Sf = self.compute_jacobians(particle, xf, Pf)
 
         dz = z.reshape(2, 1) - zp
-        dz[1, 0] = self.pi_2_pi(dz[1, 0])
+        dz[1, 0] = normalize_angle(dz[1, 0])
 
         xf, Pf = self.update_kf_with_cholesky(xf, Pf, dz, Hf)
 
@@ -161,7 +162,7 @@ class FastSlam(Slam):
         zp, Hv, Hf, Sf = self.compute_jacobians(particle, xf, Pf)
 
         dx = z.reshape(2, 1) - zp
-        dx[1, 0] = self.pi_2_pi(dx[1, 0])
+        dx[1, 0] = normalize_angle(dx[1, 0])
 
         try:
             invS = np.linalg.inv(Sf)
@@ -238,11 +239,8 @@ class FastSlam(Slam):
                           [u[0, 0] / u[1, 0] * (-cos(x[2, 0] + self.dt * u[1, 0]) + cos(x[2, 0]))],
                           [u[1, 0] * self.dt]])
         res = x + B
-        res[2] = self.pi_2_pi(res[2])
+        res[2] = normalize_angle(res[2])
         return res
-
-    def pi_2_pi(self, angle):
-        return (angle + pi) % (2 * pi) - pi
 
     def data_association(self, particle, z):
         nLM = get_n_lms(particle.lm)
