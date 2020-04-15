@@ -17,7 +17,17 @@ from models.Pose import Pose
 from supervisor.slam.Slam import Slam
 from utils.math_util import normalize_angle
 
-sensor_noise = np.diag([0.2, np.deg2rad(30.0)]) ** 2
+"""
+The sensor noise, empirically chosen. 
+The first value is the standard deviation of the measured distance.
+The second value is the standard deviation of the measured angle.
+"""
+sensor_noise = np.diag([0.2, np.deg2rad(30)]) ** 2
+"""
+The motion noise, empirically chosen. 
+The first value is the standard deviation of the motion command's translational velocity.
+The second value is the standard deviation of the motion command's angular velocity.
+"""
 motion_noise = np.diag([0.005, 0.005]) ** 2
 
 

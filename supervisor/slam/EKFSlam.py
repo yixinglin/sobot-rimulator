@@ -12,7 +12,18 @@ from models.Pose import Pose
 from supervisor.slam.Slam import Slam
 from utils.math_util import normalize_angle
 
+"""
+The sensor noise, empirically chosen. 
+The first value is the standard deviation of the measured distance.
+The second value is the standard deviation of the measured angle.
+"""
 sensor_noise = np.diag([0.2, np.deg2rad(30)]) ** 2
+"""
+The motion noise, empirically chosen. 
+The first value is the standard deviation of the robot's x-coordinate after executing a motion command.
+The second value is the standard deviation of the robot's y-coordinate after executing a motion command.
+The third value is the standard deviation of the robot's angle after executing a motion command.
+"""
 motion_noise = np.diag([0.005, 0.005, np.deg2rad(1)]) ** 2
 
 STATE_SIZE = 3  # State size [x,y,theta]
