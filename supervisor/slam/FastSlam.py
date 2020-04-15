@@ -133,11 +133,10 @@ class FastSlam(Slam):
             for particle in particles:
                 lm_id = self.data_association(particle, measurement)
                 nLM = get_n_lms(particle.lm)
-                if lm_id == nLM:   # If the landmark is new
+                if lm_id == nLM:  # If the landmark is new
                     self.add_new_lm(particle, measurement)
                 else:
                     # Multiplying importance factors, since we iterate over multiple sensor measurements
-                    particle.w *= self.compute_importance_factor(particle, measurement, lm_id)
                     self.update_landmark(particle, measurement, lm_id)
 
         return particles
@@ -255,40 +254,51 @@ class FastSlam(Slam):
         return x, P
 
     def update_landmark(self, particle, z, lm_id):
-        xf = np.array(particle.lm[lm_id, :]).reshape(2, 1)
-        Pf = np.array(particle.lmP[2 * lm_id:2 * lm_id + 2, :])
+        landmark = np.array(particle.lm[lm_id, :]).reshape(2, 1)
+        landmark_cov = np.array(particle.lmP[2 * lm_id:2 * lm_id + 2, :])
 
-        zp, Hf, Sf = self.compute_jacobians(particle, xf, Pf)
-
-        dz = z.reshape(2, 1) - zp
+        # Computing difference between landmark and robot position
+        delta_x = landmark[0, 0] - particle.x
+        delta_y = landmark[1, 0] - particle.y
+        # Computing squared distance
+        q = delta_x ** 2 + delta_y ** 2
+        sq = sqrt(q)
+        # Computing the measurement that would be expected
+        innovation = np.array(
+            [sq, normalize_angle(atan2(delta_y, delta_x) - particle.theta)]).reshape(2, 1)
+        # Computing the Jacobian
+        H = np.array([[delta_x / sq, delta_y / sq],
+                      [-delta_y / q, delta_x / q]])
+        # Computing the covariance of the measurement
+        Psi = H @ landmark_cov @ H.T + sensor_noise
+        # Computing difference between actual measurement and expected measurement
+        dz = z.reshape(2, 1) - innovation
         dz[1, 0] = normalize_angle(dz[1, 0])
 
-        xf, Pf = self.update_kf_with_cholesky(xf, Pf, dz, Hf)
+        landmark, landmark_cov = self.update_kf_with_cholesky(landmark, landmark_cov, dz, H)
 
-        particle.lm[lm_id, :] = xf.T
-        particle.lmP[2 * lm_id:2 * lm_id + 2, :] = Pf
+        particle.lm[lm_id, :] = landmark.T
+        particle.lmP[2 * lm_id:2 * lm_id + 2, :] = landmark_cov
+        particle.w *= self.compute_importance_factor(dz, Psi)
 
         return particle
 
-    def compute_importance_factor(self, particle, z, lm_id):
-        xf = np.array(particle.lm[lm_id, :]).reshape(2, 1)
-        Pf = np.array(particle.lmP[2 * lm_id:2 * lm_id + 2])
-        innovation, Hf, Sf = self.compute_jacobians(particle, xf, Pf)
-
-        dx = z.reshape(2, 1) - innovation
-        dx[1, 0] = normalize_angle(dx[1, 0])
-
+    def compute_importance_factor(self, dz, Psi):
+        """
+        Computes an importance factor.
+        :param dz: Difference between actual measurement and innovation (expected measurement)
+        :param Psi: Covariance matrix for measurement
+        :return: Importance factor
+        """
         try:
-            invS = np.linalg.inv(Sf)
+            invPsi = np.linalg.inv(Psi)
         except np.linalg.linalg.LinAlgError:
             print("Singular matrix")
             return 1.0
 
-        num = exp(-0.5 * dx.T @ invS @ dx)
-        den = sqrt(2.0 * pi * np.linalg.det(Sf))
-
+        num = exp(-0.5 * dz.T @ invPsi @ dz)
+        den = sqrt(2.0 * pi * np.linalg.det(Psi))
         w = num / den
-
         return w
 
     def resampling(self, particles):
