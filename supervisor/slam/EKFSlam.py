@@ -112,7 +112,7 @@ class EKFSlam(Slam):
             nLM = self.get_n_lm(self.mu)
             if lm_id == nLM:  # If the landmark is new
                 self.add_new_landmark(measurement)
-            lm = get_landmark_position(self.mu, lm_id)
+            lm = self.get_landmark_position(self.mu, lm_id)
             innovation, Psi, H = self.calc_innovation(lm, self.mu, self.Sigma, measurement, lm_id)
 
             K = (self.Sigma @ H.T) @ np.linalg.inv(Psi)
@@ -134,7 +134,7 @@ class EKFSlam(Slam):
         mdist = []
 
         for i in range(nLM):
-            lm = get_landmark_position(mu, i)
+            lm = self.get_landmark_position(mu, i)
             innovation, S, H = self.calc_innovation(lm, mu, Sigma, measurement, i)
             distance = innovation.T @ np.linalg.inv(S) @ innovation
             mdist.append(distance)
@@ -157,7 +157,8 @@ class EKFSlam(Slam):
                                 np.hstack((np.zeros((LM_SIZE, len(self.mu))), np.identity(LM_SIZE)))))
         self.mu = xEstTemp
 
-    def motion_model(self, x, u, dt):
+    @staticmethod
+    def motion_model(x, u, dt):
         """
         Noise-free motion model method
         :param x: The robot's pose
@@ -179,7 +180,8 @@ class EKFSlam(Slam):
         res[2] = normalize_angle(res[2])
         return res
 
-    def jacob_motion(self, x, u, dt):
+    @staticmethod
+    def jacob_motion(x, u, dt):
         """
         Returns the Jacobian matrix of the motion model
         :param x: The robot's pose
@@ -199,7 +201,8 @@ class EKFSlam(Slam):
         G = np.identity(STATE_SIZE) + G
         return G
 
-    def jacob_sensor(self, q, delta, nLM, i):
+    @staticmethod
+    def jacob_sensor(q, delta, nLM, i):
         sq = sqrt(q)
         H = np.zeros((2, 3 + nLM * 2))
         # Setting the values dependent on the robots pose
@@ -211,13 +214,15 @@ class EKFSlam(Slam):
         H = H / q
         return H
 
-    def calc_landmark_position(self, x, z):
+    @staticmethod
+    def calc_landmark_position(x, z):
         lm = np.zeros((2, 1))
         lm[0, 0] = x[0, 0] + z[0] * cos(z[1] + x[2, 0])
         lm[1, 0] = x[1, 0] + z[0] * sin(z[1] + x[2, 0])
         return lm
 
-    def get_n_lm(self, x):
+    @staticmethod
+    def get_n_lm(x):
         n = int((len(x) - STATE_SIZE) / LM_SIZE)
         return n
 
@@ -233,7 +238,8 @@ class EKFSlam(Slam):
 
         return innovation, Psi, H
 
-    def get_landmark_position(self, x, ind):
+    @staticmethod
+    def get_landmark_position(x, ind):
         lm = x[STATE_SIZE + LM_SIZE * ind: STATE_SIZE + LM_SIZE * (ind + 1), :]
         return lm
 

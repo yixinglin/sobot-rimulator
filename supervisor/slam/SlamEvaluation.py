@@ -23,7 +23,7 @@ class SlamEvaluation:
         :param obstacles: The list of actual obstacles of the map
         """
         slam_obstacles = self.slam.get_landmarks()
-        min_distances = [self._find_min_distance(slam_obstacle, obstacles) for slam_obstacle in slam_obstacles]
+        min_distances = [self.__find_min_distance(slam_obstacle, obstacles) for slam_obstacle in slam_obstacles]
         self.average_distances.append(sum(min_distances) / len(min_distances))
 
     def plot(self):
@@ -48,17 +48,18 @@ class SlamEvaluation:
 
         plt.show()
 
-    def _find_min_distance(self, slam_obstacle, obstacles):
+    def __find_min_distance(self, slam_obstacle, obstacles):
         """
         Finds the distance of the estimated obstacle to the the closest actual obstacle
         :param slam_obstacle: An estimated obstacle position of a SLAM algorithm
         :param obstacles: The list of actual obstacles in the map
         :return: Distance of estimated obstacle to closest actual obstacle
         """
-        squared_distances = [self._calc_squared_distance(slam_obstacle, obstacle.pose.sunpack()) for obstacle in obstacles]
+        squared_distances = [self.__calc_squared_distance(slam_obstacle, obstacle.pose.sunpack()) for obstacle in obstacles]
         return sqrt(min(squared_distances))
 
-    def _calc_squared_distance(self, x, y):
+    @staticmethod
+    def __calc_squared_distance(x, y):
         """
         Calculates squared distance between two positions.
         The squared distance is sufficient finding the minimum distance.

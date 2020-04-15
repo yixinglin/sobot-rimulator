@@ -163,7 +163,7 @@ class FastSlam(Slam):
         nLM = self.get_n_lms(particle.lm)
         distances = []
         # Calculate measured landmark position
-        measured_lm = calc_landmark_position(particle, z)
+        measured_lm = self.calc_landmark_position(particle, z)
         # Calculate distance from measured landmark position to all other landmark positions
         for i in range(nLM):
             lm_i = particle.lm[i]
@@ -270,7 +270,8 @@ class FastSlam(Slam):
 
         return particle
 
-    def compute_importance_factor(self, innovation, Psi):
+    @staticmethod
+    def compute_importance_factor(innovation, Psi):
         """
         Computes an importance factor.
         :param innovation: The innovation, the difference between actual measurement and expected measurement
@@ -282,7 +283,8 @@ class FastSlam(Slam):
         w = num / den
         return w
 
-    def ekf_update(self, landmark, landmark_cov, innovation, H, Psi):
+    @staticmethod
+    def ekf_update(landmark, landmark_cov, innovation, H, Psi):
         """
         Updates the landmark position and covariance
         :param landmark: Estimated landmark position
@@ -324,7 +326,8 @@ class FastSlam(Slam):
         return particles
 
     # The motion model for a motion command u = (velocity, angular velocity)
-    def motion_model(self, x, u, dt):
+    @staticmethod
+    def motion_model(x, u, dt):
         if u[1, 0] == 0:
             B = np.array([[dt * cos(x[2, 0]) * u[0, 0]],
                           [dt * sin(x[2, 0]) * u[0, 0]],
@@ -337,12 +340,14 @@ class FastSlam(Slam):
         res[2] = normalize_angle(res[2])
         return res
 
-    def get_n_lms(self, lms):
+    @staticmethod
+    def get_n_lms(lms):
         return lms.shape[0]
 
+    @staticmethod
+    def calc_landmark_position(particle, z):
+        lm = np.zeros((1, 2))
+        lm[0, 0] = particle.x + z[0] * cos(z[1] + particle.theta)
+        lm[0, 1] = particle.y + z[0] * sin(z[1] + particle.theta)
+        return lm
 
-def calc_landmark_position(particle, z):
-    zp = np.zeros((1, 2))
-    zp[0, 0] = particle.x + z[0] * cos(z[1] + particle.theta)
-    zp[0, 1] = particle.y + z[0] * sin(z[1] + particle.theta)
-    return zp
