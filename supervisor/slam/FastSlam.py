@@ -134,7 +134,7 @@ class FastSlam(Slam):
                 continue
             for particle in particles:
                 lm_id = self.data_association(particle, measurement)
-                nLM = get_n_lms(particle.lm)
+                nLM = self.get_n_lms(particle.lm)
                 if lm_id == nLM:  # If the landmark is new
                     self.add_new_lm(particle, measurement)
                 else:
@@ -150,7 +150,7 @@ class FastSlam(Slam):
         :param z: Measurement
         :return: The id of the landmark that is associated to the measurement
         """
-        nLM = get_n_lms(particle.lm)
+        nLM = self.get_n_lms(particle.lm)
         mdist = []
         # Calculate measured landmark position
         measured_lm = calc_landmark_position(particle, z)
@@ -327,13 +327,12 @@ class FastSlam(Slam):
         res[2] = normalize_angle(res[2])
         return res
 
+    def get_n_lms(self, lms):
+        return lms.shape[0]
+
 
 def calc_landmark_position(particle, z):
     zp = np.zeros((1, 2))
     zp[0, 0] = particle.x + z[0] * cos(z[1] + particle.theta)
     zp[0, 1] = particle.y + z[0] * sin(z[1] + particle.theta)
     return zp
-
-
-def get_n_lms(lm):
-    return lm.shape[0]
