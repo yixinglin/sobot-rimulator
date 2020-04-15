@@ -161,7 +161,7 @@ class FastSlam(Slam):
         :return: The id of the landmark that is associated to the measurement
         """
         nLM = self.get_n_lms(particle.lm)
-        mdist = []
+        distances = []
         # Calculate measured landmark position
         measured_lm = calc_landmark_position(particle, z)
         # Calculate distance from measured landmark position to all other landmark positions
@@ -169,11 +169,11 @@ class FastSlam(Slam):
             lm_i = particle.lm[i]
             delta = lm_i - measured_lm
             distance = sqrt(delta[0, 0] ** 2 + delta[0, 1] ** 2)
-            mdist.append(distance)
-        # Use distance threshold as criterium for spotting new landmark
-        mdist.append(self.distance_threshold)
+            distances.append(distance)
+        # Use distance threshold as criteria for spotting new landmark
+        distances.append(self.distance_threshold)
         # Choose the landmark that is closest to the measured location
-        min_id = mdist.index(min(mdist))
+        min_id = distances.index(min(distances))
         return min_id
 
     def normalize_weight(self, particles):
