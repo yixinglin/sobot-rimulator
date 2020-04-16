@@ -26,9 +26,6 @@ The third value is the standard deviation of the robot's angle after executing a
 """
 motion_noise = np.diag([0.005, 0.005, np.deg2rad(1)]) ** 2
 
-STATE_SIZE = 3  # State size [x,y,theta]
-LM_SIZE = 2  # LM state size [x,y]
-
 
 class EKFSlam(Slam):
 
@@ -49,9 +46,9 @@ class EKFSlam(Slam):
         self.landmark_state_size = slam_cfg["landmark_state_size"]
 
         # The estimated combined state vector, initially containing the robot pose at the origin and no landmarks
-        self.mu = np.zeros((STATE_SIZE, 1))
-        #
-        self.Sigma = np.zeros((STATE_SIZE, STATE_SIZE))
+        self.mu = np.zeros((self.robot_state_size, 1))
+        # The state covariance, initially set to absolute certainty of the initial robot pose
+        self.Sigma = np.zeros((self.robot_state_size, self.robot_state_size))
 
     def get_estimated_pose(self):
         """
@@ -65,7 +62,7 @@ class EKFSlam(Slam):
         Returns the estimated landmark positions
         :return: List of estimated landmark positions
         """
-        return [(x, y) for (x, y) in zip(self.mu[STATE_SIZE::2], self.mu[STATE_SIZE + 1::2])]
+        return [(x, y) for (x, y) in zip(self.mu[self.robot_state_size::2], self.mu[self.robot_state_size + 1::2])]
 
     def get_covariances(self):
         """
@@ -153,8 +150,9 @@ class EKFSlam(Slam):
         landmark_position = self.calc_landmark_position(self.mu, measurement)
         # Extend state and covariance matrix
         xEstTemp = np.vstack((self.mu, landmark_position))
-        self.Sigma = np.vstack((np.hstack((self.Sigma, np.zeros((len(self.mu), LM_SIZE)))),
-                                np.hstack((np.zeros((LM_SIZE, len(self.mu))), np.identity(LM_SIZE)))))
+        L = self.landmark_state_size
+        self.Sigma = np.vstack((np.hstack((self.Sigma, np.zeros((len(self.mu), L)))),
+                                np.hstack((np.zeros((L, len(self.mu))), np.identity(L)))))
         self.mu = xEstTemp
 
     @staticmethod
@@ -180,8 +178,7 @@ class EKFSlam(Slam):
         res[2] = normalize_angle(res[2])
         return res
 
-    @staticmethod
-    def jacob_motion(x, u, dt):
+    def jacob_motion(self, x, u, dt):
         """
         Returns the Jacobian matrix of the motion model
         :param x: The robot's pose
@@ -198,7 +195,7 @@ class EKFSlam(Slam):
                           [0, 0, u[0, 0] / u[1, 0] * (sin(x[2, 0] + dt * u[1, 0]) - sin(x[2, 0]))],
                           [0, 0, 0]])
 
-        G = np.identity(STATE_SIZE) + G
+        G = np.identity(self.robot_state_size) + G
         return G
 
     @staticmethod
@@ -221,9 +218,8 @@ class EKFSlam(Slam):
         lm[1, 0] = x[1, 0] + z[0] * sin(z[1] + x[2, 0])
         return lm
 
-    @staticmethod
-    def get_n_lm(x):
-        n = int((len(x) - STATE_SIZE) / LM_SIZE)
+    def get_n_lm(self, x):
+        n = int((len(x) - self.robot_state_size) / self.landmark_state_size)
         return n
 
     def calc_innovation(self, lm, xEst, PEst, z, LMid):
@@ -238,8 +234,9 @@ class EKFSlam(Slam):
 
         return innovation, Psi, H
 
-    @staticmethod
-    def get_landmark_position(x, ind):
-        lm = x[STATE_SIZE + LM_SIZE * ind: STATE_SIZE + LM_SIZE * (ind + 1), :]
+    def get_landmark_position(self, x, ind):
+        R = self.robot_state_size
+        L = self.landmark_state_size
+        lm = x[R + L * ind: R + L * (ind + 1), :]
         return lm
 
