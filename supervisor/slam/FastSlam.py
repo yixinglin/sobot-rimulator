@@ -38,13 +38,17 @@ class Particle:
         A particle is initialized at the origin position with no observed landmarks and an importance factor of 1
         :param lm_state_size: The state size for a landmark
         """
+        # Importance factor
         self.w = 1.0
+        # Robots x coordinate
         self.x = 0.0
+        # Robots y coordinate
         self.y = 0.0
+        # Robots angle
         self.theta = 0.0
-        # landmark x-y positions
+        # List of estimated landmark locations
         self.lm = np.zeros((0, lm_state_size))
-        # landmark position covariance
+        # List of landmark position covariances
         self.lmP = np.zeros((0, lm_state_size))
 
 
@@ -311,14 +315,17 @@ class FastSlam(Slam):
         particles = self.normalize_weight(particles)
         weights = np.array([particle.w for particle in particles])
         wcum = np.cumsum(weights)
+        # Generate a random number for each successor particle uniformly between 0 and 1
         unif = np.random.rand(self.n_particles)
         inds = []
+        # Determine which index i was sampled by each random number
         for random in unif:
             i = 0
             while random > wcum[i]:
                 i += 1
             inds.append(i)
         tparticles = particles
+        # Assign successor particles by copying the sampled particles
         for i in range(len(inds)):
             particles[i].x = tparticles[inds[i]].x
             particles[i].y = tparticles[inds[i]].y
