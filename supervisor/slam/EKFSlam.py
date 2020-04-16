@@ -36,15 +36,13 @@ class EKFSlam(Slam):
         :param slam_cfg: The configuration for the SLAM algorithm
         :param step_time: The discrete time that a single simulation cycle increments
         """
-        # bind the supervisor
+        # Bind the supervisor interface
         self.supervisor = supervisor_interface
-
         # Extract relevant configurations
         self.dt = step_time
         self.distance_threshold = slam_cfg["ekf_slam"]["distance_threshold"]
         self.robot_state_size = slam_cfg["robot_state_size"]
         self.landmark_state_size = slam_cfg["landmark_state_size"]
-
         # The estimated combined state vector, initially containing the robot pose at the origin and no landmarks
         self.mu = np.zeros((self.robot_state_size, 1))
         # The state covariance, initially set to absolute certainty of the initial robot pose
@@ -200,6 +198,14 @@ class EKFSlam(Slam):
 
     @staticmethod
     def jacob_sensor(q, delta, nLM, i):
+        """
+        Computes the Jacobian of the sensor model
+        :param q: squared distance of the expected measurement
+        :param delta: vector of the expected measurement (estimated landmark position - robot position)
+        :param nLM: Number of observed landmarks
+        :param i: Index of the observed landmark
+        :return: Jacobian of measurement
+        """
         sq = sqrt(q)
         H = np.zeros((2, 3 + nLM * 2))
         # Setting the values dependent on the robots pose
@@ -213,30 +219,56 @@ class EKFSlam(Slam):
 
     @staticmethod
     def calc_landmark_position(x, z):
+        """
+        Returns the measured landmark position
+        :param x: The robots pose (or combined state vector, only matters that first three elements are robot pose)
+        :param z: Measurement, represented as tuple of measured distance and measured angle
+        :return: Measured landmark position
+        """
         lm = np.zeros((2, 1))
         lm[0, 0] = x[0, 0] + z[0] * cos(z[1] + x[2, 0])
         lm[1, 0] = x[1, 0] + z[0] * sin(z[1] + x[2, 0])
         return lm
 
-    def get_n_lm(self, x):
-        n = int((len(x) - self.robot_state_size) / self.landmark_state_size)
+    def get_n_lm(self, mu):
+        """
+        Returns number of observed landmarks
+        :param mu: Combined state vector
+        :return: Number of observed landmarks
+        """
+        n = int((len(mu) - self.robot_state_size) / self.landmark_state_size)
         return n
 
-    def calc_innovation(self, lm, xEst, PEst, z, LMid):
-        delta = lm - xEst[0:2]
+    def calc_innovation(self, lm, mu, Sigma, z, LMid):
+        """
+        Calculates the innovation, uncertainty and Jacobian
+        :param lm: Position of observed landmark
+        :param mu: Combined state vector
+        :param Sigma: Covariance matrix
+        :param z: Measurement, consisting of tuple of measured distance and measured angle
+        :param LMid: Id of the observed landmark
+        :return: The innovation, the uncertainty of the measurement and the Jacobian
+        """
+        delta = lm - mu[0:2]
         q = (delta.T @ delta)[0, 0]
-        zangle = atan2(delta[1, 0], delta[0, 0]) - xEst[2, 0]
+        zangle = atan2(delta[1, 0], delta[0, 0]) - mu[2, 0]
         expected_measurement = np.array([[sqrt(q), normalize_angle(zangle)]])
         innovation = (z - expected_measurement).T
         innovation[1] = normalize_angle(innovation[1])
-        H = self.jacob_sensor(q, delta, self.get_n_lm(xEst), LMid)
-        Psi = H @ PEst @ H.T + sensor_noise
+        H = self.jacob_sensor(q, delta, self.get_n_lm(mu), LMid)
+        Psi = H @ Sigma @ H.T + sensor_noise
 
         return innovation, Psi, H
 
-    def get_landmark_position(self, x, ind):
+    def get_landmark_position(self, mu, i):
+        """
+        Returns the landmark with specified index
+        :param mu: Combined state vector
+        :param i: Index of landmark
+        :return: The (estimated) position of the landmark with index i
+        """
         R = self.robot_state_size
         L = self.landmark_state_size
-        lm = x[R + L * ind: R + L * (ind + 1), :]
+        lm = mu[R + L * i: R + L * (i + 1), :]
         return lm
 

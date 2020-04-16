@@ -57,12 +57,15 @@ class FastSlam(Slam):
         :param slam_cfg: The configuration for the SLAM algorithm
         :param step_time: The discrete time that a single simulation cycle increments
         """
+        # Bind the supervisor interface
         self.supervisor = supervisor_interface
+        # Extract relevant configurations
         self.dt = step_time
         self.distance_threshold = slam_cfg["fast_slam"]["distance_threshold"]
         self.n_particles = slam_cfg["fast_slam"]["n_particles"]
         self.robot_state_size = slam_cfg["robot_state_size"]
         self.landmark_state_size = slam_cfg["landmark_state_size"]
+        # Create initial list of particles
         self.particles = [Particle(self.landmark_state_size) for _ in range(self.n_particles)]
 
     def get_estimated_pose(self):
@@ -325,9 +328,15 @@ class FastSlam(Slam):
             particles[i].w = tparticles[inds[i]].w
         return particles
 
-    # The motion model for a motion command u = (velocity, angular velocity)
     @staticmethod
     def motion_model(x, u, dt):
+        """
+        Noise-free motion model method
+        :param x: The robot's pose
+        :param u: Motion command as a tuple of translational and angular velocities
+        :param dt: (Discrete) Time for which the motion command is executed
+        :return: Resulting robot's pose
+        """
         if u[1, 0] == 0:
             B = np.array([[dt * cos(x[2, 0]) * u[0, 0]],
                           [dt * sin(x[2, 0]) * u[0, 0]],
@@ -342,10 +351,21 @@ class FastSlam(Slam):
 
     @staticmethod
     def get_n_lms(lms):
+        """
+        Returns the number of observed landmarks
+        :param lms: NumPy array of observed landmarks
+        :return: Number of observed landmarks
+        """
         return lms.shape[0]
 
     @staticmethod
     def calc_landmark_position(particle, z):
+        """
+        Returns the measured landmark position
+        :param particle: Particle for which the position is executed. Only the particles robot pose is relevant.
+        :param z: Measurement, represented as tuple of measured distance and measured angle
+        :return: Measured landmark position
+        """
         lm = np.zeros((1, 2))
         lm[0, 0] = particle.x + z[0] * cos(z[1] + particle.theta)
         lm[0, 1] = particle.y + z[0] * sin(z[1] + particle.theta)
