@@ -118,22 +118,29 @@ class EKFSlam(Slam):
 
     def data_association(self, mu, Sigma, measurement):
         """
-        Associates the measurement to a landmark using the Mahalanobis distance
+        Associates the measurement to a landmark using the Mahalanobis distance.
+        The innovation, uncertainty and Jacobian are however not returned
+        and need to be recalculated when performing the EKF update.
         :param mu: Combined state vector
         :param Sigma: Covariance matrix
         :param measurement: Tuple of measured distance and measured angle
         :return: The id of the landmark that is associated to the measurement
         """
         nLM = self.get_n_lm(mu)
-
         mdist = []
-
+        # This distance is used to skip the calculation of the Mahalanobis distance for landmarks
+        # that are estimated to be far away (further than twice the maximum sensor range)
+        squared_cutoff_distance = (2 * self.supervisor.proximity_sensor_max_range()) ** 2
         for i in range(nLM):
             lm = self.get_landmark_position(mu, i)
-            innovation, S, H = self.calc_innovation(lm, mu, Sigma, measurement, i)
-            distance = innovation.T @ np.linalg.inv(S) @ innovation
-            mdist.append(distance)
-
+            delta = lm - mu[:2]
+            # If landmark is too far away, don't bother calculating Mahalanobis distance
+            if delta[0] ** 2 + delta[1] ** 2 > (2 * self.supervisor.proximity_sensor_max_range()) ** 2:
+                mdist.append(self.distance_threshold + 1)  # Will not be considered
+            else:
+                innovation, Psi, H = self.calc_innovation(lm, mu, Sigma, measurement, i)
+                distance = innovation.T @ np.linalg.inv(Psi) @ innovation
+                mdist.append(distance)
         mdist.append(self.distance_threshold)  # new landmark
         minid = mdist.index(min(mdist))
         return minid
