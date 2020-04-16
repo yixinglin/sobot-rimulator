@@ -22,6 +22,8 @@ from plotters.RobotPlotter import *
 from matplotlib import pyplot as plt
 import numpy as np
 
+from supervisor.slam.EKFSlam import EKFSlam
+
 
 class SlamPlotter:
 
@@ -43,7 +45,7 @@ class SlamPlotter:
             obstacle_plotter = ObstaclePlotter(obstacle)
             obstacle_plotter.draw_obstacle_to_frame(frame, "black", alpha=0.6)
 
-        if self.viewer.draw_invisibles and True is False:
+        if self.viewer.draw_invisibles and isinstance(self.slam, EKFSlam):
             self.__draw_confidence_ellipse(frame)
 
     def plot_covariances(self):
