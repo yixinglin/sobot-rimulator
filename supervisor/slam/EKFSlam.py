@@ -11,20 +11,6 @@ from models.Pose import Pose
 from supervisor.slam.Slam import Slam
 from utils.math_util import normalize_angle
 
-"""
-The sensor noise, empirically chosen. 
-The first value is the standard deviation of the measured distance.
-The second value is the standard deviation of the measured angle.
-"""
-sensor_noise = np.diag([0.2, np.deg2rad(30)]) ** 2
-"""
-The motion noise, empirically chosen. 
-The first value is the standard deviation of the robot's x-coordinate after executing a motion command.
-The second value is the standard deviation of the robot's y-coordinate after executing a motion command.
-The third value is the standard deviation of the robot's angle after executing a motion command.
-"""
-motion_noise = np.diag([0.005, 0.005, np.deg2rad(1)]) ** 2
-
 
 class EKFSlam(Slam):
 
@@ -42,6 +28,11 @@ class EKFSlam(Slam):
         self.distance_threshold = slam_cfg["ekf_slam"]["distance_threshold"]
         self.robot_state_size = slam_cfg["robot_state_size"]
         self.landmark_state_size = slam_cfg["landmark_state_size"]
+        self.sensor_noise = np.diag([slam_cfg["sensor_noise"]["detected_distance"],
+                                     np.deg2rad(slam_cfg["sensor_noise"]["detected_angle"])]) ** 2
+        self.motion_noise = np.diag([slam_cfg["ekf_slam"]["motion_noise"]["x"],
+                                     slam_cfg["ekf_slam"]["motion_noise"]["y"],
+                                     np.deg2rad(slam_cfg["ekf_slam"]["motion_noise"]["theta"])]) ** 2
         # The estimated combined state vector, initially containing the robot pose at the origin and no landmarks
         self.mu = np.zeros((self.robot_state_size, 1))
         # The state covariance, initially set to absolute certainty of the initial robot pose
@@ -90,7 +81,7 @@ class EKFSlam(Slam):
         # Predict the robots pose by executing noise-free motion
         self.mu[0:S] = self.motion_model(self.mu[0:S], u, self.dt)
         # Update the uncertainty of the robots pose using Jacobian G
-        self.Sigma[0:S, 0:S] = G.T @ self.Sigma[0:S, 0:S] @ G + motion_noise
+        self.Sigma[0:S, 0:S] = G.T @ self.Sigma[0:S, 0:S] @ G + self.motion_noise
 
     def correction_step(self, z):
         """
@@ -262,7 +253,7 @@ class EKFSlam(Slam):
         innovation = (z - expected_measurement).T
         innovation[1] = normalize_angle(innovation[1])
         H = self.jacob_sensor(q, delta, self.get_n_lm(mu), LMid)
-        Psi = H @ Sigma @ H.T + sensor_noise
+        Psi = H @ Sigma @ H.T + self.sensor_noise
 
         return innovation, Psi, H
 

@@ -164,7 +164,7 @@ slam:
       # Standard deviation of the robots y-coordinate in meters after executing a motion command.
       y: 0.005
       # Standard deviation of the robots angle in degrees after executing a motion command.
-      angle: 1
+      theta: 1
   fast_slam:
     # Determines whether the FastSLAM algorithm shall be executed
     enabled: true

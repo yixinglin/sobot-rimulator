@@ -17,19 +17,6 @@ from models.Pose import Pose
 from supervisor.slam.Slam import Slam
 from utils.math_util import normalize_angle
 
-"""
-The sensor noise, empirically chosen. 
-The first value is the standard deviation of the measured distance.
-The second value is the standard deviation of the measured angle.
-"""
-sensor_noise = np.diag([0.2, np.deg2rad(30)]) ** 2
-"""
-The motion noise, empirically chosen. 
-The first value is the standard deviation of the motion command's translational velocity.
-The second value is the standard deviation of the motion command's angular velocity.
-"""
-motion_noise = np.diag([0.005, 0.005]) ** 2
-
 
 class Particle:
 
@@ -69,7 +56,12 @@ class FastSlam(Slam):
         self.n_particles = slam_cfg["fast_slam"]["n_particles"]
         self.robot_state_size = slam_cfg["robot_state_size"]
         self.landmark_state_size = slam_cfg["landmark_state_size"]
-        # Create initial list of particles
+        self.sensor_noise = np.diag([slam_cfg["sensor_noise"]["detected_distance"],
+                                     np.deg2rad(slam_cfg["sensor_noise"]["detected_angle"])]) ** 2
+        self.motion_noise = np.diag([slam_cfg["fast_slam"]["motion_noise"]["translational_velocity"],
+                                     slam_cfg["fast_slam"]["motion_noise"]["rotational_velocity"]]) ** 2
+
+    # Create initial list of particles
         self.particles = [Particle(self.landmark_state_size) for _ in range(self.n_particles)]
 
     def get_estimated_pose(self):
@@ -123,7 +115,7 @@ class FastSlam(Slam):
             px[1, 0] = particle.y
             px[2, 0] = particle.theta
             # Apply noise to the motion command
-            u += (np.random.randn(1, 2) @ motion_noise ** 0.5).T
+            u += (np.random.randn(1, 2) @ self.motion_noise ** 0.5).T
             # Apply noise-free motion with noisy motion command
             px = self.motion_model(px, u, self.dt)
             # Update particle
@@ -236,7 +228,7 @@ class FastSlam(Slam):
         # Calculate initial covariance
         Gz = np.array([[measured_x, -r * measured_y],
                        [measured_y, r * measured_x]])
-        particle.lmP = np.vstack((particle.lmP, Gz @ sensor_noise @ Gz.T))
+        particle.lmP = np.vstack((particle.lmP, Gz @ self.sensor_noise @ Gz.T))
 
         return particle
 
@@ -264,7 +256,7 @@ class FastSlam(Slam):
         H = np.array([[delta_x / sq, delta_y / sq],
                       [-delta_y / q, delta_x / q]])
         # Computing the covariance of the measurement
-        Psi = H @ landmark_cov @ H.T + sensor_noise
+        Psi = H @ landmark_cov @ H.T + self.sensor_noise
         # Computing the innovation, the difference between actual measurement and expected measurement
         innovation = z.reshape(2, 1) - expected_measurement
         innovation[1, 0] = normalize_angle(innovation[1, 0])
