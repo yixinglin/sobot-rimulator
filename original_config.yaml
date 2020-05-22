@@ -1,4 +1,4 @@
-# Disrecte time
+# Disrecte time that elapses during one simulation cycle
 period: 0.05
 
 # Configures the robot
