@@ -34,7 +34,9 @@ specified as an additional program parameter:
     
 ### Graphical User Interface
 
-The user can interact with the simulator through the following buttons:
+The graphical user interface consists of the visualization of the current simulated world as well as a control panel of 
+buttons with which the user can interact. The robot is depicted in blue and aims to reach its goal depicted in green 
+while avoiding collisions with the red objects. The buttons of the control panel are:
 
 ##### Control row
 
