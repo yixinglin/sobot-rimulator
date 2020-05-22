@@ -25,9 +25,19 @@ from gui.ColorPalette import *
 class Painter:
 
     def __init__(self, pixels_per_meter):
+        """
+        Initializes a Painter object
+        :param pixels_per_meter: Specifies the amount of pixels contained in one meter
+        """
         self.pixels_per_meter = pixels_per_meter
 
     def draw_frame(self, frame, widget, context):
+        """
+        Draws a frame onto a widget
+        :param frame: The frame objects that will be drawn
+        :param widget: The widget onto which the frame is drawn
+        :param context: The cairo context to be used
+        """
         width_pixels = widget.get_allocated_width()
         height_pixels = widget.get_allocated_height()
 
@@ -75,6 +85,16 @@ class Painter:
                      pos, angle,
                      radius_x, radius_y,
                      color, alpha):
+        """
+        Draws an ellipse
+        :param context: The cairo context to be used
+        :param pos: The position of the center of the ellipse
+        :param angle: Angle of the x side
+        :param radius_x: "Radius" of one ellipse side
+        :param radius_y: "Radius" of the other ellipse side, perpendicular to the radius_x
+        :param color: Color of the ellipse
+        :param alpha: Alpha value of the color of the ellipse
+        """
         if radius_x > 0 and radius_y > 0:
             self.set_color(context, color, alpha)
             context.translate(pos[0], pos[1])
@@ -86,6 +106,14 @@ class Painter:
     def draw_circle(self, context,
                     pos, radius,
                     color, alpha):
+        """
+        Draws a circle
+        :param context: The cairo context to be used
+        :param pos: The position of the center of the circle
+        :param radius: The radius of the circle
+        :param color: Color of the circle
+        :param alpha: Alphave value of the color of the circle
+        """
         self.set_color(context, color, alpha)
         context.arc(pos[0], pos[1], radius, 0, 2.0 * pi)
         context.fill()
@@ -93,6 +121,13 @@ class Painter:
     def draw_polygons(self, context,
                       polygons,
                       color, alpha):
+        """
+        Draws a filled out polygon
+        :param context: The cairo context to be used
+        :param polygons: List of polygon vertices
+        :param color: Color of the polygon
+        :param alpha: Alpha value of the color of the polygon
+        """
         self.set_color(context, color, alpha)
         for polygon in polygons:
             context.new_path()
@@ -104,6 +139,14 @@ class Painter:
     def draw_lines(self, context,
                    lines, linewidth,
                    color, alpha):
+        """
+        Draws lines
+        :param context: The cairo context to be used
+        :param lines: List of line vertices
+        :param linewidth: Width of the lines
+        :param color: Color of the lines
+        :param alpha: Alpha value of the color of the lines
+        """
         self.set_color(context, color, alpha)
         context.set_line_width(linewidth)
         for line in lines:
@@ -114,4 +157,10 @@ class Painter:
             context.stroke()
 
     def set_color(self, cairo_context, color_string, alpha):
+        """
+        Sets a color of the cairo context
+        :param cairo_context: Cairo context to be modified
+        :param color_string: String specifying the color
+        :param alpha: Alpha value of the color
+        """
         ColorPalette.dab(cairo_context, color_string, alpha)

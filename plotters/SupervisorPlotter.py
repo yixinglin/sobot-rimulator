@@ -24,6 +24,11 @@ from plotters.controllers.GTGAndAOControllerPlotter import *
 class SupervisorPlotter:
 
     def __init__(self, supervisor, robot_geometry):
+        """
+        Initializes a SupervisorPlotter object
+        :param supervisor: The underlying supervisor
+        :param robot_geometry: The robot geometry
+        """
         self.supervisor = supervisor
         self.supervisor_state_machine = supervisor.state_machine
 
@@ -37,8 +42,11 @@ class SupervisorPlotter:
         self.robot_geometry = robot_geometry  # robot geometry
         self.robot_estimated_traverse_path = []  # path taken by robot's internal image
 
-    # draw a representation of the supervisor's internal state to the frame
     def draw_supervisor_to_frame(self, frame, draw_invisibles=False):
+        """ Draw a representation of the supervisor's internal state to the frame
+        :param frame: The frame to be used
+        :param draw_invisibles: Boolean value
+        """
         # update the estimated robot traverse path
         self.robot_estimated_traverse_path.append(self.supervisor.estimated_pose.vposition())
 
@@ -54,6 +62,10 @@ class SupervisorPlotter:
         # self._draw_all_controllers_to_frame()
 
     def _draw_goal_to_frame(self, frame):
+        """
+        Draws the current goal to the frame
+        :param frame: The frame to be used
+        """
         goal = self.supervisor.goal
         frame.add_circle(pos=goal,
                          radius=0.05,
@@ -65,6 +77,10 @@ class SupervisorPlotter:
                          alpha=0.5)
 
     def _draw_robot_state_estimate_to_frame(self, frame):
+        """
+        Draws the current robot state estimate based on odometric information only
+        :param frame: The frame to be used
+        """
         # draw the estimated position of the robot
         vertexes = self.robot_geometry.get_transformation_to_pose(self.supervisor.estimated_pose).vertexes[:]
         vertexes.append(vertexes[0])  # close the drawn polygon
@@ -78,8 +94,11 @@ class SupervisorPlotter:
                         color="red",
                         alpha=0.5)
 
-    # draw the current controller's state to the frame
     def _draw_current_controller_to_frame(self, frame):
+        """
+        Draws the current controller state
+        :param frame: The frame to be used
+        """
         current_state = self.supervisor_state_machine.current_state
         if current_state == ControlState.GO_TO_GOAL:
             self.go_to_goal_controller_plotter.draw_go_to_goal_controller_to_frame(frame)
@@ -92,6 +111,10 @@ class SupervisorPlotter:
 
     # draw all of the controllers's to the frame
     def _draw_all_controllers_to_frame(self, frame):
+        """
+        Draw all of the controllers
+        :param frame: The frame to be used
+        """
         self.go_to_goal_controller_plotter.draw_go_to_goal_controller_to_frame(frame)
         self.avoid_obstacles_controller_plotter.draw_avoid_obstacles_controller_to_frame(frame)
         # self.gtg_and_ao_controller_plotter.draw_gtg_and_ao_controller_to_frame()

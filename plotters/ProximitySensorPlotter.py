@@ -25,10 +25,19 @@ import utils.linalg2_util as linalg
 class ProximitySensorPlotter:
 
     def __init__(self, proximity_sensor, cone_angle):
+        """
+        Initializes a ProximitySensorPlotter object
+        :param proximity_sensor: The underlying proximity sensor
+        :param cone_angle: The cone angle that should be used for plotting
+        """
         self.proximity_sensor = proximity_sensor
         self.cone_angle = cone_angle
 
     def draw_proximity_sensor_to_frame(self, frame):
+        """
+        Draws the proximity sensor to a frame
+        :param frame: The frame to be used
+        """
         proximity_sensor = self.proximity_sensor
 
         # grab proximity sensor pose values
@@ -62,6 +71,10 @@ class ProximitySensorPlotter:
         # self._draw_detection_to_frame()
 
     def _draw_detection_to_frame(self, frame):
+        """
+        Visualize the detection of the proximity sensor
+        :param frame: The frame to be used
+        """
         target_delta = self.proximity_sensor.target_delta
         if target_delta is not None:
             detector_endpoints = self.proximity_sensor.detector_line.vertexes
@@ -74,6 +87,10 @@ class ProximitySensorPlotter:
                              alpha=0.7)
 
     def _draw_detector_line_to_frame(self, frame):
+        """
+        Draws a detector line to a frame
+        :param frame: The frame to be used
+        """
         vertexes = self.proximity_sensor.detector_line.vertexes
 
         frame.add_lines([vertexes],
@@ -82,12 +99,20 @@ class ProximitySensorPlotter:
                         alpha=0.7)
 
     def _draw_detector_line_origins_to_frame(self, frame):
+        """
+        Draw the detector line origins to a frame
+        :param frame: The frame to be used
+        """
         origin = self.proximity_sensor.detector_line.vertexes[0]
         frame.add_circle(pos=(origin[0], origin[1]),
                          radius=0.02,
                          color="black")
 
     def _draw_bounding_circle_to_frame(self, frame):
+        """
+        Draws a bounding circle fully containing the proximity snesor detector line to the frame
+        :param frame: The frame to be used
+        """
         c, r = self.proximity_sensor.detector_line.bounding_circle
         frame.add_circle(pos=c,
                          radius=r,

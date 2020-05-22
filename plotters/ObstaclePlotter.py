@@ -20,9 +20,19 @@
 class ObstaclePlotter:
 
     def __init__(self, obstacle):
+        """
+        Initializes an ObstaclePlotter object
+        :param obstacle: The underlying obstacle
+        """
         self.obstacle = obstacle
 
     def draw_obstacle_to_frame(self, frame, color="dark red", alpha=0.4):
+        """
+        Draws an obstacle to a frame
+        :param frame: Frame that the obstacle shall be drawn to
+        :param color: Color in which the obstacle shall be drawn
+        :param alpha: Alpha value of the color
+        """
         obstacle = self.obstacle
 
         # grab the obstacle pose
@@ -38,6 +48,10 @@ class ObstaclePlotter:
         # self._draw_bounding_circle_to_frame()
 
     def _draw_bounding_circle_to_frame(self, frame):
+        """
+        Draws a bounding circle of the obstacle
+        :param frame: Frame that the bounding circle shall be drawn to
+        """
         c, r = self.obstacle.global_geometry.bounding_circle
         frame.add_circle(pos=c,
                          radius=r,

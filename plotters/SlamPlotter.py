@@ -28,6 +28,14 @@ from supervisor.slam.EKFSlam import EKFSlam
 class SlamPlotter:
 
     def __init__(self, slam, viewer, radius, robot_config, frame_number):
+        """
+        Initializes a SlamPlotter object
+        :param slam: The underlying slam algorithm object
+        :param viewer: The viewer to be used
+        :param radius: The radius with which the estimated obstacles shall be drawn
+        :param robot_config: The robot configuration
+        :param frame_number: The frame number to be used
+        """
         self.slam = slam
         self.viewer = viewer
         self.frame_number = frame_number
@@ -36,6 +44,9 @@ class SlamPlotter:
         self.radius = radius
 
     def draw_slam_to_frame(self):
+        """
+        Draws a SLAM visualization to the frame
+        """
         frame = self.viewer.current_frames[self.frame_number]
         self.__draw_robot_to_frame(frame, self.slam.get_estimated_pose())
 
@@ -49,11 +60,19 @@ class SlamPlotter:
             self.__draw_confidence_ellipse(frame)
 
     def plot_covariances(self):
+        """
+        Plots the covariance matrix
+        """
         cov = self.slam.get_covariances()
         plt.matshow(cov)
         plt.show()
 
     def __draw_robot_to_frame(self, frame, robot_pose):
+        """
+        Draws the roboto to the frame
+        :param frame: The frame to be used
+        :param robot_pose: The pose of the robot
+        """
         robot_pos, robot_theta = robot_pose.vunpack()
         # draw the robot
         robot_bottom = linalg.rotate_and_translate_vectors(self.robot_bottom_shape, robot_theta, robot_pos)
@@ -67,6 +86,10 @@ class SlamPlotter:
                            alpha=0.5)
 
     def __draw_confidence_ellipse(self, frame):
+        """
+        Draws confidence ellipses based on the covariance matrix to the frame. Only supported for EKFSLAM.
+        :param frame: The frame to be used
+        """
         cov = self.slam.get_covariances()[:2, :2]  # Get covariances of position arguments
         eigvals, eigvecs = np.linalg.eig(cov)
         if eigvals[0] < eigvals[1]:

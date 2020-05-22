@@ -25,16 +25,25 @@ from simulation.exceptions import CollisionException
 class Physics:
 
     def __init__(self, world):
-        # the world this physics engine acts on
+        """
+        Initializes a Physics object
+        :param world: The world this physics engine acts on
+        """
         self.world = world
 
     def apply_physics(self):
+        """
+        Apply the physics interactions of the world.
+        Consists of collision detections and updating the robots proximity sensors
+        """
         self._detect_collisions()
         self._update_proximity_sensors()
 
-    # test the world for existing collisions with solids
-    # raises a CollisionException if one occurs
     def _detect_collisions(self):
+        """
+        Checks the world for any collisions between colliding objects (robots) and solid objects (obstacles)
+        Raises a CollisionException if a collision is detected
+        """
         colliders = self.world.colliders()
         solids = self.world.solids()
 
@@ -50,8 +59,10 @@ class Physics:
                         if geometrics.convex_polygon_intersect_test(polygon1, polygon2):
                             raise CollisionException()
 
-    # update any proximity sensors that are in range of solid objects
     def _update_proximity_sensors(self):
+        """
+        Update any proximity sensors that are in range of solid objects
+        """
         robots = self.world.robots
         solids = self.world.solids()
 

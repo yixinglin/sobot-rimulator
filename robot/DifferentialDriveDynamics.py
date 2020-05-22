@@ -23,13 +23,24 @@ from math import *
 class DifferentialDriveDynamics:
 
     def __init__(self, wheel_radius, wheel_base_length):
+        """
+        Initializes a DifferentialDriveDynamics object
+        :param wheel_radius: The wheel radius
+        :param wheel_base_length: Distance between the two centers of the wheels
+        """
         self.wheel_radius = wheel_radius
         self.wheel_base_length = wheel_base_length
 
-    # apply physical dynamics to the given representations of moving parts
     def apply_dynamics(self, v_l, v_r, d_t,  # dynamics parameters
                        pose, wheel_encoders):  # the moving parts
-
+        """
+        Applies a differential drive motion command and updates the wheel encoders.
+        :param v_l: Velocity of left wheel
+        :param v_r: Velocity of right wheel
+        :param d_t: Time that the motion is executed for
+        :param pose: Pose at the beginning of the motion
+        :param wheel_encoders: The odometric wheel sensors
+        """
         # calculate the change in wheel angle (in radians)
         d_angle_left = d_t * v_l
         d_angle_right = d_t * v_r
@@ -41,7 +52,6 @@ class DifferentialDriveDynamics:
         d_center = (d_left_wheel + d_right_wheel) / 2.0
 
         # calculate the new pose
-        # TODO: This linearizes the movement, right? Is this fine?
         old_x, old_y, old_theta = pose.sunpack()
         new_x = old_x + (d_center * cos(old_theta))
         new_y = old_y + (d_center * sin(old_theta))

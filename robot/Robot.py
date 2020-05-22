@@ -27,6 +27,10 @@ from robot.sensor.WheelEncoder import *
 class Robot:  # Khepera III robot
 
     def __init__(self, robot_cfg):
+        """
+        Initializes a Robot object
+        :param robot_cfg: The robot configuration
+        """
         self.robot_cfg = robot_cfg
         # geometry
         self.geometry = Polygon(robot_cfg["bottom_plate"])
@@ -59,8 +63,11 @@ class Robot:  # Khepera III robot
         self.left_wheel_drive_rate = 0.0
         self.right_wheel_drive_rate = 0.0
 
-    # simulate the robot's motion over the given time interval
     def step_motion(self, dt):
+        """
+        Simulate the robot's motion over the given time interval
+        :param dt: The time interval for which this motion is executed
+        """
         v_l = self.left_wheel_drive_rate
         v_r = self.right_wheel_drive_rate
 
@@ -75,8 +82,12 @@ class Robot:  # Khepera III robot
         for ir_sensor in self.ir_sensors:
             ir_sensor.update_position()
 
-    # set the drive rates (angular velocities) for this robot's wheels in rad/s
     def set_wheel_drive_rates(self, v_l, v_r):
+        """
+        Set the drive rates (angular velocities) for this robot's wheels in rad/s
+        :param v_l: Velocity of left wheel
+        :param v_r: Velocity of right while
+        """
         # simulate physical limit on drive motors
         v_l = min(self.robot_cfg["wheel"]["max_speed"], v_l)
         v_r = min(self.robot_cfg["wheel"]["max_speed"], v_r)

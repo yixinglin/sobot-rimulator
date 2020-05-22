@@ -23,6 +23,11 @@ from models.Polygon import *
 class OctagonObstacle:
 
     def __init__(self, radius, pose):
+        """
+        Initializes a regular OctagonObstacle object
+        :param radius: The distance from the center to a corner of the octagon
+        :param pose: Pose specifying the center of the octagon
+        """
         self.pose = pose
         self.radius = radius
 

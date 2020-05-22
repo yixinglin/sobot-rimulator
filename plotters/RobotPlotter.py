@@ -24,6 +24,10 @@ from plotters.SupervisorPlotter import *
 class RobotPlotter:
 
     def __init__(self, robot):
+        """
+        Initializes a RobotPlotter object
+        :param robot: The underlying robot
+        """
         self.robot = robot
         self.robot_shape = robot.robot_cfg["top_plate"]
 
@@ -38,6 +42,11 @@ class RobotPlotter:
         self.traverse_path = []  # this robot's traverse path
 
     def draw_robot_to_frame(self, frame, draw_invisibles=False):
+        """
+        Draws a robot to the frame
+        :param frame: The frame to be used
+        :param draw_invisibles: Boolean value specifying whether invisibles shall be drawn
+        """
         # update the robot traverse path
         position = self.robot.pose.vposition()
         self.traverse_path.append(position)
@@ -67,30 +76,10 @@ class RobotPlotter:
             self._draw_real_traverse_path_to_frame(frame)
 
     def _draw_real_traverse_path_to_frame(self, frame):
+        """
+        Draws the real traverse path of the robot to the frame
+        :param frame: The frame to be used
+        """
         frame.add_lines([self.traverse_path],
                         color="black",
                         linewidth=0.01)
-
-    # draws the traverse path as dots weighted according to robot speed
-    def _draw_rich_traverse_path_to_frame(self, frame):
-        # when robot is moving fast, draw small, opaque dots
-        # when robot is moving slow, draw large, transparent dots
-        d_min, d_max = 0.0, 0.01574  # possible distances between dots
-        r_min, r_max = 0.007, 0.02  # dot radius
-        a_min, a_max = 0.3, 0.55  # dot alpha value
-        m_r = (r_max - r_min) / (d_min - d_max)
-        b_r = r_max - m_r * d_min
-        m_a = (a_max - a_min) / (r_min - r_max)
-        b_a = a_max - m_a * r_min
-
-        prev_posn = self.traverse_path[0]
-        for posn in self.traverse_path[1::1]:
-            d = linalg.distance(posn, prev_posn)
-            r = (m_r * d) + b_r
-            a = (m_a * r) + b_a
-            frame.add_circle(pos=posn,
-                             radius=r,
-                             color="black",
-                             alpha=a)
-
-            prev_posn = posn

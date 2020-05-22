@@ -2,6 +2,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 import math
 
+"""
+This is a script to produce plots visualizing the difference between applying Gaussian noise
+to the motion command before executing the motion (translational and rotational velocities)
+or to the resulting robot pose after a noise free motion command was executed.
+"""
+
 # Fixing random state for reproducibility
 np.random.seed(19680801)
 

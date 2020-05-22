@@ -21,16 +21,28 @@
 class RobotSupervisorInterface:
 
     def __init__(self, robot):
+        """
+        Initializes a RobotSupervisorInterface object
+        :param robot: The underlying robot
+        """
         self.robot = robot
 
-    # read the proximity sensors
     def read_proximity_sensors(self):
+        """
+        :return: List of the current proximity sensor readings
+        """
         return [s.read() for s in self.robot.ir_sensors]
 
-    # read the wheel encoders
     def read_wheel_encoders(self):
+        """
+        :return: List of current wheel encoder readings
+        """
         return [e.read() for e in self.robot.wheel_encoders]
 
-    # apply wheel drive command
     def set_wheel_drive_rates(self, v_l, v_r):
+        """
+        Specify the wheel velocities
+        :param v_l: Velocity of left wheel
+        :param v_r: Velocity of right wheel
+        """
         self.robot.set_wheel_drive_rates(v_l, v_r)

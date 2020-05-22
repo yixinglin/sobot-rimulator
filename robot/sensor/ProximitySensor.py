@@ -30,7 +30,12 @@ class ProximitySensor(Sensor):
                  placement_pose,
                  # pose of this sensor relative to the robot (NOTE: normalized on robot located at origin and with theta 0, i.e. facing east )
                  sensor_config):
-
+        """
+        Initializes a ProximitySensor object
+        :param robot: THe underlying robot
+        :param placement_pose: The pose at which the sensor is placed relative to the robot
+        :param sensor_config: The sensor configurations
+        """
         # bind the robot
         self.robot = robot
 
@@ -61,8 +66,11 @@ class ProximitySensor(Sensor):
         # factor used for converting measured distance into a read value
         self.factor = log(self.min_read_value / self.max_read_value) / (self.max_range - self.min_range)
 
-    # set this proximity sensor to detect an object at distance ( delta * max_range )
     def detect(self, delta):
+        """
+        Set this proximity sensor to detect an object at distance ( delta * max_range )
+        :param delta: Factor of the maximum sensor range that was detected
+        """
         if delta is not None and (delta < 0.0 or delta > 1.0):
             raise Exception("delta out of bounds - must be in range [0.0, 1.0]")
 
@@ -83,18 +91,24 @@ class ProximitySensor(Sensor):
                                       int(ceil(self.max_read_value * e ** (self.factor * (d - min_range))))
                                       )
 
-    # get this sensor's output
     def read(self):
+        """
+        :return: The current sensor reading
+        """
         return self.read_value
 
-    # update the global position of this sensor
     def update_position(self):
+        """
+        Update the global position of this sensor
+        """
         # update global pose
         self._update_pose()
 
         # update detector line
         self.detector_line = self.detector_line_source.get_transformation_to_pose(self.pose)
 
-    # update this sensor's pose
     def _update_pose(self):
+        """
+        Update this sensor's pose
+        """
         self.pose = self.placement_pose.transform_to(self.robot.pose)

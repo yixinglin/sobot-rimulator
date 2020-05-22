@@ -23,6 +23,12 @@ from models.Polygon import *
 class RectangleObstacle:
 
     def __init__(self, width, height, pose):
+        """
+        Initializes a RectangleObstacle
+        :param width: Width of the rectangle
+        :param height: Height of the rectanle
+        :param pose: Pose specifying the center of the rectangle
+        """
         self.pose = pose
         self.width = width
         self.height = height

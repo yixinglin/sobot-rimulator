@@ -22,4 +22,7 @@
 class Sensor:
 
     def read(self):
+        """
+        Abstract method that should return the current sensor reading
+        """
         raise NotImplementedError()

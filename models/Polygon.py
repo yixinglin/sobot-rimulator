@@ -24,6 +24,10 @@ from utils import linalg2_util as linalg
 class Polygon(Geometry):
 
     def __init__(self, vertexes):
+        """
+        Initializes a Polygon object
+        :param vertexes: The vertices of the polygon
+        """
         self.vertexes = vertexes  # a list of 2-dimensional vectors
 
         # define the centerpoint and radius of a circle containing this polygon
@@ -31,13 +35,18 @@ class Polygon(Geometry):
         # NOTE: this may not be the "minimum bounding circle"
         self.bounding_circle = self._bounding_circle()
 
-    # return a copy of this polygon transformed to the given pose
     def get_transformation_to_pose(self, pose):
+        """
+        :param pose: The resulting pose
+        :return: A copy of this polygon transformed to the given pose
+        """
         p_pos, p_theta = pose.vunpack()
         return Polygon(linalg.rotate_and_translate_vectors(self.vertexes, p_theta, p_pos))
 
-    # get a list of of this polygon's edges as vertex pairs
     def edges(self):
+        """
+        :return: The edges of the polygon as vertex pairs
+        """
         vertexes = self.vertexes
 
         edges = []
@@ -47,8 +56,10 @@ class Polygon(Geometry):
 
         return edges
 
-    # get the number of edges of this polygon
     def numedges(self):
+        """
+        :return: The number of edges of this polygon
+        """
         return len(self.vertexes)
 
     # get the centerpoint and radius for a circle that completely contains this polygon

@@ -777,6 +777,12 @@ class ColorPalette:
 
     @classmethod
     def dab(cls, cairo_context, color_string, alpha):
+        """
+        Changes the color of a cairo context to the specified color
+        :param cairo_context: The cairo context to be changed
+        :param color_string: String specifying the color
+        :param alpha: The alpha value of the color
+        """
         vals = [c / 255.0 for c in color_table[color_string]]
         if alpha:
             cairo_context.set_source_rgba(vals[0], vals[1], vals[2], alpha)

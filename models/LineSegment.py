@@ -24,19 +24,28 @@ from utils import linalg2_util as linalg
 class LineSegment(Geometry):
 
     def __init__(self, vertexes):
+        """
+        Initializes a LineSegment object
+        :param vertexes: The vertices of the line segment
+        """
         self.vertexes = vertexes  # the beginning and ending points of this line segment
 
         # define the centerpoint and radius of a circle containing this line segment
         # value is a tuple of the form ( [ cx, cy ], r )
         self.bounding_circle = self._bounding_circle()
 
-    # return a copy of this line segment transformed to the given pose
     def get_transformation_to_pose(self, pose):
+        """
+        :param pose: The pose that this line segment should be transformed to
+        :return: A copy of this line segment transformed to the given pose
+        """
         p_pos, p_theta = pose.vunpack()
         return LineSegment(linalg.rotate_and_translate_vectors(self.vertexes, p_theta, p_pos))
 
-    # get the centerpoint and radius of a circle that contains this line segment
     def _bounding_circle(self):
+        """
+        :return: The centerpoint and radius of a circle that fully contains this line segment
+        """
         v = self._as_vector()
         vhalf = linalg.scale(v, 0.5)
 
@@ -45,6 +54,8 @@ class LineSegment(Geometry):
 
         return c, r
 
-    # get the vector from the beginning point to the end point of this line segment
     def _as_vector(self):
+        """
+        :return: The vector from the beginning point to the end point of this line segment
+        """
         return linalg.sub(self.vertexes[1], self.vertexes[0])

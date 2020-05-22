@@ -24,6 +24,11 @@ from plotters.RobotPlotter import *
 class WorldPlotter:
 
     def __init__(self, world, viewer):
+        """
+        Initializes a WorldPlotter object
+        :param world: The underlying world
+        :param viewer: The used viewer object
+        """
         # bind the viewer
         self.viewer = viewer
 
@@ -37,14 +42,25 @@ class WorldPlotter:
             self.add_obstacle(obstacle)
 
     def add_robot(self, robot):
+        """
+        Adds a robot plotter object
+        :param robot: The underlying robot
+        """
         robot_plotter = RobotPlotter(robot)
         self.robot_plotters.append(robot_plotter)
 
     def add_obstacle(self, obstacle):
+        """
+        Adds an obstacle plotter object
+        :param obstacle: The underlying obstacle
+        """
         obstacle_plotter = ObstaclePlotter(obstacle)
         self.obstacle_plotters.append(obstacle_plotter)
 
     def draw_world_to_frame(self):
+        """
+        Draw the world to the frame
+        """
         # draw the grid
         self._draw_grid_to_frame()
 
@@ -60,6 +76,9 @@ class WorldPlotter:
                     obstacle_plotter.draw_obstacle_to_frame(frame)
 
     def _draw_grid_to_frame(self):
+        """
+        Draw the grid of the world
+        """
         # NOTE: THIS FORMULA ASSUMES THE FOLLOWING:
         # - Window size never changes
         # - Window is always centered at (0, 0)

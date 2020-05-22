@@ -33,6 +33,14 @@ LS_DIALOG_RESPONSE_ACCEPT = 2
 class Viewer:
 
     def __init__(self, simulator, viewer_config, num_frames, ekf_enabled=True, use_slam_evaluation=True):
+        """
+        Initializes a Viewer object
+        :param simulator: The underlying simulator
+        :param viewer_config: The configuration of the Viewer
+        :param num_frames: Number of frame of the GUI, determined by which algorithms are activated
+        :param ekf_enabled: Boolean value specifying if EKF is enabled
+        :param use_slam_evaluation: Boolean value specifying if the slam evaluation is enabled
+        """
         # bind the simulator
         self.simulator = simulator
 
@@ -218,13 +226,22 @@ class Viewer:
         self.window.show_all()
 
     def new_frame(self):
+        """
+        Initialiues empty frames
+        """
         self.current_frames = [Frame() for _ in range(self.num_frames)]
 
     def draw_frame(self):
+        """
+        Draws the frames
+        """
         for drawing_area in self.drawing_areas:
             drawing_area.queue_draw_area(0, 0, self.view_width_pixels, self.view_height_pixels)
 
     def control_panel_state_init(self):
+        """
+        Specifies the button sensitivities at the initial state
+        """
         self.alert_box.set_text('')
         self.button_play.set_sensitive(True)
         self.button_stop.set_sensitive(False)
@@ -232,16 +249,26 @@ class Viewer:
         self.button_reset.set_sensitive(False)
 
     def control_panel_state_playing(self):
+        """
+        Specifies the button sensitivities while the simulation is running
+        """
         self.button_play.set_sensitive(False)
         self.button_stop.set_sensitive(True)
         self.button_reset.set_sensitive(True)
 
     def control_panel_state_paused(self):
+        """
+        Specifies the button sensitivities while the simulation is paused
+        """
         self.button_play.set_sensitive(True)
         self.button_stop.set_sensitive(False)
         self.button_reset.set_sensitive(True)
 
     def control_panel_state_finished(self, alert_text):
+        """
+        Specifies the button sensitivies once the simulation encountered an exception
+        :param alert_text: Text to be displayed to the user
+        """
         self.alert_box.set_text(alert_text)
         self.button_play.set_sensitive(False)
         self.button_stop.set_sensitive(False)
@@ -249,18 +276,38 @@ class Viewer:
 
     # EVENT HANDLERS:
     def on_play(self, widget):
+        """
+        Callback function that handles a click on the "Play" button
+        :param widget: The corresponding widget
+        """
         self.simulator.play_sim()
 
     def on_stop(self, widget):
+        """
+        Callback function that handles a click on the "Stop" button
+        :param widget: The corresponding widget
+        """
         self.simulator.pause_sim()
 
     def on_step(self, widget):
+        """
+        Callback function that handles a click on the "Step" button
+        :param widget: The corresponding widget
+        """
         self.simulator.step_sim_once()
 
     def on_reset(self, widget):
+        """
+        Callback function that handles a click on the "Reset" button
+        :param widget: The corresponding widget
+        """
         self.simulator.reset_sim()
 
     def on_save_map(self, widget):
+        """
+        Callback function that handles a click on the "Save Map" button
+        :param widget: The corresponding widget
+        """
         # create the file chooser
         file_chooser = gtk.FileChooserDialog(title='Save Map',
                                              parent=self.window,
@@ -281,6 +328,10 @@ class Viewer:
             file_chooser.destroy()
 
     def on_load_map(self, widget):
+        """
+        Callback function that handles a click on the "Load map" button
+        :param widget: The corresponding widget
+        """
         # create the file chooser
         file_chooser = gtk.FileChooserDialog(title='Load Map',
                                              parent=self.window,
@@ -300,9 +351,17 @@ class Viewer:
             file_chooser.destroy()
 
     def on_random_map(self, widget):
+        """
+        Callback function that handles a click on the "Random map" button
+        :param widget: The corresponding widget
+        """
         self.simulator.random_map()
 
     def on_draw_invisibles(self, widget):
+        """
+        Callback function that handles a click on the "Draw invisibles" button
+        :param widget: The corresponding widget
+        """
         # toggle the draw_invisibles state
         self.draw_invisibles = not self.draw_invisibles
         if self.draw_invisibles:
@@ -312,34 +371,69 @@ class Viewer:
         self.simulator.draw_world()
 
     def on_slam_evaluation(self, widget):
+        """
+        Callback function that handles a click on the "Slam evaluation" button
+        :param widget: The corresponding widget
+        """
         if self.simulator.ekfslam_evaluation is not None:
             self.simulator.ekfslam_evaluation.plot()
         if self.simulator.fastslam_evaluation is not None:
             self.simulator.fastslam_evaluation.plot()
 
     def on_plot_covariances(self, widget):
+        """
+        Callback function that handles a click on the "Plot covariances" button
+        :param widget: The corresponding widget
+        """
         self.simulator.ekfslam_plotter.plot_covariances()
 
     def on_expose1(self, widget, context):
+        """
+        Draws the first frame
+        :param widget: The corresponding widget
+        :param context: The cairo context to be used
+        """
         self.painter.draw_frame(self.current_frames[0], widget, context)
 
     def on_expose2(self, widget, context):
+        """
+        Draws the second frame
+        :param widget: The corresponding widget
+        :param context: The cairo context to be used
+        """
         self.painter.draw_frame(self.current_frames[1], widget, context)
 
     def on_expose3(self, widget, context):
+        """
+        Draws the third frame
+        :param widget: The corresponding widget
+        :param context: The cairo context to be used
+        """
         self.painter.draw_frame(self.current_frames[2], widget, context)
 
     def on_delete(self, widget, event):
+        """
+        Callback function the handles a delete event
+        :param widget: The corresponding widget
+        :param event: An event to be handled
+        :return:
+        """
         gtk.main_quit()
         return False
 
     def _decorate_draw_invisibles_button_active(self):
+        """
+        Specifies the "Draw invisibles" button while it is enabled
+        """
         draw_invisibles_image = gtk.Image()
         draw_invisibles_image.set_from_stock(gtk.STOCK_REMOVE, gtk.IconSize.BUTTON)
         self.button_draw_invisibles.set_image(draw_invisibles_image)
         self.button_draw_invisibles.set_label('Hide Invisibles')
 
     def _decorate_draw_invisibles_button_inactive(self):
+        """
+        Specifies the "Draw invisibles" button while it is disabled
+        """
         draw_invisibles_image = gtk.Image()
         draw_invisibles_image.set_from_stock(gtk.STOCK_ADD, gtk.IconSize.BUTTON)
         self.button_draw_invisibles.set_image(draw_invisibles_image)

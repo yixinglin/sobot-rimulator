@@ -24,6 +24,10 @@ from utils import math_util
 class Pose:
 
     def __init__(self, *args):
+        """
+        Initializes a Pose object
+        :param args: Arguments specifying the pose
+        """
         if len(args) == 2:  # initialize using a vector ( vect, theta )
             vect = args[0]
             theta = args[1]

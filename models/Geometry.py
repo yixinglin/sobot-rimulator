@@ -21,8 +21,16 @@
 
 class Geometry:
     def __init__(self, vertexes):
+        """
+        Initializes a Geometry object
+        :param vertexes: List of vertices to be stored
+        """
         self.vertexes = vertexes
         self.bounding_circle = None
 
     def get_transformation_to_pose(self, pose):
+        """
+        Abstract method to transform the geometrical object to the specified pose
+        :param pose: Pose that the object should be transformed to
+        """
         raise NotImplementedError()
