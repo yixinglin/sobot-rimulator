@@ -1,4 +1,4 @@
-## Sobot Rimulator - A Robot Programming Tool
+# Sobot Rimulator - A Robot Programming Tool
 
 ![Screenshot](documentation/GUI.png)
 
@@ -7,7 +7,7 @@ which allows the simulation of a mobile robot in a map of obstacles that must be
 This extension includes the integration of the EKFSLAM and FastSLAM algorithms to perform an estimation of the current robot state
 and its surrounding environment based on its previous motion commands and proximity sensor readings.
 
-### Requirements
+## Requirements
 
 *Sobot Rimulator* is cross-platform compatible. In order to run, the following must be installed on your computer:
 - Python 3: Please follow the instructions at http://www.python.org/download/
@@ -21,7 +21,7 @@ Additional required dependencies can be installed by
     pip3 install PyYAML
     
 
-### To Run
+## To Run
 
 Open a command prompt (terminal) and navigate to the *Sobot Rimulator* directory. Then type:
 
@@ -32,20 +32,20 @@ specified as an additional program parameter:
 
     python rimulator.py original_config.yaml
     
-### Graphical User Interface
+## Graphical User Interface
 
 The graphical user interface consists of the visualization of the current simulated world as well as a control panel of 
 buttons with which the user can interact. The robot is depicted in blue and aims to reach its goal depicted in green 
 while avoiding collisions with the red objects. The buttons of the control panel are:
 
-##### Control row
+#### Control row
 
 - **Play**: Starts or continues the simulation
 - **Stop**: Stops the simulation
 - **Step**: Progresses the simulation by a single simulation cycle. If the simulation is running, it will first be stopped.
 - **Reset** Reset the robot to its initial position 
 
-##### Map row
+#### Map row
 
 - **Save map**: Opens a directory window, in which filename and path can be specified in order to save the current map.
  The default directory is [/maps](/maps), where multiple example maps are already stored.
@@ -53,7 +53,7 @@ while avoiding collisions with the red objects. The buttons of the control panel
 - **Random map**: Generates a random map and resets the robot to the initial origin pose. Map generation parameters are 
 specified in the configuration file.
 
-##### Additional information row
+#### Additional information row
 
 - **Show/Hide invisibles**: The button lets the user toggle whether additional information shall be visualized. These 
 include 
@@ -70,7 +70,7 @@ Only displayed if the EKF SLAM is enabled in the configuration.
 - **Plot Slam Evaluation**: Plots a graph for every enabled SLAM algorithm displaying the accuracy of its estimations 
 over the course of the simulation. Only displayed if the SLAM evaluation is enabled in the configuration.
 
-### Configuration
+## Configuration
 
 The simulator can be configured by a variety of paramters. The default configuration file is [config.yaml](config.yaml), 
 where all parameters are documented. The configuration file [original_config.yaml](original_config.yaml) does not include
