@@ -32,6 +32,10 @@ seed(42)
 class MapManager:
 
     def __init__(self, map_config):
+        """
+
+        :param map_config:
+        """
         self.current_obstacles = []
         self.current_goal = None
         self.cfg = map_config
@@ -162,11 +166,16 @@ class MapManager:
         with open(filename, 'wb') as file:
             pickle.dump(self.current_obstacles, file)
             pickle.dump(self.current_goal, file)
+            pickle.dump(getstate(), file)
 
     def load_map(self, filename):
         with open(filename, 'rb') as file:
             self.current_obstacles = pickle.load(file)
             self.current_goal = pickle.load(file)
+            try:
+                setstate(pickle.load(file))
+            except EOFError:
+                print("No random state stored")
 
     def apply_to_world(self, world):
         # add the current obstacles
