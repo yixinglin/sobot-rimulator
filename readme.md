@@ -18,7 +18,7 @@ Alternatively, this software is available through package managers such as Apt-G
 
 Additional required dependencies can be installed by
     
-    python3 -m pip yaml
+    pip3 install PyYAML
     
 
 ### To Run
