@@ -1,11 +1,11 @@
 ## Sobot Rimulator - A Robot Programming Tool
 
-![Screenshot](documentation/GUI.png)
+![Screenshot](screenshot.png)
 
 
 ### Documentation
 
-Detailed documentation can be found in the [Manual](original_documentation/Manual.txt).
+Detailed documentation can be found in the [Manual](Manual.txt).
 
 I also wrote about this project for the Toptal Engineering Blog! Read more about the underlying principles of autonomous mobile robotics [here](https://www.toptal.com/robotics/programming-a-robot-an-introductory-tutorial).
 
@@ -28,11 +28,3 @@ Alternatively, both pieces of software should be available through package manag
 Open a command prompt (terminal) and navigate to the *Sobot Rimulator* directory. Then type:
 
     python rimulator.py
-    
-This will start the simulator using the default `config.yaml` configuration file. A specific configuration file can be
-specified as an additional program parameter:
-
-    python rimulator.py original_config.yaml
-    
-
-
