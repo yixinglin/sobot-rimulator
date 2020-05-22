@@ -37,11 +37,11 @@ class SlamEvaluation:
         ax.plot(range(0, sim_cycles, self.cfg["interval"]), self.average_distances)
         ax.grid()
         if isinstance(self.slam, EKFSlam):
-            ax.set(xlabel='Simulation cycles', ylabel='Average distance to true landmark',
+            ax.set(xlabel='Simulation cycles', ylabel='Average distance to true landmark in meters',
                    title='Evaluation of EKF SLAM')
             plt.savefig('ekf_slam_evaluation.png')
         else:
-            ax.set(xlabel='Simulation cycles', ylabel='Average distance to true landmark',
+            ax.set(xlabel='Simulation cycles', ylabel='Average distance to true landmark in meters',
                    title='Evaluation of FastSLAM')
             plt.savefig('fast_slam_evaluation.png')
         ax.grid()
