@@ -23,6 +23,10 @@ from utils import math_util
 class GoToAngleController:
 
     def __init__(self, supervisor):
+        """
+        Initializes a GoToAngleController
+        :param supervisor: The underlying supervisor
+        """
         # bind the supervisor
         self.supervisor = supervisor
 
@@ -30,6 +34,10 @@ class GoToAngleController:
         self.k_p = 5.0
 
     def execute(self, theta_d):
+        """
+        Executes the controllers update during one simulation cycle
+        :param theta_d: The angle in which the robot should drive
+        """
         theta = self.supervisor.estimated_pose().theta
         e = math_util.normalize_angle(theta_d - theta)
         omega = self.k_p * e

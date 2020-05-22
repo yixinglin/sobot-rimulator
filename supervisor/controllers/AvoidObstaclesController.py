@@ -25,6 +25,10 @@ from utils import linalg2_util as linalg
 class AvoidObstaclesController:
 
     def __init__(self, supervisor):
+        """
+        Initializes an AvoidObstaclesController object
+        :param supervisor: The underlying supervisor
+        """
         # bind the supervisor
         self.supervisor = supervisor
 
@@ -50,10 +54,15 @@ class AvoidObstaclesController:
         self.ao_heading_vector = [1.0, 0.0]
 
     def update_heading(self):
-        # generate and store new heading and obstacle vectors
+        """
+        Generates and store new heading and obstacle vectors
+        """
         self.ao_heading_vector, self.obstacle_vectors = self.calculate_ao_heading_vector()
 
     def execute(self):
+        """
+        Executes the controllers update during one simulation cycle
+        """
         # calculate the time that has passed since the last control iteration
         current_time = self.supervisor.time()
         dt = current_time - self.prev_time
@@ -79,12 +88,11 @@ class AvoidObstaclesController:
 
         self.supervisor.set_outputs(v, omega)
 
-        # === FOR DEBUGGING ===
-        # self._print_vars( eP, eI, eD, v, omega )
-
-    # return a obstacle avoidance vector in the robot's reference frame
-    # also returns vectors to detected obstacles in the robot's reference frame
     def calculate_ao_heading_vector(self):
+        """
+        :return: An obstacle avoidance vector in the robot's reference frame
+                 and vectors to detected obstacles in the robot's reference frame
+        """
         # initialize vector
         obstacle_vectors = [[0.0, 0.0]] * len(self.proximity_sensor_placements)
         ao_heading_vector = [0.0, 0.0]
@@ -106,21 +114,3 @@ class AvoidObstaclesController:
                                            linalg.scale(vector, self.sensor_gains[i]))
 
         return ao_heading_vector, obstacle_vectors
-
-    def _print_vars(self, eP, eI, eD, v, omega):
-        print("\n\n")
-        print("==============")
-        print("ERRORS:")
-        print("eP: " + str(eP))
-        print("eI: " + str(eI))
-        print("eD: " + str(eD))
-        print("CONTROL COMPONENTS:")
-        print("kP * eP = " + str(self.kP) + " * " + str(eP))
-        print("= " + str(self.kP * eP))
-        print("kI * eI = " + str(self.kI) + " * " + str(eI))
-        print("= " + str(self.kI * eI))
-        print("kD * eD = " + str(self.kD) + " * " + str(eD))
-        print("= " + str(self.kD * eD))
-        print("OUTPUTS:")
-        print("omega: " + str(omega))
-        print("v    : " + str(v))

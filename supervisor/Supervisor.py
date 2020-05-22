@@ -26,11 +26,17 @@ from supervisor.SupervisorStateMachine import *
 
 class Supervisor:
 
-    def __init__(self, robot_interface,  # the interface through which this supervisor will interact with the robot
+    def __init__(self, robot_interface,
                  cfg,
-                 goal=[0.0, 0.0],  # the goal to which this supervisor will guide the robot
-                 initial_pose_args=[0.0, 0.0, 0.0]):  # the pose the robot will have when control begins
-
+                 goal=[0.0, 0.0],
+                 initial_pose_args=[0.0, 0.0, 0.0]):
+        """
+        Initializes a supervisor object
+        :param robot_interface: The interface through which this supervisor will interact with the robot
+        :param cfg: The configuration of the simulator
+        :param goal: The goal to which this supervisor will guide the robot
+        :param initial_pose_args: The initial pose of the robot
+        """
         # Extract relevant configs
         self.robot_cfg = cfg["robot"]
         self.control_cfg = cfg["control"]
@@ -102,8 +108,11 @@ class Supervisor:
         self.v_l = 0.0
         self.v_r = 0.0
 
-    # simulate this supervisor running for one time increment
     def step(self, dt):
+        """
+        Simulate this supervisor running for one time increment
+        :param dt: Discrete time interval corresponding to one simulation cycle
+        """
         # increment the internal clock time
         self.time += dt
 
@@ -113,15 +122,19 @@ class Supervisor:
         # execute one full control loop
         self._execute()
 
-    # execute one control loop
     def _execute(self):
+        """
+        Execute one control loop
+        """
         self._update_state()  # update state
-        self._update_slam()
+        self._update_slam()  # Update SLAM estimations
         self.current_controller.execute()  # apply the current controller
         self._send_robot_commands()  # output the generated control signals to the robot
 
-    # update the estimated robot state and the control state
     def _update_state(self):
+        """
+        Update the estimated robot state and the control state
+        """
         # update estimated robot state from sensor readings
         self._update_proximity_sensor_distances()
         self._update_odometry()
@@ -132,15 +145,19 @@ class Supervisor:
         # update the control state
         self.state_machine.update_state()
 
-    # calculate updated heading vectors for the active controllers
     def _update_controller_headings(self):
+        """
+        Calculate updated heading vectors for the active controllers
+        """
         self.go_to_goal_controller.update_heading()
         self.avoid_obstacles_controller.update_heading()
         self.gtg_and_ao_controller.update_heading()
         self.follow_wall_controller.update_heading()
 
-    # update the distances indicated by the proximity sensors
     def _update_proximity_sensor_distances(self):
+        """
+        Update the distances indicated by the proximity sensors
+        """
         self.proximity_sensor_distances = \
             [self.proximity_sensor_min_range + (
                 log(readval / self.proximity_sensor_max_read_value)) / self.sensor_conversion_factor
@@ -150,8 +167,10 @@ class Supervisor:
              for (measured_distance, sensor_placement_distance) in
              zip(self.proximity_sensor_distances, self.proximity_sensor_placements_distances_to_robot_center)]
 
-    # update the estimated position of the robot using it's wheel encoder readings
     def _update_odometry(self):
+        """
+        Update the estimated position of the robot using it's wheel encoder readings
+        """
         R = self.robot_wheel_radius
         N = float(self.wheel_encoder_ticks_per_revolution)
 
@@ -181,6 +200,9 @@ class Supervisor:
         self.prev_ticks_right = ticks_right
 
     def _update_slam(self):
+        """
+        Update SLAM estimations
+        """
         v, yaw = self._diff_to_uni(self.v_l, self.v_r)  # Retrieve the previous motion command
         motion_command = np.array([[v], [yaw]])
         measured_distances = self.proximity_sensor_distances_from_robot_center
@@ -190,8 +212,10 @@ class Supervisor:
         if self.fastslam is not None:
             self.fastslam.update(motion_command, zip(measured_distances, sensor_angles))
 
-    # generate and send the correct commands to the robot
     def _send_robot_commands(self):
+        """
+        Generate and send the correct commands to the robot
+        """
         # limit the speeds:
         v = max(min(self.v_output, self.v_max), -self.v_max)
         omega = max(min(self.omega_output, self.omega_max), -self.omega_max)
@@ -203,8 +227,12 @@ class Supervisor:
         self.robot.set_wheel_drive_rates(v_l, v_r)
 
     def _uni_to_diff(self, v, omega):
-        # v = translational velocity (m/s)
-        # omega = angular velocity (rad/s)
+        """
+        Transform a unicyclic motion command to the differential drive model
+        :param v: Translational velocity (m/s)
+        :param omega: Rotational velocity (rad/s)
+        :return: Velocities for left and right wheel (rad/s)
+        """
 
         R = self.robot_wheel_radius
         L = self.robot_wheel_base_length
@@ -215,8 +243,12 @@ class Supervisor:
         return v_l, v_r
 
     def _diff_to_uni(self, v_l, v_r):
-        # v_l = left-wheel angular velocity (rad/s)
-        # v_r = right-wheel angular velocity (rad/s)
+        """
+        Transform a differential drive command to the unicycle model
+        :param v_l: Velocity for left wheel (rad/s)
+        :param v_r: Velocity for right wheel (rad/s)
+        :return: Translational velocity (m/s) and rotational velocity (rad/s)
+        """
 
         R = self.robot_wheel_radius
         L = self.robot_wheel_base_length

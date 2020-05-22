@@ -23,6 +23,10 @@ from models.Physics import *
 class World:
 
     def __init__(self, dt=0.05):
+        """
+        Initializes a World object
+        :param dt: Discrete time interval corresponding to one simulation cycle
+        """
         # initialize physics engine
         self.physics = Physics(self)
 
@@ -35,8 +39,10 @@ class World:
         self.robots = []
         self.obstacles = []
 
-    # step the simulation through one time interval
     def step(self):
+        """
+        Executes one simulation cycle
+        """
         dt = self.dt
 
         # step all the robots
@@ -56,17 +62,29 @@ class World:
         self.world_time += dt
 
     def add_robot(self, robot):
+        """
+        Adds a robot to the simulation
+        :param robot: Robot to be added
+        """
         self.robots.append(robot)
         self.supervisors.append(robot.supervisor)
 
     def add_obstacle(self, obstacle):
+        """
+        Adds an obstacle to the simulation
+        :param obstacle: Obstacle to be added
+        """
         self.obstacles.append(obstacle)
 
-    # return all objects in the world that might collide with other objects in the world during simulation
     def colliders(self):
+        """
+        :return: All objects in the world that might collide with other objects in the world during simulation
+        """
         # moving objects only
         return self.robots  # as obstacles are static we should not test them against each other
 
-    # return all solids in the world
     def solids(self):
+        """
+        :return: All solids in the world
+        """
         return self.robots + self.obstacles

@@ -25,6 +25,10 @@ from utils import linalg2_util as linalg
 class GoToGoalController:
 
     def __init__(self, supervisor):
+        """
+        Initializes a GoToGoalController object
+        :param supervisor: The underlying supervisor
+        """
         # bind the supervisor
         self.supervisor = supervisor
 
@@ -42,10 +46,15 @@ class GoToGoalController:
         self.gtg_heading_vector = [1.0, 0.0]
 
     def update_heading(self):
-        # generate and store new heading vector
+        """
+        Generate and store new heading vector
+        """
         self.gtg_heading_vector = self.calculate_gtg_heading_vector()
 
     def execute(self):
+        """
+        Executes the controllers update during one simulation cycle
+        """
         # calculate the time that has passed since the last control iteration
         current_time = self.supervisor.time()
         dt = current_time - self.prev_time
@@ -71,11 +80,10 @@ class GoToGoalController:
 
         self.supervisor.set_outputs(v, omega)
 
-        # === FOR DEBUGGING ===
-        # self._print_vars( eP, eI, eD, v, omega )
-
-    # return a go-to-goal heading vector in the robot's reference frame
     def calculate_gtg_heading_vector(self):
+        """
+        :return: A go-to-goal heading vector in the robot's reference frame
+        """
         # get the inverse of the robot's pose
         robot_inv_pos, robot_inv_theta = self.supervisor.estimated_pose().inverse().vunpack()
 
@@ -84,21 +92,3 @@ class GoToGoalController:
         goal = linalg.rotate_and_translate_vector(goal, robot_inv_theta, robot_inv_pos)
 
         return goal
-
-    def _print_vars(self, eP, eI, eD, v, omega):
-        print("\n\n")
-        print("==============")
-        print("ERRORS:")
-        print("eP: " + str(eP))
-        print("eI: " + str(eI))
-        print("eD: " + str(eD))
-        print("CONTROL COMPONENTS:")
-        print("kP * eP = " + str(self.kP) + " * " + str(eP))
-        print("= " + str(self.kP * eP))
-        print("kI * eI = " + str(self.kI) + " * " + str(eI))
-        print("= " + str(self.kI * eI))
-        print("kD * eD = " + str(self.kD) + " * " + str(eD))
-        print("= " + str(self.kD * eD))
-        print("OUTPUTS:")
-        print("omega: " + str(omega))
-        print("v    : " + str(v))

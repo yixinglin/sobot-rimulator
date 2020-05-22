@@ -21,49 +21,96 @@
 class SupervisorControllerInterface:
 
     def __init__(self, supervisor):
+        """
+        Initializes a SupervisorControllerInterface object
+        :param supervisor: The underlying supervisor
+        """
         self.supervisor = supervisor
 
-    # get the current control state
     def current_state(self):
+        """
+        :return: The current control state
+        """
         return self.supervisor.state_machine.current_state
 
-    # get the supervisor's internal pose estimation
     def estimated_pose(self):
+        """
+        :return: The supervisors internal pose estimation based on odometry
+        """
         return self.supervisor.estimated_pose
 
-    # get the placement poses of the robot's sensors
+    def estimated_pose_ekfslam(self):
+        """
+        :return: The pose that is currently estimated by the EKF SLAM
+        """
+        if self.supervisor.ekfslam is not None:
+            return self.supervisor.ekfslam.get_estimated_pose()
+        else:
+            None
+
+    def estimated_pose_fastslam(self):
+        """
+        :return: The pose that is currently estimated by the FastSLAM
+        """
+        if self.supervisor.fastslam is not None:
+            return self.supervisor.fastslam.get_estimated_pose()
+        else:
+            None
+
     def proximity_sensor_placements(self):
+        """
+        :return: The placement poses of the robot's sensors
+        """
         return self.supervisor.proximity_sensor_placements
 
-    # get the robot's proximity sensor read values converted to real distances in meters
     def proximity_sensor_distances(self):
+        """
+        :return: The robots proximity sensor read values converted to real distances in meters
+        """
         return self.supervisor.proximity_sensor_distances
 
-    # get the robot's proximity sensor read values converted to real distances in meters
     def proximity_sensor_distances_from_robot_center(self):
+        """
+        :return: The robots proximity sensor read values converted to real distances in meters
+        """
         return self.supervisor.proximity_sensor_distances_from_robot_center
 
     def proximity_sensor_max_range(self):
+        """
+        :return: The maximum sensor range of the robots proximity sensors
+        """
         return self.supervisor.proximity_sensor_max_range
 
-    # get true/false indicators for which sensors are actually detecting obstacles
     def proximity_sensor_positive_detections(self):
+        """
+        :return: List of boolean values indicating which sensors are actually detecting obstacles
+        """
         sensor_range = self.supervisor.proximity_sensor_max_range
         return [d < sensor_range - 0.001 for d in self.proximity_sensor_distances()]
 
-    # get the velocity limit of the supervisor
     def v_max(self):
+        """
+        :return: The maximum velocity of the supervisor
+        """
         return self.supervisor.v_max
 
-    # get the supervisor's goal
     def goal(self):
+        """
+        :return: The supervisors goal
+        """
         return self.supervisor.goal
 
-    # get the supervisor's internal clock time
     def time(self):
+        """
+        :return: The supervisors internal clock time
+        """
         return self.supervisor.time
 
-    # set the outputs of the supervisor
     def set_outputs(self, v, omega):
+        """
+        Specify the next motion command
+        :param v: Translational veloctiy (m/s)
+        :param omega: otational velocity (rad/s)
+        """
         self.supervisor.v_output = v
         self.supervisor.omega_output = omega

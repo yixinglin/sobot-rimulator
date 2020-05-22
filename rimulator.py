@@ -44,6 +44,10 @@ from simulation.exceptions import CollisionException
 class Simulator:
 
     def __init__(self, cfg):
+        """
+        Initializes a Simulator object
+        :param cfg: The simulators configuration
+        """
         # create the GUI
         self.num_frames = 1
         if cfg["slam"]["ekf_slam"]["enabled"]:
@@ -76,6 +80,10 @@ class Simulator:
         gtk.main()
 
     def initialize_sim(self, random=False):
+        """
+        Initializes the simulated world
+        :param random: Boolean value specifying if a random map shall be generated
+        """
         # reset the viewer
         self.viewer.control_panel_state_init()
 
@@ -113,31 +121,55 @@ class Simulator:
         self.draw_world()
 
     def play_sim(self):
+        """
+        Start or continue the simulation
+        """
         GLib.source_remove(
             self.sim_event_source)  # this ensures multiple calls to play_sim do not speed up the simulator
         self._run_sim()
         self.viewer.control_panel_state_playing()
 
     def pause_sim(self):
+        """
+        Pause the simulation
+        """
         GLib.source_remove(self.sim_event_source)
         self.viewer.control_panel_state_paused()
 
     def step_sim_once(self):
+        """
+        Progress the simulation by exactly one simulation cycle
+        """
         self.pause_sim()
         self._step_sim()
 
     def end_sim(self, alert_text=''):
+        """
+        End the simulation
+        :param alert_text: Test to be displayed to the user
+        """
         GLib.source_remove(self.sim_event_source)
         self.viewer.control_panel_state_finished(alert_text)
 
     def reset_sim(self):
+        """
+        Reset the simulated world
+        """
         self.pause_sim()
         self.initialize_sim()
 
     def save_map(self, filename):
+        """
+        Save the map
+        :param filename: Filename under which the map shall be stored
+        """
         self.map_manager.save_map(filename)
 
     def load_map(self, filename):
+        """
+
+        :param filename:
+        """
         self.map_manager.load_map(filename)
         self.reset_sim()
 

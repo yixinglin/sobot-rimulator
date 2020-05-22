@@ -25,6 +25,11 @@ from utils import linalg2_util as linalg
 class SupervisorStateMachine:
 
     def __init__(self, supervisor, control_config):
+        """
+        Initializes a SupervisorStateMachine object
+        :param supervisor: The underlying supervisor
+        :param control_config: The control configuration
+        """
         self.supervisor = supervisor
 
         # initialize state
@@ -36,6 +41,9 @@ class SupervisorStateMachine:
         self.cfg = control_config
 
     def update_state(self):
+        """
+        Update the control state
+        """
         if self.current_state == ControlState.GO_TO_GOAL:
             self.execute_state_go_to_goal()
         elif self.current_state == ControlState.AVOID_OBSTACLES:
@@ -184,17 +192,3 @@ class SupervisorStateMachine:
 
     def _update_best_distance_to_goal(self):
         self.best_distance_to_goal = min(self.best_distance_to_goal, self._distance_to_goal())
-
-    # === FOR DEBUGGING ===
-    def _print_debug_info(self):
-        print("\n ======== \n")
-        print("STATE: " + str(
-            ["At Goal", "Go to Goal", "Avoid Obstacles", "Blended", "Slide Left", "Slide Right"][self.current_state]))
-        print("CONDITIONS:")
-        print("At Obstacle: " + str(self.condition_at_obstacle()))
-        print("Danger: " + str(self.condition_danger()))
-        print("No Obstacle: " + str(self.condition_no_obstacle()))
-        print("Progress Made: " + str(self.condition_progress_made()) + " ( Best Dist: " + str(
-            round(self.best_distance_to_goal, 3)) + ", Current Dist: " + str(round(self._distance_to_goal(), 3)) + " )")
-        print("Slide Left: " + str(self.condition_slide_left()))
-        print("Slide Right: " + str(self.condition_slide_right()))

@@ -8,7 +8,6 @@ import numpy as np
 from math import *
 from models.Pose import Pose
 
-# EKF state covariance
 from supervisor.slam.Slam import Slam
 from utils.math_util import normalize_angle
 
@@ -135,7 +134,7 @@ class EKFSlam(Slam):
             lm = self.get_landmark_position(mu, i)
             delta = lm - mu[:2]
             # If landmark is too far away, don't bother calculating Mahalanobis distance
-            if delta[0] ** 2 + delta[1] ** 2 > (2 * self.supervisor.proximity_sensor_max_range()) ** 2:
+            if delta[0] ** 2 + delta[1] ** 2 > squared_cutoff_distance:
                 mdist.append(self.distance_threshold + 1)  # Will not be considered
             else:
                 innovation, Psi, H = self.calc_innovation(lm, mu, Sigma, measurement, i)

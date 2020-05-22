@@ -134,13 +134,13 @@ class FastSlam(Slam):
 
     def measurement_update(self, particles, z):
         """
-        Performs the measurement update of the algorithm, which consists of data association
+        Performs the measurement update of the algorithm, which consists of
         1. data association
         2. adding a new landmark or
            computing importance factor and performing an EKF update for an already encountered landmark
         :param particles:
-        :param z:
-        :return:
+        :param z: Measurement
+        :return: Updated list of particles
         """
         # Removing the importance factors of the previous cycle
         particles = self.clear_importance_factors(particles)

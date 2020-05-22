@@ -62,7 +62,7 @@ class SlamEvaluation:
     def __calc_squared_distance(x, y):
         """
         Calculates squared distance between two positions.
-        The squared distance is sufficient finding the minimum distance.
+        The squared distance is sufficient for finding the minimum distance.
         :param x: First position
         :param y: Second position
         :return: squared distance between the two positions

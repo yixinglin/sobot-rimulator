@@ -33,14 +33,18 @@ class MapManager:
 
     def __init__(self, map_config):
         """
-
-        :param map_config:
+        Initializes a MapManager object
+        :param map_config: The map configuration
         """
         self.current_obstacles = []
         self.current_goal = None
         self.cfg = map_config
 
     def random_map(self, world):
+        """
+        Generates a random map and goal
+        :param world: The world the map is generated for
+        """
         obstacles = []
         if self.cfg["obstacle"]["octagon"]["enabled"]:
             obstacles += self.__generate_octagon_obstacles(world)
@@ -55,6 +59,9 @@ class MapManager:
         self.apply_to_world(world)
 
     def add_new_goal(self):
+        """
+        Adds a new goal
+        """
         while True:
             goal = self.__generate_new_goal()
             intersects = self.__check_obstacle_intersections(goal)
@@ -63,6 +70,11 @@ class MapManager:
                 break
 
     def __generate_octagon_obstacles(self, world):
+        """
+        Generate random octagon obstacles
+        :param world: The world for which they are generated
+        :return: List of generated octagon obstacles
+        """
         obs_radius = self.cfg["obstacle"]["octagon"]["radius"]
         obs_min_count = self.cfg["obstacle"]["octagon"]["min_count"]
         obs_max_count = self.cfg["obstacle"]["octagon"]["max_count"]
@@ -96,6 +108,11 @@ class MapManager:
         return obstacles
 
     def __generate_rectangle_obstacles(self, world):
+        """
+        Generate random rectangle obstacles
+        :param world: The world for which they are generated
+        :return: List of generated rectangle obstacles
+        """
         obs_min_dim = self.cfg["obstacle"]["rectangle"]["min_dim"]
         obs_max_dim = self.cfg["obstacle"]["rectangle"]["max_dim"]
         obs_max_combined_dim = self.cfg["obstacle"]["rectangle"]["max_combined_dim"]
@@ -137,6 +154,10 @@ class MapManager:
         return obstacles
 
     def __generate_new_goal(self):
+        """
+        Generate a new random goal
+        :return: The generated goal
+        """
         min_dist = self.cfg["goal"]["min_distance"]
         max_dist = self.cfg["goal"]["max_distance"]
         goal_dist_range = max_dist - min_dist
@@ -148,6 +169,11 @@ class MapManager:
         return goal
 
     def __check_obstacle_intersections(self, goal):
+        """
+        Check for intersections between the goal and the obstacles
+        :param goal: The goal posibition
+        :return: Boolean value indicating if the goal is too close to an obstacle
+        """
         # generate a proximity test geometry for the goal
         min_clearance = self.cfg["goal"]["min_clearance"]
         n = 6   # goal is n sided polygon
@@ -163,12 +189,20 @@ class MapManager:
         return intersects
 
     def save_map(self, filename):
+        """
+        Save the map, including obstacles and goal, as well as the current random state to enable reproducibility
+        :param filename: The filename under which the map shall be stored
+        """
         with open(filename, 'wb') as file:
             pickle.dump(self.current_obstacles, file)
             pickle.dump(self.current_goal, file)
             pickle.dump(getstate(), file)
 
     def load_map(self, filename):
+        """
+        Load a map from the file
+        :param filename: Filename from which the map shall be loaded
+        """
         with open(filename, 'rb') as file:
             self.current_obstacles = pickle.load(file)
             self.current_goal = pickle.load(file)
@@ -178,6 +212,10 @@ class MapManager:
                 print("No random state stored")
 
     def apply_to_world(self, world):
+        """
+        Apply the current obstacles and goal to the world
+        :param world: The world that shall be updated
+        """
         # add the current obstacles
         for obstacle in self.current_obstacles:
             world.add_obstacle(obstacle)

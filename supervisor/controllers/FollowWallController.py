@@ -30,6 +30,10 @@ from utils import linalg2_util as linalg
 class FollowWallController:
 
     def __init__(self, supervisor):
+        """
+        Initializes a FollowWallController object
+        :param supervisor: The underlying supervisor
+        """
         # bind the supervisor
         self.supervisor = supervisor
 
@@ -63,6 +67,9 @@ class FollowWallController:
         self.r_fw_heading_vector = [1.0, 0.0]
 
     def update_heading(self):
+        """
+        Generates and store new heading and obstacle vectors
+        """
         # generate and store new heading vector and critical points for following to the left
         [
             self.l_fw_heading_vector,
@@ -81,6 +88,9 @@ class FollowWallController:
         ] = self.calculate_fw_heading_vector(FWDIR_RIGHT)
 
     def execute(self):
+        """
+        Executes the controllers update during one simulation cycle
+        """
         # determine which direction to slide in
         current_state = self.supervisor.current_state()
         if current_state == ControlState.SLIDE_LEFT:
@@ -115,14 +125,13 @@ class FollowWallController:
 
         self.supervisor.set_outputs(v, omega)
 
-        # === FOR DEBUGGING ===
-        # self._print_vars( eP, eI, eD, v, omega )
-
-    # return a wall-following vector in the robot's reference frame
-    # also returns the component vectors used to calculate the heading
-    # and the vectors representing the followed surface in robot-space
     def calculate_fw_heading_vector(self, follow_direction):
-
+        """
+        :param follow_direction: The direction the robot is following a wall
+        :return: A wall-following vector in the robot's reference frame
+                 also returns the component vectors used to calculate the heading
+                 and the vectors representing the followed surface in robot-space
+        """
         # get the necessary variables for the working set of sensors
         #   the working set is the sensors on the side we are bearing on, indexed from rearmost to foremost on the robot
         #   NOTE: uses preexisting knowledge of the how the sensors are stored and indexed
@@ -177,21 +186,3 @@ class FollowWallController:
         l_fw_heading_vector = linalg.add(l_parallel_component, l_perpendicular_component)
 
         return l_fw_heading_vector, l_parallel_component, l_perpendicular_component, l_distance_vector, l_wall_surface
-
-    def _print_vars(self, eP, eI, eD, v, omega):
-        print("\n\n")
-        print("==============")
-        print("ERRORS:")
-        print("eP: " + str(eP))
-        print("eI: " + str(eI))
-        print("eD: " + str(eD))
-        print("CONTROL COMPONENTS:")
-        print("kP * eP = " + str(self.kP) + " * " + str(eP))
-        print("= " + str(self.kP * eP))
-        print("kI * eI = " + str(self.kI) + " * " + str(eI))
-        print("= " + str(self.kI * eI))
-        print("kD * eD = " + str(self.kD) + " * " + str(eD))
-        print("= " + str(self.kD * eD))
-        print("OUTPUTS:")
-        print("omega: " + str(omega))
-        print("v    : " + str(v))
