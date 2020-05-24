@@ -12,12 +12,12 @@ and its surrounding environment based on its previous motion commands and proxim
 *Sobot Rimulator* is cross-platform compatible. In order to run, the following must be installed on your computer:
 - Python 3: Please follow the instructions at http://www.python.org/download/
 - PyGTK 3: Please follow the instructions at https://pygobject.readthedocs.io/en/latest/getting_started.html
-- NumPy: Please follow the instructions at https://scipy.org/install.html
 
 Alternatively, this software is available through package managers such as Apt-Get (for Linux/Unix) or Homebrew (Recommended for Mac)
 
 Additional required dependencies can be installed by
     
+    pip3 install matplotlib
     pip3 install PyYAML
     
 
@@ -30,8 +30,31 @@ Open a command prompt (terminal) and navigate to the *Sobot Rimulator* directory
 This will start the simulator using the default `config.yaml` configuration file. A specific configuration file can be
 specified as an additional program parameter:
 
-    python rimulator.py original_config.yaml
+    python rimulator.py original_config.yaml`
+
+## Setup
+
+It is recommended to run the simulator directly on your native machine. For this, the following must be installed
+- Python 3: Please follow the instructions at http://www.python.org/download/
+- PyGTK 3: Please follow the instructions at https://pygobject.readthedocs.io/en/latest/getting_started.html
+
+Additional dependencies can then be installed using `pip`
+
+    pip3 install matplotlib
+    pip3 install pyyaml
     
+The simulator is then started by 
+
+    python rimulator.py
+    
+which uses the default `config.yaml` configuration file. A specific configuration file can be
+specified as an additional program parameter:
+
+    python rimulator.py original_config.yaml
+
+Alternatively, the simulator can be run using `docker`, as described in [documentation/docker.md](documentation/docker.md).
+    
+
 ## Graphical User Interface
 
 The graphical user interface consists of the visualization of the current simulated world as well as a control panel of 
@@ -78,17 +101,17 @@ any of the extensions made and performs completely identical to the original sob
 
 The most important parameters in terms of the SLAM algorithms are:
 
-- `motion_noise`: Specifies the motion noise used by the algorithm, in my thesis denoted as `R_t`. The used motion 
+- `motion_noise`: Specifies the motion noise used by the algorithm, in my thesis denoted as `R_t`. The currently used motion 
 noise is very low to reflect the very accurate motion of the simulated robot. Increasing the motion noise increases the 
 region that the robot is estimated to be in.
-- `sensor_noise`: Specifies the motion noise used by the algorithm, in my thesis denoted as `Q_t`. The used sensor noise
+- `sensor_noise`: Specifies the motion noise used by the algorithm, in my thesis denoted as `Q_t`. The currently used sensor noise
 is relatively high, so the robot currently rarely makes large modifications of its pose estimate based on sensor readings.
 - `distance_threshold`: Specifies a threshold to be used for the data association. Decreasing this value will increase 
 the frequency of the SLAM algorithm considering a landmark as "new" instead of associating it with an encountered landmark.
 - The evaluation `interval` specifies the interval of simulation cycles after which the SLAM accuracy shall be evaluated.
 Low intervals can lead to performance problems. The SLAM evaluation can also be disabled entirely to further improve performance.
 
-Other interesting parameters are
+Other interesting parameters are:
 
 - the map configuration paramters, such as amount and shape of obstacles. It is however recommended to perform a SLAM simulation
 with small, circular obstacles, which can be better represented by point-like landmarks.
@@ -96,6 +119,7 @@ with small, circular obstacles, which can be better represented by point-like la
 the `follow wall` state and has been significantly decreased to avoid the problem of the robot looping around the small 
 circular objects. Using large, rectangular objects allows the usage of a larger value.
 
-The robot parameters are based on the *Khepera III* research robot and should **only be modified if you know what you are doing**, since some parameter values are not fully 
-supported. Particularly **the amount of sensors and their placements are currently partially hard-coded** in the source code.
+The robot parameters are based on the *Khepera III* research robot and should **only be modified if you know what you are doing**, 
+since some parameter values are not fully supported. Particularly **the amount of sensors and their placements are currently 
+partially hard-coded** in the source code.
 
