@@ -28,3 +28,10 @@ Determine the IP address of your host machines network interface
 Run the docker image by setting the `DISPLAY` environment variable to your IP address
 
     docker run -e DISPLAY=$IP:0 sobot-rimulator
+    
+### Linux (Ubuntu)
+
+After building the image, the container must be allowed access to the display and can then be run
+
+    $ xhost +local:root
+    $ docker run -e DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix sobot-rimulator
