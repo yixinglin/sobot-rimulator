@@ -7,31 +7,6 @@ which allows the simulation of a mobile robot in a map of obstacles that must be
 This extension includes the integration of the EKFSLAM and FastSLAM algorithms to perform an estimation of the current robot state
 and its surrounding environment based on its previous motion commands and proximity sensor readings.
 
-## Requirements
-
-*Sobot Rimulator* is cross-platform compatible. In order to run, the following must be installed on your computer:
-- Python 3: Please follow the instructions at http://www.python.org/download/
-- PyGTK 3: Please follow the instructions at https://pygobject.readthedocs.io/en/latest/getting_started.html
-
-Alternatively, this software is available through package managers such as Apt-Get (for Linux/Unix) or Homebrew (Recommended for Mac)
-
-Additional required dependencies can be installed by
-    
-    pip3 install matplotlib
-    pip3 install PyYAML
-    
-
-## To Run
-
-Open a command prompt (terminal) and navigate to the *Sobot Rimulator* directory. Then type:
-
-    python rimulator.py
-    
-This will start the simulator using the default `config.yaml` configuration file. A specific configuration file can be
-specified as an additional program parameter:
-
-    python rimulator.py original_config.yaml`
-
 ## Setup
 
 It is recommended to run the simulator directly on your native machine. For this, the following must be installed
