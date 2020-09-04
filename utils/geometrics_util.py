@@ -108,7 +108,7 @@ def line_segment_intersection(line1, line2):
 # returns:
 #   intersection_exists - boolean         - value indicating whether an intersection was found
 #   intersection        - vector          - the intersection point, or None if none was found
-#   d                   - float in [0, 1] - distance along the thest line at which the intersection occurs
+#   d                   - float in [0, 1] - distance along the test line at which the intersection occurs
 def directed_line_segment_polygon_intersection(line_segment, test_polygon):
     test_line = line_segment.vertexes  # get the raw line segment
     dmin = float('inf')

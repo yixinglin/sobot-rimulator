@@ -220,7 +220,7 @@ class Simulator:
 
 
 if __name__ == "__main__":
-    filename = "config.yaml" if len(sys.argv) == 1 else sys.argv[1]
+    filename = "config2.yaml" if len(sys.argv) == 1 else sys.argv[1]
     with open(filename, 'r') as ymlfile:
         cfg = yaml.safe_load(ymlfile)
     Simulator(cfg)
