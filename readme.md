@@ -4,8 +4,8 @@
 
 This project is an extension of the [sobot rimulator](https://github.com/nmccrea/sobot-rimulator) developed by Nick McCrea
 which allows the simulation of a mobile robot in a map of obstacles that must be avoided.
-This extension includes the integration of the EKFSLAM and FastSLAM algorithms to perform an estimation of the current robot state
-and its surrounding environment based on its previous motion commands and proximity sensor readings.
+The [extension](https://collaborating.tuhh.de/cva9931/sobot-rimulator) developed by Michael Dobler includes the integration of the EKFSLAM and FastSLAM algorithms to perform an estimation of the current robot state
+and its surrounding environment based on its previous motion commands and proximity sensor readings. In my extension Graph-based SLAM algorithm was integrated. 
 
 ## Setup
 
