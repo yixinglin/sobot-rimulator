@@ -178,6 +178,23 @@ slam:
       translational_velocity: 0.005
       # Standard deviation of the motion command's rotational velocity in rad/s.
       rotational_velocity: 0.005
+
+
+  graph_based_slam:
+    # Determines whether the EKF SLAM algorithm shall be executed
+    enabled: true
+    # The mahalanobis distance threshold used in data association
+    distance_threshold: 1
+    # Configures the motion noise. The values are currently empirically chosen.
+    motion_noise:
+      # Standard deviation of the robots x-coordinate in meters after executing a motion command.
+      x: 0.005
+      # Standard deviation of the robots y-coordinate in meters after executing a motion command.
+      y: 0.005
+      # Standard deviation of the robots angle in degrees after executing a motion command.
+      theta: 1
+
+
   # Configures the evaluation of the SLAM algorithms
   evaluation:
     # Determines whether the accuracy of the generated maps shall be evaluated
