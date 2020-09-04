@@ -32,7 +32,7 @@ LS_DIALOG_RESPONSE_ACCEPT = 2
 
 class Viewer:
 
-    def __init__(self, simulator, viewer_config, num_frames, ekf_enabled=True, use_slam_evaluation=True):
+    def __init__(self, simulator, viewer_config, num_frames, slam_cfg):
         """
         Initializes a Viewer object
         :param simulator: The underlying simulator
@@ -45,8 +45,10 @@ class Viewer:
         self.simulator = simulator
 
         self.cfg = viewer_config
-        self.ekf_enabled = ekf_enabled
-        self.use_slam_evaluation = use_slam_evaluation
+        self.ekf_enabled = slam_cfg["ekf_slam"]["enabled"]
+        self.fastslam_enabled = slam_cfg["fast_slam"]["enabled"]
+        self.graphslambased_enabled = slam_cfg["graph_based_slam"]["enabled"]
+        self.use_slam_evaluation = slam_cfg["evaluation"]["enabled"]
 
         # initialize camera parameters
         self.num_frames = num_frames
@@ -63,22 +65,26 @@ class Viewer:
         self.window.set_resizable(False)
         self.window.connect('delete_event', self.on_delete)
 
-        # Define labels of the drawing areas
+        label_strings = ["World"]
         if self.ekf_enabled:
-            label_strings = ["World", "EKF SLAM", "FastSLAM"][:self.num_frames]
-        else:
-            label_strings = ["World", "FastSLAM"][:self.num_frames]
+            label_strings += ['EKF SLAM']
+        if self.fastslam_enabled:
+            label_strings += ['FAST SLAM']
+        if self.graphslambased_enabled:
+            label_strings += ['GRAPH-BASED SLAM']
+
+        label_strings = label_strings[:self.num_frames]
+
         self.labels = []
         for label_string in label_strings:
             label = gtk.Label()
             label.set_text(label_string)
             self.labels.append(label)
 
-
         # initialize the drawing_areas
         self.drawing_areas = []
         # This list contains the drawing functions for the frames. The list has same length as number of frames.
-        on_expose_functions = [self.on_expose1, self.on_expose2, self.on_expose3][:self.num_frames]
+        on_expose_functions = [self.on_expose1, self.on_expose2, self.on_expose3, self.on_expose4][:self.num_frames]
         for on_expose in on_expose_functions:
             drawing_area = gtk.DrawingArea()
             drawing_area.set_size_request(self.view_width_pixels, self.view_height_pixels)
@@ -410,6 +416,14 @@ class Viewer:
         :param context: The cairo context to be used
         """
         self.painter.draw_frame(self.current_frames[2], widget, context)
+
+    def on_expose4(self, widget, context):
+        """
+        Draws the fourth frame
+        :param widget: The corresponding widget
+        :param context: The cairo context to be used
+        """
+        self.painter.draw_frame(self.current_frames[3], widget, context)
 
     def on_delete(self, widget, event):
         """

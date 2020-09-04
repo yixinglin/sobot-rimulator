@@ -70,7 +70,7 @@ over the course of the simulation. Only displayed if the SLAM evaluation is enab
 
 ## Configuration
 
-The simulator can be configured by a variety of paramters. The default configuration file is [config.yaml](config.yaml), 
+The simulator can be configured by a variety of paramters. The default configuration file is [config.yaml](extension_config.yaml), 
 where all parameters are documented. The configuration file [original_config.yaml](original_config.yaml) does not include
 any of the extensions made and performs completely identical to the original sobot rimulator.
 

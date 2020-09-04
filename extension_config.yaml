@@ -33,8 +33,8 @@ robot:
   sensor:
     # Minimum detection range of the sensor in meters
     min_range: 0.02
-    # Maximum detection range of the sensor in meters 0.2
-    max_range: 2.0
+    # Maximum detection range of the sensor in meters
+    max_range: 0.2
     # Value that is read at maximum range
     min_read_value: 18
     # Value that is read at minimum range
@@ -86,15 +86,15 @@ map:
       # Determines whether octagon obstacles shall be generated
       enabled: true
       # Radius of obstacles
-      radius: 0.08
+      radius: 0.04
       # Minimum amount of generated obstacles
-      min_count: 20
+      min_count: 25
       # Maximum amount of generated obstacles
-      max_count: 30
+      max_count: 50
       # Minimum distance to origin
       min_distance: 0.2
       # Maximum distance to origin
-      max_distance: 4
+      max_distance: 2
     # Configures rectangle obstacles
     rectangle:
       # Determines whether rectangle obstacles shall be generated
@@ -110,9 +110,9 @@ map:
       # Maximum amount of generated obstacles
       max_count: 50
       # Minimum distance to origin
-      min_distance: 1.4
+      min_distance: 0.4
       # Maximum distance to origin
-      max_distance: 3
+      max_distance: 6
   # Configures the goal generation
   goal:
     # Determines if a new goal is generated once the robot reaches its current goal
@@ -154,7 +154,7 @@ slam:
     detected_angle: 30
   ekf_slam:
     # Determines whether the EKF SLAM algorithm shall be executed
-    enabled: false
+    enabled: true
     # The mahalanobis distance threshold used in data association
     distance_threshold: 1
     # Configures the motion noise. The values are currently empirically chosen.
@@ -167,7 +167,7 @@ slam:
       theta: 1
   fast_slam:
     # Determines whether the FastSLAM algorithm shall be executed
-    enabled: false
+    enabled: true
     # The mahalanobis distance threshold used in data association
     distance_threshold: 0.125
     # The number of used particles
@@ -178,23 +178,6 @@ slam:
       translational_velocity: 0.005
       # Standard deviation of the motion command's rotational velocity in rad/s.
       rotational_velocity: 0.005
-
-
-  graph_based_slam:
-    # Determines whether the EKF SLAM algorithm shall be executed
-    enabled: true
-    # The mahalanobis distance threshold used in data association
-    distance_threshold: 1
-    # Configures the motion noise. The values are currently empirically chosen.
-    motion_noise:
-      # Standard deviation of the robots x-coordinate in meters after executing a motion command.
-      x: 0.005
-      # Standard deviation of the robots y-coordinate in meters after executing a motion command.
-      y: 0.005
-      # Standard deviation of the robots angle in degrees after executing a motion command.
-      theta: 1
-
-
   # Configures the evaluation of the SLAM algorithms
   evaluation:
     # Determines whether the accuracy of the generated maps shall be evaluated

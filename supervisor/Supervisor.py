@@ -20,6 +20,7 @@ from supervisor.controllers.GTGAndAOController import *
 from supervisor.controllers.FollowWallController import *
 from supervisor.controllers.GoToAngleController import *
 from supervisor.slam.EKFSlam import *
+from supervisor.slam.GraphBasedSLAM import *
 from supervisor.SupervisorControllerInterface import *
 from supervisor.SupervisorStateMachine import *
 
@@ -78,12 +79,16 @@ class Supervisor:
         # slam
         self.ekfslam = None
         self.fastslam = None
+        self.graphbasedslam = None
         if cfg["slam"]["ekf_slam"]["enabled"]:
             print("Using EKF SLAM")
             self.ekfslam = EKFSlam(controller_interface, cfg["slam"], step_time=cfg["period"])
         if cfg["slam"]["fast_slam"]["enabled"]:
             print("Using FastSLAM")
             self.fastslam = FastSlam(controller_interface, cfg["slam"], step_time=cfg["period"])
+        if cfg["slam"]["graph_based_slam"]["enabled"]:
+            print("Using Graph-based SLAM")
+            self.graphbasedslam = GraphBasedSLAM(controller_interface, cfg["slam"], step_time=cfg["period"])
 
         # state machine
         self.state_machine = SupervisorStateMachine(self, self.control_cfg)
@@ -211,6 +216,8 @@ class Supervisor:
             self.ekfslam.update(motion_command, zip(measured_distances, sensor_angles))
         if self.fastslam is not None:
             self.fastslam.update(motion_command, zip(measured_distances, sensor_angles))
+        if self.graphbasedslam is not None:
+            self.graphbasedslam.update(motion_command, zip(measured_distances, sensor_angles))
 
     def _send_robot_commands(self):
         """

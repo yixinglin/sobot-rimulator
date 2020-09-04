@@ -54,11 +54,17 @@ class Simulator:
             self.num_frames += 1
         if cfg["slam"]["fast_slam"]["enabled"]:
             self.num_frames += 1
-        self.viewer = gui.Viewer.Viewer(self, cfg["viewer"], self.num_frames, cfg["slam"]["ekf_slam"]["enabled"], cfg["slam"]["evaluation"]["enabled"])
+        if cfg["slam"]["graph_based_slam"]["enabled"]:
+            self.num_frames += 1
+
+        self.viewer = gui.Viewer.Viewer(self, cfg["viewer"], self.num_frames, cfg["slam"])
         self.ekfslam_plotter = None
         self.fastslam_plotter = None
+        self.graphbasedslam_plotter = None
         self.ekfslam_evaluation = None
         self.fastslam_evaluation = None
+        self.graphbasedslam_evaluation = None
+
         self.world_plotter = None
 
         # create the map manager
@@ -104,18 +110,25 @@ class Simulator:
 
         # create the world view
         self.world_plotter = WorldPlotter(self.world, self.viewer)
+        n_frame = 1
         if cfg["slam"]["ekf_slam"]["enabled"]:
-            self.ekfslam_plotter = SlamPlotter(self.world.supervisors[0].ekfslam, self.viewer, self.cfg["map"]["obstacle"]["octagon"]["radius"], self.cfg["robot"], 1)
+            self.ekfslam_plotter = SlamPlotter(self.world.supervisors[0].ekfslam, self.viewer, self.cfg["map"]["obstacle"]["octagon"]["radius"], self.cfg["robot"], n_frame)
+            n_frame += 1
             if self.cfg["slam"]["evaluation"]["enabled"]:
                 self.ekfslam_evaluation = SlamEvaluation(self.world.supervisors[0].ekfslam, self.cfg["slam"]["evaluation"])
+
         if cfg["slam"]["fast_slam"]["enabled"]:
-            if self.num_frames == 3:
-                frame_num = 2
-            else:
-                frame_num = 1
-            self.fastslam_plotter = SlamPlotter(self.world.supervisors[0].fastslam, self.viewer, self.cfg["map"]["obstacle"]["octagon"]["radius"], self.cfg["robot"], frame_num)
+            self.fastslam_plotter = SlamPlotter(self.world.supervisors[0].fastslam, self.viewer, self.cfg["map"]["obstacle"]["octagon"]["radius"], self.cfg["robot"], n_frame)
+            n_frame += 1
             if self.cfg["slam"]["evaluation"]["enabled"]:
                 self.fastslam_evaluation = SlamEvaluation(self.world.supervisors[0].fastslam, self.cfg["slam"]["evaluation"])
+
+        if cfg["slam"]["graph_based_slam"]["enabled"]:
+            self.graphbasedslam_plotter = SlamPlotter(self.world.supervisors[0].graphbasedslam, self.viewer, self.cfg["map"]["obstacle"]["octagon"]["radius"], self.cfg["robot"], n_frame)
+            n_frame += 1
+            if self.cfg["slam"]["evaluation"]["enabled"]:
+                self.graphbasedslam_evaluation = SlamEvaluation(self.world.supervisors[0].graphbasedslam,
+                                                                self.cfg["slam"]["evaluation"])
 
         # render the initial world
         self.draw_world()
@@ -184,6 +197,9 @@ class Simulator:
             self.ekfslam_plotter.draw_slam_to_frame()
         if self.fastslam_plotter is not None:
             self.fastslam_plotter.draw_slam_to_frame()
+        if self.graphbasedslam_plotter is not None:
+            self.graphbasedslam_plotter.draw_slam_to_frame()
+
         self.viewer.draw_frame()  # render the frame
 
     def _run_sim(self):
@@ -220,7 +236,7 @@ class Simulator:
 
 
 if __name__ == "__main__":
-    filename = "config2.yaml" if len(sys.argv) == 1 else sys.argv[1]
+    filename = "config.yaml" if len(sys.argv) == 1 else sys.argv[1]
     with open(filename, 'r') as ymlfile:
         cfg = yaml.safe_load(ymlfile)
     Simulator(cfg)
