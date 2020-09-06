@@ -70,15 +70,17 @@ class SupervisorControllerInterface:
         return self.supervisor.proximity_sensor_distances
 
     def read_wheel_encoders(self):
+        """
+        Read the wheel encoder values and return the parameters of robot
+        """
+        params = {
+            "wheel_base_length": self.supervisor.robot_wheel_base_length,
+            "wheel_radius": self.supervisor.robot_wheel_radius,
+            "wheel_encoder_ticks_per_revolution": self.supervisor.wheel_encoder_ticks_per_revolution
+        }
         ticks_left, ticks_right = self.supervisor.robot.read_wheel_encoders()
-        return (ticks_left, ticks_right)
+        return (ticks_left, ticks_right), params
 
-
-    def wheel_base_length(self):
-        """
-        :return: The base length of the robot's wheels
-        """
-        return self.supervisor.robot_wheel_base_length
 
     def proximity_sensor_distances_from_robot_center(self):
         """
