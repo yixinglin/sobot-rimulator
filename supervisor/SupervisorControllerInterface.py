@@ -69,6 +69,17 @@ class SupervisorControllerInterface:
         """
         return self.supervisor.proximity_sensor_distances
 
+    def read_wheel_encoders(self):
+        ticks_left, ticks_right = self.supervisor.robot.read_wheel_encoders()
+        return (ticks_left, ticks_right)
+
+
+    def wheel_base_length(self):
+        """
+        :return: The base length of the robot's wheels
+        """
+        return self.supervisor.robot_wheel_base_length
+
     def proximity_sensor_distances_from_robot_center(self):
         """
         :return: The robots proximity sensor read values converted to real distances in meters
@@ -76,10 +87,13 @@ class SupervisorControllerInterface:
         return self.supervisor.proximity_sensor_distances_from_robot_center
 
     def proximity_sensor_max_range(self):
+        return self.supervisor.proximity_sensor_max_range
+
+    def proximity_sensor_min_range(self):
         """
         :return: The maximum sensor range of the robots proximity sensors
         """
-        return self.supervisor.proximity_sensor_max_range
+        return self.supervisor.proximity_sensor_min_range
 
     def proximity_sensor_positive_detections(self):
         """
