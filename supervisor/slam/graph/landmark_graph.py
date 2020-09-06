@@ -1,0 +1,284 @@
+import matplotlib.pyplot as plt
+from supervisor.slam.graph.baseclass.Vertex import Vertex
+from supervisor.slam.graph.baseclass.Edge import Edge
+from supervisor.slam.graph.baseclass.Graph import Graph
+from math import cos, sin
+from numpy.linalg import inv
+import numpy as np
+#from slam2.graph.vetor2matrix import *
+from supervisor.slam.graph.vetor2matrix import *
+
+"""       Define Vertex Classes        
+Vertex
+    - PoseVertex
+    - LandmarkVertex
+"""
+class PoseVertex(Vertex):
+
+    def __init__(self, pose, sigma, observation = None):
+        """
+        :param pose: robot pose. [x, y, yaw].T
+        :param sigma: covariance matrix
+        :param observation: observation of landmarks
+        """
+        Vertex.__init__(self, pose, sigma, observation)
+        assert pose.shape[0] == 3
+        assert sigma.shape == (3, 3)
+
+    def __str__(self):
+        x, y, yaw = np.squeeze(self.pose)
+        return "Pose[id = {0}, pose = {1}]".format(self.id, (x, y, yaw))
+
+    def __sub__(self, other):
+        X2 = v2t(self.pose)  # current
+        X1 = v2t(other.pose)    # previous
+        Z = inv(X1) @ X2
+        z = t2v(Z)
+        return Vertex(z, None)
+
+class LandmarkVertex(Vertex):
+
+    def __init__(self, pose, sigma):
+        """
+        :param pose: landmark position. [x, y].T
+        :param sigma: covariance matrix
+        """
+        Vertex.__init__(self, pose, sigma, None)
+        assert pose.shape[0] == 2
+        assert sigma.shape == (2, 2)
+
+
+    def __str__(self):
+        x, y = np.squeeze(self.pose)
+        return "Landmark[id = {0}, pose = {1}]".format(self.id, (x, y))
+
+    def __sub__(self, other):
+        assert isinstance(other, PoseVertex)
+        return Vertex(self.pose - other.pose[0:2, :], None)
+
+"""      Define Edge Classes       
+Edge
+    - PosePoseEdge
+    - PoseLandmarkEdge
+
+"""
+
+class PosePoseEdge(Edge):
+
+    def __init__(self, id_vertex1, id_vertex2, z, information, list_vertices):
+        """
+        :param id_vertex1: id of previous vertex
+        :param id_vertex2: id of current vertex
+        :param z: actual measurement obtained by sensor
+        :param information: information matrix
+        :param list_vertices: list of vertices used to look up. a single vertex is a Vertex object.
+        """
+
+        Edge.__init__(self, id_vertex1, id_vertex2, z, information, list_vertices)
+        assert isinstance(self.vertex1, PoseVertex)
+        assert isinstance(self.vertex2, PoseVertex)
+        assert z.shape == (3, 1)
+        assert information.shape == (3, 3)
+
+
+    def calc_error_vector(self, x1, x2, z):
+        """
+        Calculate the error vector.
+
+        :param x1: 3x1 vector of previous state.
+        :param x2: 3x1 vector of current state.
+        :param z:  3x1 vector of measurement from x1 to x2.
+        :return: an error vector, jacobian matrices A, B.
+        """
+        # calculate homogeneous matrices.
+        Z = v2t(z) # homogeneous matrix of vector z
+        X1 = v2t(x1) # homogeneous matrix of vector x1
+        X2 = v2t(x2) # # homogeneous matrix of vector x2
+        e12 = t2v(inv(Z) @ inv(X1) @ X2)
+        return e12
+
+    def linearize_constraint(self, x1, x2, z):
+        """
+        Linearize the pose-pose constraint.
+
+        :param x1: 3x1 vector of previous pose.
+        :param x2: 3x1 vector of current pose.
+        :param z:  3x1 vector of measurement from x1 to x2.
+        :return: an error vector, jacobian matrices A, B.
+                e 3x1 error of the constraint.
+                A 3x3 Jacobian wrt x1.
+                B 3x3 Jacobian wrt x2.
+        """
+        c = cos(x1[2, 0] + z[2, 0])
+        s = sin(x1[2, 0] + z[2, 0])
+        t = x2[0:2, :] - x1[0:2, :]
+        Rd = np.array([[-s, c], [-c, -s]])
+        Re = np.array([[-c, -s], [s, -c]])
+        A = np.hstack((Re, Rd @ t))
+        A = np.vstack((A, [0, 0, -1]))
+        B = np.hstack((-Re, np.zeros((2, 1))))
+        B = np.vstack((B, [0, 0, 1]))
+
+        e = self.calc_error_vector(x1, x2, z)
+        return e, A, B
+
+    def __str__(self):
+        x, y, yaw = np.squeeze(self.z)
+        s = "PPE: id1:{0},id2: {1},z: [{2}, {3}, {4}]".format(self.id1, self.id2, x, y, yaw)
+        return s
+
+class PoseLandmarkEdge(Edge):
+
+    def __init__(self, id_vertex1, id_vertex2, z, information, list_vertices):
+        Edge.__init__(self, id_vertex1, id_vertex2, z, information, list_vertices)
+        assert isinstance(self.vertex1, PoseVertex)
+        assert isinstance(self.vertex2, LandmarkVertex)
+        assert z.shape == (2, 1)
+        assert information.shape == (2, 2)
+
+    def calc_error_vector(self, x1, x2, z):
+
+        X1 = v2t(x1) # homogeneous matrix of vector x1
+        R1 = X1[0:2, 0:2]  # rotation matrix
+        e12 = R1.T @ (x2 - x1[0:2, :]) - z
+        return e12
+
+    def linearize_constraint(self, x, lm, z):
+        """
+        Compute the error of a pose-landmark constraint.
+        :param x1: 3x1 vector (x,y,theta) of the robot pose.
+        :param lm: 2x1 vector (x,y) of the landmark.
+        :param z: 2x1 vector (x,y) of the measurement, the position of the landmark in.
+                the coordinate frame of the robot given by the vector x.
+        :return:
+            e 2x1 error of the constraint.
+            A 2x3 Jacobian wrt x.
+            B 2x2 Jacobian wrt lm.
+        """
+        theta_i = x[2, 0]
+        xi, yi = x[0, 0], x[1, 0]
+        xl, yl = lm[0, 0], lm[1, 0]
+        # Compute eij partial derivative with respect to pose x
+        c = cos(theta_i)
+        s = sin(theta_i)
+        A = np.array([[-c, -s, -(xl - xi) * s + (yl - yi) * c],
+                      [s, -c, -(xl - xi) * c - (yl - yi) * s]])
+        B = np.array([[c, s],
+                      [-s, c]])
+
+        e = self.calc_error_vector(x, lm, z)
+        return e, A, B
+
+    def __str__(self):
+        x, y, yaw = np.squeeze(self.z)
+        s = "PLE: id1:{0},id2: {1},z: [{2}, {3}]".format(self.id1, self.id2, x, y)
+        return s
+
+
+"""   Define Graph Class
+Graph
+    -LMGraph 
+
+"""
+class LMGraph(Graph):
+
+    def __init__(self):
+        """
+        Posegraph to estimate only robot's poses
+        :param vertices: list of vertices. a single vertex is a pose of robot
+        :param edges: list of edges. a single edge is a constraint
+                            An edge can be an object of
+                            1. PoseLandmarkEdge, (PoseVertex - PoseVertex)
+                            2. LandmarkVertex, (PoseVertex - LandmarkVertex)
+        """
+        Graph.__init__(self)
+
+
+    def generate_edge_object(self, vertex1, vertex2, z, information):
+        """
+        Add an edge to the graph.
+        :param vertex1: a Vertex object.
+        :param vertex2: a Vertex object.
+        :param z: vector of an actual measurement.
+        :param information: information matrix.
+        """
+
+        if isinstance(vertex1, PoseVertex) and isinstance(vertex2, LandmarkVertex):
+            # edge is an Edge object
+            edge = PoseLandmarkEdge(vertex1.id, vertex2.id, z, information, self.vertices)
+        elif isinstance(vertex1, PoseVertex) and isinstance(vertex2, PoseVertex):
+            edge = PosePoseEdge(vertex1.id, vertex2.id, z, information, self.vertices)
+        else:
+            raise RuntimeError()
+
+        return edge
+
+    def count_vertices(self):
+        """
+        :return:
+                pose: number of PoseVertex objects
+                landmarks number of LandmarkVertex objects
+        """
+        pose = 0
+        landmarks = 0
+        for v in self.vertices:
+            if isinstance(v, PoseVertex):
+                pose += 1
+            elif isinstance(v, LandmarkVertex):
+                landmarks += 1
+            else:
+                raise RuntimeError()
+        return pose, landmarks
+
+    def normalize_angles(self, vertices):
+        for v in vertices:
+            if isinstance(v, PoseVertex):
+                v.pose[2, 0] = atan2(sin(v.pose[2, 0]), cos(v.pose[2, 0]))
+
+    def get_last_pose_vertex(self):
+        v_pose = None
+        for v in reversed(self.vertices):
+            if isinstance(v, PoseVertex):
+                v_pose = v
+                break
+        return v_pose
+
+    def get_estimated_pose_vertices(self):
+        poses = []
+        for v in self.vertices:
+            if isinstance(v, PoseVertex):
+                poses.append(v)
+        return poses
+
+    def get_estimated_landmark_vertices(self):
+        poses = []
+        for v in self.vertices:
+            if isinstance(v, LandmarkVertex):
+                poses.append(v)
+        return poses
+
+    def draw(self):
+        """
+        Visualize the graph
+        """
+        # draw vertices
+        plt.cla()
+        for v in self.vertices:
+            if isinstance(v, LandmarkVertex):
+                x, y = np.squeeze(v.pose[0:2, 0])
+                plt.plot(x, y, '*b')
+            if isinstance(v, PoseVertex):
+                x, y = np.squeeze(v.pose[0:2, 0])
+                plt.plot(x, y, '*r')
+
+        # draw edges
+        for e in self.edges:
+            x1, y1 = np.squeeze(e.vertex1.pose[0:2, 0])
+            x2, y2 = np.squeeze(e.vertex2.pose[0:2, 0])
+            if isinstance(e, PoseLandmarkEdge):
+                plt.plot([x1, x2], [y1, y2], 'y')
+            if isinstance(e, PosePoseEdge):
+                plt.plot([x1, x2], [y1, y2], 'k')
+
+        plt.axis('square')
+        plt.show()
