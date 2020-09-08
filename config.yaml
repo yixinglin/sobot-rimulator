@@ -108,7 +108,7 @@ map:
       # Minimum amount of generated obstacles
       min_count: 10
       # Maximum amount of generated obstacles
-      max_count: 50
+      max_count: 30
       # Minimum distance to origin
       min_distance: 0.4
       # Maximum distance to origin
@@ -154,7 +154,7 @@ slam:
     detected_angle: 30
   ekf_slam:
     # Determines whether the EKF SLAM algorithm shall be executed
-    enabled: true
+    enabled: false
     # The mahalanobis distance threshold used in data association
     distance_threshold: 1
     # Configures the motion noise. The values are currently empirically chosen.
@@ -167,7 +167,7 @@ slam:
       theta: 1
   fast_slam:
     # Determines whether the FastSLAM algorithm shall be executed
-    enabled: true
+    enabled: false
     # The mahalanobis distance threshold used in data association
     distance_threshold: 0.125
     # The number of used particles
@@ -181,22 +181,22 @@ slam:
 
 
   graph_based_slam:
-    # Determines whether the EKF SLAM algorithm shall be executed
+    # Determines whether the Graph-based SLAM algorithm shall be executed
     enabled: true
-    # The mahalanobis distance threshold used in data association
-    distance_threshold: 1
+    # The euclidean distance threshold used in data association
+    distance_threshold: 0.1
     # Configures the motion noise. The values are currently empirically chosen.
     motion_noise:
       # Standard deviation of the robots x-coordinate in meters after executing a motion command.
-      x: 0.05
-      # Standard deviation of the robots y-coordinate in meters after executing a motion command.
-      y: 0.05
-      # Standard deviation of the robots angle in degrees after executing a motion command.
-      theta: 1
-
-    sensor_noise:
       x: 0.1
+      # Standard deviation of the robots y-coordinate in meters after executing a motion command.
       y: 0.1
+      # Standard deviation of the robots angle in degrees after executing a motion command.
+      theta: 0.09
+    # Configures the sensor noise. The values are currently empirically chosen.
+    sensor_noise:
+      x: 2
+      y: 2
 
   # Configures the evaluation of the SLAM algorithms
   evaluation:
