@@ -2,11 +2,11 @@ import matplotlib.pyplot as plt
 from supervisor.slam.graph.baseclass.Vertex import Vertex
 from supervisor.slam.graph.baseclass.Edge import Edge
 from supervisor.slam.graph.baseclass.Graph import Graph
-from math import cos, sin
 from numpy.linalg import inv
-import numpy as np
+
 #from slam2.graph.vetor2matrix import *
 from supervisor.slam.graph.vetor2matrix import *
+from utils.math_util import normalize_angle
 
 """       Define Vertex Classes        
 Vertex
@@ -233,7 +233,8 @@ class LMGraph(Graph):
     def normalize_angles(self, vertices):
         for v in vertices:
             if isinstance(v, PoseVertex):
-                v.pose[2, 0] = atan2(sin(v.pose[2, 0]), cos(v.pose[2, 0]))
+                # v.pose[2, 0] = atan2(sin(v.pose[2, 0]), cos(v.pose[2, 0]))
+                v.pose[2, 0] = normalize_angle(v.pose[2, 0])
 
     def get_last_pose_vertex(self):
         v_pose = None
