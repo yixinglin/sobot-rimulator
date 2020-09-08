@@ -18,6 +18,7 @@
 
 
 # a class representing the available interactions a supervisor may have with a robot
+from numpy.random import normal
 class RobotSupervisorInterface:
 
     def __init__(self, robot):
@@ -45,4 +46,6 @@ class RobotSupervisorInterface:
         :param v_l: Velocity of left wheel
         :param v_r: Velocity of right wheel
         """
+        v_l += normal(0, 0.001)
+        v_r += normal(0, 0.001)
         self.robot.set_wheel_drive_rates(v_l, v_r)
