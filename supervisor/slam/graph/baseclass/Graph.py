@@ -1,16 +1,20 @@
+"""
+LS-Slam
+Based on implementation of dnovischi (https://github.com/aimas-upb/slam-course-solutions)
+
+"""
+
 import matplotlib.pyplot as plt
 import numpy as np
-#from slam2.graph.linearize import *
-# warnings.simplefilter("ignore", SparseEfficiencyWarning)
-# warnings.filterwarnings("ignore", category=SparseEfficiencyWarning)
 import time
 from scipy.sparse import coo_matrix
 from scipy.sparse.linalg import spsolve
 
-#from slam.graph.Edge import Edge
-
 
 def timer(function):
+    """
+    Used to test the efficiency of any functions
+    """
     def wrapper(*args, **kw):
         time_start = time.time()
         result = function(*args, **kw)
@@ -26,7 +30,7 @@ class Graph:
     def __init__(self):
         self.edges = []
         self.vertices = []
-        self.vertex_counter = 0  # it will be set to id of any vertices.
+        self.vertex_counter = 0  # it will be set as id of any vertices.
 
     def add_vertex(self, vertex):
         """
@@ -62,8 +66,8 @@ class Graph:
 
     def normalize_angles(self, vertices):
         """
-        Normalize angles of robot's orientation
-        :param vertices:
+        Normalize angles of robot's orientation of the vertices
+        :param vertices: vertices of the graph
         """
         raise NotImplementedError()
 
@@ -74,44 +78,38 @@ class Graph:
         """
         global_err = 0
         for edge in self.edges:
-            global_err += edge.calc_error()
+            global_err += edge.calc_error() # error of an edge
         return global_err
 
     @timer
-    def graph_optimization(self, animation = False, number_fix = 3, damp_factor = 0.01):
+    def graph_optimization(self, animation = False, number_fix = 3, damp_factor = 0.01, max_iter = 10):
         """
         Optimization of the posegraph
         :param animation:
         :param number_fix: fix the estimation of the initial step
         :param damp_factor:
+        :param max_iter: the maximum number of iterations
         :return: global error after optimization
         """
-
-        numIterations = 100  # the number of iterations
         global_error = np.inf
         preError = np.inf
-        for i in range(numIterations):
-            """     linearize the problem   <cost time!> """
+        for i in range(max_iter):
+            """     linearize the problem   """
             H, b = self.__linearize_constraints(self.vertices, self.edges, number_fix, damp_factor)
             """     solve sparse matrix    """
             dx = self.__solve_sparse(H, b)
             """     update vertices        """
-            # x = x + dx;
-            self.__apply_dx(dx, H)
+            self.__apply_dx(dx, H) # x = x + dx;
+
             global_error = self.compute_global_error()
             diff = dx.T @ dx
-            print("global_error:", global_error, "iteration:", i, 'diff=', diff)
+            print ("iter: {0}, diff: {1}, Global Error: {2}".format(i, diff, global_error))
             if animation == True:
                 self.draw()
 
-            # if np.max(np.abs(dx)) < epsilon:
-            #     damp_factor *= 2
-            # else:
-            #     damp_factor /= 2
-
             dError = abs(preError - global_error)  # check converge
             preError = global_error
-            if dError < 0.01 or i > 10 or diff < 0.01:
+            if dError < 0.01 or diff < 0.01:
                 break
         return global_error
 
@@ -137,7 +135,10 @@ class Graph:
     def __linearize_constraints(self, vertices, edges, number_fix, damp_factor):
         """
         Linearize the problem
-        :return: H, b
+
+        :return:
+                H: the hessian matrix (information matrix)
+                b: information vector
         """
         indices, hess_size = self.get_block_index_(vertices)  # calculate indices for each block of the hessian matrix
         b = np.zeros((hess_size, 1), dtype=np.float32)  # information vector
@@ -178,15 +179,13 @@ class Graph:
             Hessian_data += (Hii.flatten().tolist() + Hjj.flatten().tolist()
                              + Hij.flatten().tolist() + Hji.flatten().tolist())
 
-
-        # add dampling factor
+        """    add dampling factor     """
         I = [damp_factor]*number_fix
         ii = [i for i in range(number_fix)]
         Hessian_data += I
         row_indices += ii
         col_indices += ii
-        # Create a sparse hessian matrix efficiently.
-        # H = csr_matrix((Hessian_data, (row_indices, col_indices)), shape=(hess_size, hess_size), dtype=np.float32)
+        """   Create a sparse hessian matrix in a efficient way.      """
         H = coo_matrix((Hessian_data, (row_indices, col_indices)), shape=(hess_size, hess_size), dtype=np.float32)
         return H, b
 

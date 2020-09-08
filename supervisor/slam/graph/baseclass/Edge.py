@@ -57,14 +57,13 @@ class Edge:
         Calculate the error vector of the expected measurement and the actual measurement.
         :param x1: state vector of the first vertex
         :param x2: state vector of the second vertex
-        :param z:  actual measurement vector from sensors
+        :param z:  vector of actual measurement from sensors
         :return:
             error = z1 - z2
                 - z1 can be calculated through the states of 2 vertices x1, x2
                 - z2 is obtained by sensors
         """
         raise NotImplementedError()
-
 
 
     def find_vertice_by_id(self, id):
