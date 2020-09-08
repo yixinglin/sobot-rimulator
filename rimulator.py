@@ -23,7 +23,7 @@ import yaml
 import gi
 from gi.repository import GLib
 
-from plotters.SlamPlotter import SlamPlotter
+from plotters.SlamPlotter import *
 from supervisor.slam.SlamEvaluation import SlamEvaluation
 
 gi.require_version('Gtk', '3.0')
@@ -124,7 +124,10 @@ class Simulator:
                 self.fastslam_evaluation = SlamEvaluation(self.world.supervisors[0].fastslam, self.cfg["slam"]["evaluation"])
 
         if cfg["slam"]["graph_based_slam"]["enabled"]:
-            self.graphbasedslam_plotter = SlamPlotter(self.world.supervisors[0].graphbasedslam, self.viewer, self.cfg["map"]["obstacle"]["octagon"]["radius"], self.cfg["robot"], n_frame)
+            # self.graphbasedslam_plotter = SlamPlotter(self.world.supervisors[0].graphbasedslam, self.viewer, self.cfg["map"]["obstacle"]["octagon"]["radius"], self.cfg["robot"], n_frame)
+            self.graphbasedslam_plotter = GraphSlamPlotter(self.world.supervisors[0].graphbasedslam, self.viewer,
+                                                      self.cfg["map"]["obstacle"]["octagon"]["radius"],
+                                                      self.cfg["robot"], n_frame)
             n_frame += 1
             if self.cfg["slam"]["evaluation"]["enabled"]:
                 self.graphbasedslam_evaluation = SlamEvaluation(self.world.supervisors[0].graphbasedslam,

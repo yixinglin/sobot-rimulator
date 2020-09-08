@@ -71,7 +71,7 @@ class Viewer:
         if self.fastslam_enabled:
             label_strings += ['FAST SLAM']
         if self.graphslambased_enabled:
-            label_strings += ['GRAPH-BASED SLAM']
+            label_strings += ['Graph-based SLAM']
 
         label_strings = label_strings[:self.num_frames]
 
