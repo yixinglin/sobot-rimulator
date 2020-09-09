@@ -29,6 +29,15 @@ robot:
               [0.057, 0.000],
               [0.052, 0.021],
               [0.033, 0.043]]
+
+  # Configures the motor used by the robot
+  motor:
+    noise:
+      # Standard deviation of the left wheel's velocity in meters/second while executing a motion command.
+      left_velocity: 0.01
+      # Standard deviation of the right wheel's velocity in meters/second while executing a motion command.
+      right_velocity: 0.01
+
   # Configures the sensors used by the robot
   sensor:
     # Minimum detection range of the sensor in meters
@@ -39,6 +48,8 @@ robot:
     min_read_value: 18
     # Value that is read at minimum range
     max_read_value: 3960
+    # Standard deviation of the distance from the sensors to the detected landmark.
+    noise: 0.005
     # Specificies the poses and number of sensors
     # Each pose is composed of x position, y position and angle in degrees
     poses: [[-0.038, 0.048, 128],
@@ -167,7 +178,7 @@ slam:
       theta: 1
   fast_slam:
     # Determines whether the FastSLAM algorithm shall be executed
-    enabled: false
+    enabled: true
     # The mahalanobis distance threshold used in data association
     distance_threshold: 0.125
     # The number of used particles

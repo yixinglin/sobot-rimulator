@@ -99,7 +99,7 @@ class Simulator:
         # create the robot
         robot = Robot(self.cfg["robot"])
         # Assign supervisor to the robot
-        robot.supervisor = Supervisor(RobotSupervisorInterface(robot), self.cfg)
+        robot.supervisor = Supervisor(RobotSupervisorInterface(robot, self.cfg['robot']), self.cfg)
         self.world.add_robot(robot)
 
         # generate a random environment
@@ -124,15 +124,11 @@ class Simulator:
                 self.fastslam_evaluation = SlamEvaluation(self.world.supervisors[0].fastslam, self.cfg["slam"]["evaluation"])
 
         if cfg["slam"]["graph_based_slam"]["enabled"]:
-            # self.graphbasedslam_plotter = SlamPlotter(self.world.supervisors[0].graphbasedslam, self.viewer, self.cfg["map"]["obstacle"]["octagon"]["radius"], self.cfg["robot"], n_frame)
-            self.graphbasedslam_plotter = GraphSlamPlotter(self.world.supervisors[0].graphbasedslam, self.viewer,
-                                                      self.cfg["map"]["obstacle"]["octagon"]["radius"],
-                                                      self.cfg["robot"], n_frame)
+            self.graphbasedslam_plotter = GraphSlamPlotter(self.world.supervisors[0].graphbasedslam, self.viewer, self.cfg["map"]["obstacle"]["octagon"]["radius"], self.cfg["robot"], n_frame)
             n_frame += 1
             if self.cfg["slam"]["evaluation"]["enabled"]:
                 self.graphbasedslam_evaluation = SlamEvaluation(self.world.supervisors[0].graphbasedslam,
                                                                 self.cfg["slam"]["evaluation"])
-
         # render the initial world
         self.draw_world()
 

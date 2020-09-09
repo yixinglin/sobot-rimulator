@@ -21,23 +21,26 @@
 from numpy.random import normal
 class RobotSupervisorInterface:
 
-    def __init__(self, robot):
+    def __init__(self, robot, robot_cfg):
         """
         Initializes a RobotSupervisorInterface object
         :param robot: The underlying robot
         """
         self.robot = robot
+        self.sensor_noise = robot_cfg['sensor']['noise']
+        self.motor_noise = (robot_cfg['motor']['noise']['left_velocity'], robot_cfg['motor']['noise']['right_velocity'])
 
     def read_proximity_sensors(self):
         """
         :return: List of the current proximity sensor readings
         """
-        return [s.read() for s in self.robot.ir_sensors]
+        return [s.read() + normal(0, self.sensor_noise) for s in self.robot.ir_sensors]
 
     def read_wheel_encoders(self):
         """
         :return: List of current wheel encoder readings
         """
+
         return [e.read() for e in self.robot.wheel_encoders]
 
     def set_wheel_drive_rates(self, v_l, v_r):
@@ -46,6 +49,6 @@ class RobotSupervisorInterface:
         :param v_l: Velocity of left wheel
         :param v_r: Velocity of right wheel
         """
-        v_l += normal(0, 0.001)
-        v_r += normal(0, 0.001)
+        v_l += normal(0, self.motor_noise[0])
+        v_r += normal(0, self.motor_noise[1])
         self.robot.set_wheel_drive_rates(v_l, v_r)
