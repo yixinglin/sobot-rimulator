@@ -71,7 +71,6 @@ class Graph:
         """
         raise NotImplementedError()
 
-    @timer
     def compute_global_error(self):
         """
         Compute global error of the graph
@@ -85,7 +84,7 @@ class Graph:
     def graph_optimization(self, animation = False, number_fix = 3, damp_factor = 0.01, max_iter = 10):
         """
         Optimization of the posegraph
-        :param animation:
+        :param animation: decide whether animation shall be shown
         :param number_fix: fix the estimation of the initial step
         :param damp_factor:
         :param max_iter: the maximum number of iterations
@@ -99,19 +98,27 @@ class Graph:
             """     solve sparse matrix    """
             dx = self.__solve_sparse(H, b)
             """     update vertices        """
-            self.__apply_dx(dx, H) # x = x + dx;
-
+            self.__apply_dx(dx) # x = x + dx;
             global_error = self.compute_global_error()
             diff = dx.T @ dx
-            print ("iter: {0}, diff: {1}, Global Error: {2}".format(i, diff, global_error))
+            #print ("iter: {0}, diff: {1}, Global Error: {2}".format(i, diff, global_error))
             if animation == True:
                 self.draw()
 
             dError = abs(preError - global_error)  # check converge
             preError = global_error
             if dError < 0.01 or diff < 0.01:
+                self.__apply_covariance(H)
                 break
         return global_error
+
+    def __apply_covariance(self, H):
+        H = H.tocsr()
+        indices, hess_size = self.get_block_index_(self.vertices)
+        for id, vertex in enumerate(self.vertices):
+            i1, i2 = indices[id]
+            Hii = H[i1:i2, i1:i2].toarray()
+            vertex.sigma = np.linalg.inv(Hii)
 
     def draw(self):
         """
@@ -131,7 +138,6 @@ class Graph:
         plt.axis('square')
         plt.show()
 
-    @timer
     def __linearize_constraints(self, vertices, edges, number_fix, damp_factor):
         """
         Linearize the problem
@@ -189,14 +195,12 @@ class Graph:
         H = coo_matrix((Hessian_data, (row_indices, col_indices)), shape=(hess_size, hess_size), dtype=np.float32)
         return H, b
 
-    @timer
     def __solve_sparse(self, H, b):
         dx = spsolve(H, -b)
         dx = np.array(dx)[:, np.newaxis]
         return dx
 
-    @timer
-    def __apply_dx(self, dx, H):
+    def __apply_dx(self, dx):
         indices, _ = self.get_block_index_(self.vertices)
         for i, v in enumerate(self.vertices):
             i1, i2 = indices[i]
