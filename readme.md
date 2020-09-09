@@ -1,11 +1,15 @@
 # Sobot Rimulator - A Robot Programming Tool
 
-![Screenshot](documentation/GUI2.png)
+![Screenshot](documentation/GUI.png)
 
 This project is an extension of the [sobot rimulator](https://github.com/nmccrea/sobot-rimulator) developed by Nick McCrea
 which allows the simulation of a mobile robot in a map of obstacles that must be avoided.
-The [extension](https://collaborating.tuhh.de/cva9931/sobot-rimulator) developed by Michael Dobler includes the integration of the EKFSLAM and FastSLAM algorithms to perform an estimation of the current robot state
-and its surrounding environment based on its previous motion commands and proximity sensor readings. In my extension Graph-based SLAM algorithm was integrated. 
+The [extension](https://collaborating.tuhh.de/cva9931/sobot-rimulator) developed by Michael Dobler includes 
+the integration of the EKFSLAM and FastSLAM algorithms to perform an estimation 
+of the current robot state and its surrounding environment based on its previous motion commands 
+and proximity sensor readings. In my extension Graph-based SLAM algorithm was integrated 
+to perform an estimation of the full traverse trajectory of the robot as well as the surrounding environment based on its 
+previous motion commands and the measurements from the sensors and the wheel encoders. 
 
 ## Setup
 
@@ -70,8 +74,9 @@ over the course of the simulation. Only displayed if the SLAM evaluation is enab
 
 ## Configuration
 
-The simulator can be configured by a variety of paramters. The default configuration file is [extension_config.yaml](extension_config.yaml), 
-where all parameters are documented. The configuration file [original_config.yaml](original_config.yaml) does not include
+The simulator can be configured by a variety of paramters. The default configuration file is [config.yaml](config.yaml)
+where all parameters are documented. The configuration file [ekf_fast_skam_config.yaml](ekf_fast_skam_config.yaml) includes 
+an extension of EKFSlam and FastSlam performs completely identical to the sobot rimulator of Michael Dobler. The configuration file [original_config.yaml](original_config.yaml) does not include
 any of the extensions made and performs completely identical to the original sobot rimulator.
 
 The most important parameters in terms of the SLAM algorithms are:
