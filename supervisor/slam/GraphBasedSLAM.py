@@ -70,7 +70,7 @@ class GraphBasedSLAM(Slam):
 
         traj = []
         for vertex in self.graph.get_estimated_pose_vertices():
-            traj.append([vertex.pose[0,0], vertex.pose[1,0]])
+            traj.append((vertex.pose[0,0], vertex.pose[1,0]))
         return traj
 
     def get_landmarks(self):
@@ -80,7 +80,7 @@ class GraphBasedSLAM(Slam):
         landmarks = []
         vertices = self.graph.get_estimated_landmark_vertices()
         for v in vertices:
-            landmarks.append((v.pose[0], v.pose[1]))
+            landmarks.append((v.pose[0, 0], v.pose[1, 0]))
         return landmarks
 
     def __update_odometry_estimation(self, odom_pose):
