@@ -212,6 +212,8 @@ class Simulator:
                 self.ekfslam_evaluation.evaluate(self.world.obstacles)
             if self.fastslam_evaluation is not None:
                 self.fastslam_evaluation.evaluate(self.world.obstacles)
+            if self.graphbasedslam_evaluation is not None:
+                self.graphbasedslam_evaluation.evaluate(self.world.obstacles)
 
     def _step_sim(self):
         self.num_cycles += 1

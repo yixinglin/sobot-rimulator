@@ -2,7 +2,8 @@ from math import sqrt
 from matplotlib import pyplot as plt
 
 from supervisor.slam.EKFSlam import EKFSlam
-
+from supervisor.slam.FastSlam import FastSlam
+from supervisor.slam.GraphBasedSLAM import GraphBasedSLAM
 
 class SlamEvaluation:
     def __init__(self, slam, evaluation_cfg):
@@ -40,10 +41,15 @@ class SlamEvaluation:
             ax.set(xlabel='Simulation cycles', ylabel='Average distance to true landmark in meters',
                    title='Evaluation of EKF SLAM')
             plt.savefig('ekf_slam_evaluation.png')
-        else:
+        elif isinstance(self.slam, FastSlam):
             ax.set(xlabel='Simulation cycles', ylabel='Average distance to true landmark in meters',
                    title='Evaluation of FastSLAM')
             plt.savefig('fast_slam_evaluation.png')
+        elif isinstance(self.slam, GraphBasedSLAM):
+            ax.set(xlabel='Simulation cycles', ylabel='Average distance to true landmark in meters',
+                   title='Evaluation of Graph-based Slam')
+            plt.savefig('graph_based_slam_evaluation.png')
+
         ax.grid()
 
         plt.show()

@@ -385,6 +385,8 @@ class Viewer:
             self.simulator.ekfslam_evaluation.plot()
         if self.simulator.fastslam_evaluation is not None:
             self.simulator.fastslam_evaluation.plot()
+        if self.simulator.graphbasedslam_evaluation is not None:
+            self.simulator.graphbasedslam_evaluation.plot()
 
     def on_plot_covariances(self, widget):
         """
