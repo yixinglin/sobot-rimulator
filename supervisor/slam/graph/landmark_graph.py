@@ -1,8 +1,10 @@
 import matplotlib.pyplot as plt
+from numpy.linalg import inv
+from random import sample
 from supervisor.slam.graph.baseclass.Vertex import Vertex
 from supervisor.slam.graph.baseclass.Edge import Edge
 from supervisor.slam.graph.baseclass.Graph import Graph
-from numpy.linalg import inv
+
 
 #from slam2.graph.vetor2matrix import *
 from supervisor.slam.graph.vetor2matrix import *
@@ -264,22 +266,37 @@ class LMGraph(Graph):
         """
         # draw vertices
         plt.cla()
+        landmarks = []
+        vertices = []
         for v in self.vertices:
             if isinstance(v, LandmarkVertex):
                 x, y = np.squeeze(v.pose[0:2, 0])
-                plt.plot(x, y, '*b')
+                landmarks.append((x, y))
             if isinstance(v, PoseVertex):
                 x, y = np.squeeze(v.pose[0:2, 0])
-                plt.plot(x, y, '*r')
+                vertices.append((x, y))
 
         # draw edges
         for e in self.edges:
             x1, y1 = np.squeeze(e.vertex1.pose[0:2, 0])
             x2, y2 = np.squeeze(e.vertex2.pose[0:2, 0])
             if isinstance(e, PoseLandmarkEdge):
-                plt.plot([x1, x2], [y1, y2], 'y')
+                plt.plot([x1, x2], [y1, y2], 'y', linewidth=0.3)
             if isinstance(e, PosePoseEdge):
                 plt.plot([x1, x2], [y1, y2], 'k')
 
+        num_landmarks = len(landmarks)
+        if num_landmarks  > 0:
+            lmx, lmy = zip(*landmarks)
+            plt.plot(lmx, lmy, 'xb', label = 'Landmark ({0})'.format(num_landmarks))
+        num_vertices = len(vertices)
+        if num_vertices > 0:
+            k = min(100, num_vertices)
+            vertices = sample(vertices, k)
+            vx, vy = zip(*vertices)
+            plt.plot(vx, vy, '*r', label='Vertex ({0})'.format(num_vertices))
+
+        plt.title("Graph")
+        plt.legend()
         plt.axis('square')
         plt.show()

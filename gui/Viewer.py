@@ -169,6 +169,10 @@ class Viewer:
         self.button_plot_covariances.set_image_position(gtk.PositionType.LEFT)
         self.button_plot_covariances.connect('clicked', self.on_plot_covariances)
 
+        # build the plot-graph button
+        self.button_plot_graph = gtk.Button("Plot Graph")
+        self.button_plot_graph.set_image_position(gtk.PositionType.LEFT)
+        self.button_plot_graph.connect('clicked', self.on_plot_graph)
 
         # == lay out the window
 
@@ -202,6 +206,10 @@ class Viewer:
         information_box.pack_start(self.button_draw_invisibles, False, False, 0)
         if self.ekf_enabled:
             information_box.pack_start(self.button_plot_covariances, False, False, 0)
+
+        if self.graphslambased_enabled:
+            information_box.pack_start(self.button_plot_graph, False, False, 0)
+
         if num_frames > 1 and self.use_slam_evaluation:
             information_box.pack_start(self.button_slam_evaluation, False, False, 0)
 
@@ -394,6 +402,14 @@ class Viewer:
         :param widget: The corresponding widget
         """
         self.simulator.ekfslam_plotter.plot_covariances()
+
+    def on_plot_graph(self, widget):
+        """
+        Callback function that handles a click on the "Plot Graph" button
+        :param widget: The corresponding widget
+        """
+        self.simulator.graphbasedslam_plotter.plot_graph()
+
 
     def on_expose1(self, widget, context):
         """

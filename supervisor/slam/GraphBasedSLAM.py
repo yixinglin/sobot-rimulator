@@ -83,6 +83,9 @@ class GraphBasedSLAM(Slam):
             landmarks.append((v.pose[0, 0], v.pose[1, 0]))
         return landmarks
 
+    def plot_graph(self):
+        self.graph.draw()
+
     def __update_odometry_estimation(self, odom_pose):
         """
         Calculate odometry estimation from wheel encoders.

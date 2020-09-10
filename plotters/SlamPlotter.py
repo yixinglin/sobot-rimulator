@@ -120,3 +120,6 @@ class GraphSlamPlotter(SlamPlotter):
                         linewidth=0.005,
                         color="red",
                         alpha=0.5)
+
+    def plot_graph(self):
+        self.slam.graph.draw()
