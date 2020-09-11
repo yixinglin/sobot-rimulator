@@ -1,11 +1,11 @@
 import numpy as np
 from math import cos, sin, sqrt
 from utils.geometrics_util import bresenham_line
-class OccupancyGridMap2d:
+class OccupancyMapping2d:
 
     def __init__ (self, slam, slam_cfg, max_range):
         """
-        Initialize the OccupancyGridMap2d object
+        Initialize the OccupancyMapping2d object
         :param slam: The underlying slam algorithm object.
         :param slam_cfg: The slam configuration.
         """
@@ -22,8 +22,9 @@ class OccupancyGridMap2d:
 
         self.prob_unknown = 0.5 # prior
         self.prob_occ = 0.4 # probability that a grid is occupied
-        self.L = self.__prob2log(np.ones_like(self.map) * self.prob_unknown)  # recursive term of the map
-        self.L0 = self.__prob2log(np.ones_like(self.map) * self.prob_unknown)  # prior term of the map
+
+        self.L = self.__prob2log(np.full_like(self.map, self.prob_unknown, dtype=np.float32))  # recursive term of the map
+        self.L0 = self.__prob2log(np.full_like(self.map, self.prob_unknown, dtype=np.float32))  # prior term of the map
 
     def update(self, z):
         """
@@ -39,7 +40,7 @@ class OccupancyGridMap2d:
             points = self.__calc_prob(points)  # calculate the occupancy probabilities on this line
             observed_pixs += points
 
-        inverse_sensor = np.ones_like(self.map) * self.prob_unknown # initialize the inverse-sensor-model term by prior
+        inverse_sensor = np.full_like(self.map, self.prob_unknown, dtype=np.float32) # initialize the inverse-sensor-model term by prior
 
         for xi, yi, prob_occ in observed_pixs:
             if xi < self.W and xi >= 0 and yi < self.H and yi >= 0:

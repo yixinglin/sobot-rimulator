@@ -21,7 +21,7 @@ from supervisor.controllers.GoToAngleController import *
 from supervisor.slam.EKFSlam import *
 from supervisor.slam.FastSlam import FastSlam
 from supervisor.slam.GraphBasedSLAM import *
-from supervisor.slam.mapping import OccupancyGridMap2d
+from supervisor.slam.mapping import OccupancyMapping2d
 from supervisor.SupervisorControllerInterface import *
 from supervisor.SupervisorStateMachine import *
 
@@ -97,11 +97,11 @@ class Supervisor:
         if cfg["slam"]["mapping"]["enabled"]:
             max_range = cfg['robot']['sensor']['max_range']
             if self.ekfslam is not None:
-                self.ekfslam_mapping = OccupancyGridMap2d(self.ekfslam, cfg["slam"], max_range)
+                self.ekfslam_mapping = OccupancyMapping2d(self.ekfslam, cfg["slam"], max_range)
             if self.fastslam is not None:
-                self.fastslam_mapping = OccupancyGridMap2d(self.fastslam, cfg["slam"], max_range)
+                self.fastslam_mapping = OccupancyMapping2d(self.fastslam, cfg["slam"], max_range)
             if self.graphbasedslam is not None:
-                self.graphbasedslam_mapping = OccupancyGridMap2d(self.graphbasedslam, cfg["slam"], max_range)
+                self.graphbasedslam_mapping = OccupancyMapping2d(self.graphbasedslam, cfg["slam"], max_range)
 
         # state machine
         self.state_machine = SupervisorStateMachine(self, self.control_cfg)
