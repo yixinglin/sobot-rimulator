@@ -15,12 +15,13 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # 
 # Email mccrea.engineering@gmail.com for questions, comments, or to report bugs.
-from supervisor.slam.FastSlam import FastSlam
 from supervisor.controllers.GTGAndAOController import *
 from supervisor.controllers.FollowWallController import *
 from supervisor.controllers.GoToAngleController import *
 from supervisor.slam.EKFSlam import *
+from supervisor.slam.FastSlam import FastSlam
 from supervisor.slam.GraphBasedSLAM import *
+from supervisor.slam.mapping import OccupancyGridMap2d
 from supervisor.SupervisorControllerInterface import *
 from supervisor.SupervisorStateMachine import *
 
@@ -76,10 +77,14 @@ class Supervisor:
         self.gtg_and_ao_controller = GTGAndAOController(controller_interface)
         self.follow_wall_controller = FollowWallController(controller_interface)
 
-        # slam
+        # slam and mapping
         self.ekfslam = None
         self.fastslam = None
         self.graphbasedslam = None
+        self.ekfslam_mapping = None
+        self.fastslam_mapping = None
+        self.graphbasedslam_mapping = None
+
         if cfg["slam"]["ekf_slam"]["enabled"]:
             print("Using EKF SLAM")
             self.ekfslam = EKFSlam(controller_interface, cfg["slam"], step_time=cfg["period"])
@@ -89,6 +94,13 @@ class Supervisor:
         if cfg["slam"]["graph_based_slam"]["enabled"]:
             print("Using Graph-based SLAM")
             self.graphbasedslam = GraphBasedSLAM(controller_interface, cfg["slam"], step_time=cfg["period"])
+        if cfg["slam"]["mapping"]["enabled"]:
+            if self.ekfslam is not None:
+                self.ekfslam_mapping = OccupancyGridMap2d(self.ekfslam, controller_interface, cfg["slam"])
+            if self.fastslam is not None:
+                self.fastslam_mapping = OccupancyGridMap2d(self.fastslam, controller_interface, cfg["slam"])
+            if self.graphbasedslam is not None:
+                self.graphbasedslam_mapping = OccupancyGridMap2d(self.graphbasedslam, controller_interface, cfg["slam"])
 
         # state machine
         self.state_machine = SupervisorStateMachine(self, self.control_cfg)
@@ -133,6 +145,7 @@ class Supervisor:
         """
         self._update_state()  # update state
         self._update_slam()  # Update SLAM estimations
+        self._update_mapping() # Update SLAM mapping
         self.current_controller.execute()  # apply the current controller
         self._send_robot_commands()  # output the generated control signals to the robot
 
@@ -218,6 +231,17 @@ class Supervisor:
             self.fastslam.update(motion_command, zip(measured_distances, sensor_angles))
         if self.graphbasedslam is not None:
             self.graphbasedslam.update(motion_command, zip(measured_distances, sensor_angles))
+
+    def _update_mapping(self):
+        """
+        Update slam mapping estimation
+        """
+        if self.ekfslam_mapping is not None:
+            self.ekfslam_mapping.update()
+        if self.fastslam_mapping is not None:
+            self.fastslam_mapping.update()
+        if self.graphbasedslam_mapping is not None:
+            self.graphbasedslam_mapping.update()
 
     def _send_robot_commands(self):
         """

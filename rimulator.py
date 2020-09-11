@@ -26,6 +26,9 @@ from gi.repository import GLib
 from plotters.SlamPlotter import *
 from supervisor.slam.SlamEvaluation import SlamEvaluation
 
+
+from plotters.MappingPlotter import MappingPlotter
+
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk as gtk
 
@@ -64,6 +67,10 @@ class Simulator:
         self.ekfslam_evaluation = None
         self.fastslam_evaluation = None
         self.graphbasedslam_evaluation = None
+
+        self.ekfslam_mapping_plotter = None
+        self.fastslam_mapping_plotter = None
+        self.graphbasedslam_mapping_plotter = None
 
         self.world_plotter = None
 
@@ -113,18 +120,24 @@ class Simulator:
         n_frame = 1
         if cfg["slam"]["ekf_slam"]["enabled"]:
             self.ekfslam_plotter = SlamPlotter(self.world.supervisors[0].ekfslam, self.viewer, self.cfg["map"]["obstacle"]["octagon"]["radius"], self.cfg["robot"], n_frame)
+            if cfg["slam"]["mapping"]["enabled"]:
+                self.ekfslam_mapping_plotter = MappingPlotter(self.world.supervisors[0].ekfslam_mapping, self.viewer, n_frame)
             n_frame += 1
             if self.cfg["slam"]["evaluation"]["enabled"]:
                 self.ekfslam_evaluation = SlamEvaluation(self.world.supervisors[0].ekfslam, self.cfg["slam"]["evaluation"])
 
         if cfg["slam"]["fast_slam"]["enabled"]:
             self.fastslam_plotter = SlamPlotter(self.world.supervisors[0].fastslam, self.viewer, self.cfg["map"]["obstacle"]["octagon"]["radius"], self.cfg["robot"], n_frame)
+            if cfg["slam"]["mapping"]["enabled"]:
+                self.fastslam_mapping_plotter = MappingPlotter(self.world.supervisors[0].fastslam_mapping, self.viewer, n_frame)
             n_frame += 1
             if self.cfg["slam"]["evaluation"]["enabled"]:
                 self.fastslam_evaluation = SlamEvaluation(self.world.supervisors[0].fastslam, self.cfg["slam"]["evaluation"])
 
         if cfg["slam"]["graph_based_slam"]["enabled"]:
             self.graphbasedslam_plotter = GraphSlamPlotter(self.world.supervisors[0].graphbasedslam, self.viewer, self.cfg["map"]["obstacle"]["octagon"]["radius"], self.cfg["robot"], n_frame)
+            if cfg["slam"]["mapping"]["enabled"]:
+                self.graphbasedslam_mapping_plotter = MappingPlotter(self.world.supervisors[0].graphbasedslam_mapping, self.viewer, n_frame)
             n_frame += 1
             if self.cfg["slam"]["evaluation"]["enabled"]:
                 self.graphbasedslam_evaluation = SlamEvaluation(self.world.supervisors[0].graphbasedslam,
@@ -198,6 +211,12 @@ class Simulator:
             self.fastslam_plotter.draw_slam_to_frame()
         if self.graphbasedslam_plotter is not None:
             self.graphbasedslam_plotter.draw_slam_to_frame()
+        if self.ekfslam_mapping_plotter is not None:
+            self.ekfslam_mapping_plotter.draw_mapping_to_frame()
+        if self.fastslam_mapping_plotter is not None:
+            self.fastslam_mapping_plotter.draw_mapping_to_frame()
+        if self.graphbasedslam_mapping_plotter is not None:
+            self.graphbasedslam_mapping_plotter.draw_mapping_to_frame()
 
         self.viewer.draw_frame()  # render the frame
 
