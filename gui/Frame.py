@@ -99,3 +99,25 @@ class Frame:
             'color': color,
             'alpha': alpha
         })
+
+    def add_rectangle(self, pos, width, height, color, alpha = None):
+        """
+        Adds a rectangle to the list of objects to be drawn
+        :param pos: Top left coordinate of the rectangle
+        :param width: Width of the rectangle
+        :param height: Height of the rectangle
+        :param color: Color of the rectangle, it's a tuple of rgb values (r, g, b) in range of 0.0 - 1.0
+        :param alpha: Alpha value of the color of the rectangle
+        """
+        self.draw_list.append({
+            'type': 'rectangle',
+            'pos': pos,
+            'width':width,
+            'height': height,
+            'color': color,
+            'alpha': alpha
+        })
+
+
+
+

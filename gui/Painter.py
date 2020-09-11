@@ -80,6 +80,13 @@ class Painter:
                                 component['linewidth'],
                                 component['color'],
                                 component['alpha'])
+            elif component['type'] == 'rectangle':
+                self.draw_rectangle(context,
+                                    component['pos'],
+                                    component['width'],
+                                    component['height'],
+                                    component['color'],
+                                    component['alpha'])
 
     def draw_ellipse(self, context,
                      pos, angle,
@@ -164,3 +171,18 @@ class Painter:
         :param alpha: Alpha value of the color
         """
         ColorPalette.dab(cairo_context, color_string, alpha)
+
+
+    def draw_rectangle(self, context, pos, width, height, color, alpha):
+        """
+        Draws an rectangle
+        :param context: The cairo context to be used
+        :param pos: Top left coordinate of the rectangle
+        :param width: Width of the rectangle
+        :param height: Height of the rectangle
+        :param color: Color of the rectangle, it's a tuple of rgb values (r, g, b) in range of 0.0 - 1.0
+        :param alpha: Alpha value of the color of the rectangle
+        """
+        context.set_source_rgba(color[0], color[1], color[2], alpha)
+        context.rectangle(pos[0], pos[1], width, height)
+        context.fill()
