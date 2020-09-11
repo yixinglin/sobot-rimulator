@@ -4,9 +4,6 @@ from random import sample
 from supervisor.slam.graph.baseclass.Vertex import Vertex
 from supervisor.slam.graph.baseclass.Edge import Edge
 from supervisor.slam.graph.baseclass.Graph import Graph
-
-
-#from slam2.graph.vetor2matrix import *
 from supervisor.slam.graph.vetor2matrix import *
 from utils.math_util import normalize_angle
 

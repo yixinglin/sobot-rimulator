@@ -2,6 +2,10 @@
 LS-Slam
 Based on implementation of dnovischi (https://github.com/aimas-upb/slam-course-solutions)
 
+The parent class of any types of graph
+The Graph class has to be inherited and the following methods has to be implemented,
+        - generate_edge_object(self, vertex1, vertex2, z, information)
+        - normalize_angles(self, vertices):
 """
 
 import matplotlib.pyplot as plt
@@ -55,18 +59,19 @@ class Graph:
 
     def generate_edge_object(self, vertex1, vertex2, z, information):
         """
-        To gernerate an edge object w.r.t vertex1 and vertex2
-        :param vertex1:
-        :param vertex2:
-        :param z:
-        :param information:
-        :return:
+        To generate an Edge object w.r.t vertex1 and vertex2.
+        This Edge object is a subclass of the Edge class.
+        :param vertex1: the first vertex of the edge.
+        :param vertex2: the second vertex of the edge.
+        :param z: the actual measurement
+        :param information: the information matrix, i.e the inverse of the covariance matrix
+        :return: An Edge object of a subclass of the Edge class
         """
         raise NotImplementedError()
 
     def normalize_angles(self, vertices):
         """
-        Normalize angles of robot's orientation of the vertices
+        In this method you're going to normalize angles of robot's orientation of the vertices
         :param vertices: vertices of the graph
         """
         raise NotImplementedError()
@@ -83,10 +88,10 @@ class Graph:
     @timer
     def graph_optimization(self, animation = False, number_fix = 3, damp_factor = 0.01, max_iter = 10):
         """
-        Optimization of the posegraph
+        Optimization of the graph
         :param animation: decide whether animation shall be shown
         :param number_fix: fix the estimation of the initial step
-        :param damp_factor:
+        :param damp_factor: how fasten you want to fix a vertex.
         :param max_iter: the maximum number of iterations
         :return: global error after optimization
         """
@@ -105,7 +110,7 @@ class Graph:
             if animation == True:
                 self.draw()
 
-            dError = abs(preError - global_error)  # check converge
+            dError = abs(preError - global_error)  # check convergence
             preError = global_error
             if dError < 0.01 or diff < 0.01:
                 self.__apply_covariance(H)
@@ -140,8 +145,7 @@ class Graph:
 
     def __linearize_constraints(self, vertices, edges, number_fix, damp_factor):
         """
-        Linearize the problem
-
+        Linearize the problem (global) i.e. compute the hessian matrix and the information vector
         :return:
                 H: the hessian matrix (information matrix)
                 b: information vector
@@ -196,11 +200,22 @@ class Graph:
         return H, b
 
     def __solve_sparse(self, H, b):
+        """
+        Solve the linear system H @ dx = -b, where dx is unknown
+        :param H: A sparse hessian matrix
+        :param b: An information matrix
+        :return:
+                dx: the solution.
+        """
         dx = spsolve(H, -b)
         dx = np.array(dx)[:, np.newaxis]
         return dx
 
     def __apply_dx(self, dx):
+        """
+        A apply the increment dx on all vertices of the graph
+        :param dx: increment
+        """
         indices, _ = self.get_block_index_(self.vertices)
         for i, v in enumerate(self.vertices):
             i1, i2 = indices[i]
@@ -210,11 +225,13 @@ class Graph:
     @staticmethod
     def get_block_index_(vertices):
         """
-
-        :param vertices: Calculate block indices in hessian matrix for each vertices.
+        Calculate block indices in hessian matrix for each vertices of the graph
+        :param vertices: A list of vertices of the graph
         :return:
-            indices: block indices in hessian matrix (from_index, to_index)
-            size: size of hessian matrix
+            indices: indices of hessian matrix blocks (from_index, to_index) ,
+                    the list order is corresponding the vertex ids, i.e. the index of a term in this list
+                    represents a vertex.id where id == index
+            size: an integer that represents the size of the hessian matrix
         """
         size = 0
         indices = []
@@ -226,17 +243,23 @@ class Graph:
     @staticmethod
     def cartesian_product(i1, i2, j1, j2):
         """
-        create cartesian product
-        i1, i2, index of row, [i1, i2)
-        j1, j2, index of column [j1, j2)
-        e.g.
-        i1, i2 = 1, 3
-        j1, j2 = 4, 5
-        index_ij(i, j) = [1,1,2,2,3,3]
-                         [4,5,4,5,4,5]
-        :param rows:
-        :param cols:
+        Calculate the cartesian product in a range
+        :param i1: index of row [i1, i2)
+        :param i2: index of row [i1, i2)
+        :param j1: index of column [j1, j2)
+        :param j2: index of column [j1, j2)
         :return:
+                rows, a list of indices of rows
+                cols, a list of indices of columns
+
+            i1, i2, index of row, [i1, i2)
+            j1, j2, index of column [j1, j2)
+            e.g.
+            i1, i2 = 1, 3
+            j1, j2 = 4, 5
+            cartesian_product(i1, i2, j1, j2) = [1,1,2,2,3,3]
+                                                [4,5,4,5,4,5]
+
         """
         i12 = list(range(i1, i2))
         j12 = list(range(j1, j2))

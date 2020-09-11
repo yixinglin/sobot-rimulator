@@ -1,3 +1,10 @@
+"""
+The parent class of any types of edge
+The Edge class has to be inherited and the following methods has to be implemented,
+        - calc_error_vector(self, x1, x2, z): In this method you are going to define the error of the constraint in the graph.
+        - linearize_constraint(self, x1, x2, z): In this method you are going to linearize the problem by calculating
+            the jacobian matrices of the error w.r.t x1 and x2
+"""
 class Edge:
 
     def __init__(self, id_vertex1, id_vertex2, z, information, list_vertices):
@@ -54,7 +61,7 @@ class Edge:
 
     def calc_error_vector(self, x1, x2, z):
         """
-        Calculate the error vector of the expected measurement and the actual measurement.
+        Calculate the error vector between the expected measurement and the actual measurement.
         :param x1: state vector of the first vertex
         :param x2: state vector of the second vertex
         :param z:  vector of actual measurement from sensors

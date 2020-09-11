@@ -100,7 +100,7 @@ class GraphBasedSLAM(Slam):
         vl = (wheel_record[0] - self.old_wheel_record[0])/self.dt  # Velocity of the left wheel
         vr = (wheel_record[1] - self.old_wheel_record[1])/self.dt  # Velocity of the right wheel
         v, w = self.diff_to_uni(vl, vr, base_length)   # Convert to uni-wheel model
-        # Update the odometry estimation
+        """   Update the odometry estimation      """
         odom_pose = self.motion_model(odom_pose, np.array([[v], [w]]), self.dt)
         self.old_wheel_record = np.copy(wheel_record)
         return odom_pose
