@@ -178,7 +178,7 @@ slam:
       theta: 1
   fast_slam:
     # Determines whether the FastSLAM algorithm shall be executed
-    enabled: true
+    enabled: false
     # The mahalanobis distance threshold used in data association
     distance_threshold: 0.125
     # The number of used particles

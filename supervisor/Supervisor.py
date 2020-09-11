@@ -95,12 +95,13 @@ class Supervisor:
             print("Using Graph-based SLAM")
             self.graphbasedslam = GraphBasedSLAM(controller_interface, cfg["slam"], step_time=cfg["period"])
         if cfg["slam"]["mapping"]["enabled"]:
+            max_range = cfg['robot']['sensor']['max_range']
             if self.ekfslam is not None:
-                self.ekfslam_mapping = OccupancyGridMap2d(self.ekfslam, controller_interface, cfg["slam"])
+                self.ekfslam_mapping = OccupancyGridMap2d(self.ekfslam, cfg["slam"], max_range)
             if self.fastslam is not None:
-                self.fastslam_mapping = OccupancyGridMap2d(self.fastslam, controller_interface, cfg["slam"])
+                self.fastslam_mapping = OccupancyGridMap2d(self.fastslam, cfg["slam"], max_range)
             if self.graphbasedslam is not None:
-                self.graphbasedslam_mapping = OccupancyGridMap2d(self.graphbasedslam, controller_interface, cfg["slam"])
+                self.graphbasedslam_mapping = OccupancyGridMap2d(self.graphbasedslam, cfg["slam"], max_range)
 
         # state machine
         self.state_machine = SupervisorStateMachine(self, self.control_cfg)
@@ -145,7 +146,6 @@ class Supervisor:
         """
         self._update_state()  # update state
         self._update_slam()  # Update SLAM estimations
-        self._update_mapping() # Update SLAM mapping
         self.current_controller.execute()  # apply the current controller
         self._send_robot_commands()  # output the generated control signals to the robot
 
@@ -219,29 +219,26 @@ class Supervisor:
 
     def _update_slam(self):
         """
-        Update SLAM estimations
+        Update SLAM estimations and mapping
         """
         v, yaw = self._diff_to_uni(self.v_l, self.v_r)  # Retrieve the previous motion command
         motion_command = np.array([[v], [yaw]])
         measured_distances = self.proximity_sensor_distances_from_robot_center
         sensor_angles = [pose.theta for pose in self.proximity_sensor_placements]
+        # update LAM estimations
         if self.ekfslam is not None:
             self.ekfslam.update(motion_command, zip(measured_distances, sensor_angles))
         if self.fastslam is not None:
             self.fastslam.update(motion_command, zip(measured_distances, sensor_angles))
         if self.graphbasedslam is not None:
             self.graphbasedslam.update(motion_command, zip(measured_distances, sensor_angles))
-
-    def _update_mapping(self):
-        """
-        Update slam mapping estimation
-        """
+        # update mappings
         if self.ekfslam_mapping is not None:
-            self.ekfslam_mapping.update()
+            self.ekfslam_mapping.update(zip(measured_distances, sensor_angles))
         if self.fastslam_mapping is not None:
-            self.fastslam_mapping.update()
+            self.fastslam_mapping.update(zip(measured_distances, sensor_angles))
         if self.graphbasedslam_mapping is not None:
-            self.graphbasedslam_mapping.update()
+            self.graphbasedslam_mapping.update(zip(measured_distances, sensor_angles))
 
     def _send_robot_commands(self):
         """
