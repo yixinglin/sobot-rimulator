@@ -3,7 +3,7 @@ class MappingPlotter:
     def __init__(self, slam_mapping, viewer, frame_number):
         """
         Initialize a MappingPlotter object
-        :param slam_mapping: An object of OccupancyGridMap2d
+        :param slam_mapping: An object of OccupancyMapping2d
         :param viewer: The viewer to be used
         :param frame_number: The frame number to be used
         """
@@ -16,17 +16,18 @@ class MappingPlotter:
 
     def draw_mapping_to_frame(self):
         """
-        Draw the occupancy gridmap estimated by the mapping algorithm to the frame
+        Draw the occupancy mapping estimated by the mapping algorithm to the frame
         """
-        frame = self.viewer.current_frames[self.frame_number]
-        H, W = self.slam_mapping.map_shape()
-        map = self.slam_mapping.get_map()
-        for j in range(H):
-            for i in range(W):
-                val = map[j, i]  # the occupancy probability
-                if val >= 0.5:
-                    x, y = self.__to_meter(i, j)
-                    frame.add_rectangle([x, y], self.pixel_size, self.pixel_size, color=(val, val, val), alpha=0.5)
+        if self.viewer.draw_invisibles == True:
+            frame = self.viewer.current_frames[self.frame_number]
+            H, W = self.slam_mapping.map_shape()
+            map = self.slam_mapping.get_map()
+            for j in range(H):
+                for i in range(W):
+                    val = map[j, i]  # the occupancy probability
+                    if val >= 0.5:
+                        x, y = self.__to_meter(i, j)
+                        frame.add_rectangle([x, y], self.pixel_size, self.pixel_size, color=(val, val, val), alpha=0.5)
 
     def __to_meter(self, x, y):
         """
