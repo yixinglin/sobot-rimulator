@@ -126,3 +126,41 @@ def directed_line_segment_polygon_intersection(line_segment, test_polygon):
         return True, intersection, dmin
     else:
         return False, None, None
+
+
+def bresenham_line(x0, y0, x1, y1):
+    """
+    A line drawing algorithm that determines the points to approximate to a straight line.
+    https://www.cs.helsinki.fi/group/goa/mallinnus/lines/bresenh.html
+    :param x0: start point (x0, y0) on the segment
+    :param y0: start point (x0, y0) on the segment
+    :param x1: end point (x0, y0) on the segment
+    :param y1: end point (x0, y0) on the segment
+    :return: a list of points on this segment. A single point is (x, y)
+    """
+    x0 = round(x0); y0 = round(y0)
+    x1 = round(x1); y1 = round(y1)
+    dx = abs(x1-x0); dy = abs(y1-y0)
+    sx = 1 if x0 < x1 else -1
+    sy = 1 if y0 < y1 else -1
+    x = x0; y = y0
+    err = 0
+    line = []
+    if (dx > dy):
+        while x != x1:
+            line.append((x, y))
+            err += dy
+            if 2*err >= dx:
+                y += sy
+                err -= dx
+            x += sx
+    else:
+        while y != y1:
+            line.append((x, y))
+            err += dx
+            if err*2 >= dy:
+                x += sx
+                err -= dy
+            y += sy
+    line.append((x, y))
+    return line
