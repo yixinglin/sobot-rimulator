@@ -163,16 +163,6 @@ class Painter:
                 context.line_to(*point)
             context.stroke()
 
-    def set_color(self, cairo_context, color_string, alpha):
-        """
-        Sets a color of the cairo context
-        :param cairo_context: Cairo context to be modified
-        :param color_string: String specifying the color
-        :param alpha: Alpha value of the color
-        """
-        ColorPalette.dab(cairo_context, color_string, alpha)
-
-
     def draw_rectangle(self, context, pos, width, height, color, alpha):
         """
         Draws an rectangle
@@ -183,6 +173,22 @@ class Painter:
         :param color: Color of the rectangle, it's a tuple of rgb values (r, g, b) in range of 0.0 - 1.0
         :param alpha: Alpha value of the color of the rectangle
         """
-        context.set_source_rgba(color[0], color[1], color[2], alpha)
+        if type(color) == list or type(color) == tuple:
+            context.set_source_rgba(color[0], color[1], color[2], alpha)
+        elif type(color) == str:
+            self.set_color(context, color, alpha)
+
         context.rectangle(pos[0], pos[1], width, height)
         context.fill()
+
+    def set_color(self, cairo_context, color_string, alpha):
+        """
+        Sets a color of the cairo context
+        :param cairo_context: Cairo context to be modified
+        :param color_string: String specifying the color
+        :param alpha: Alpha value of the color
+        """
+        ColorPalette.dab(cairo_context, color_string, alpha)
+
+
+
