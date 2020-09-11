@@ -1,5 +1,8 @@
-import numpy as np
+"""
+The parent class of any types of vertex
+"""
 
+import numpy as np
 class Vertex:
 
     def __init__(self, pose, sigma, observation = None):

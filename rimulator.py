@@ -122,26 +122,27 @@ class Simulator:
             self.ekfslam_plotter = SlamPlotter(self.world.supervisors[0].ekfslam, self.viewer, self.cfg["map"]["obstacle"]["octagon"]["radius"], self.cfg["robot"], n_frame)
             if cfg["slam"]["mapping"]["enabled"]:
                 self.ekfslam_mapping_plotter = MappingPlotter(self.world.supervisors[0].ekfslam_mapping, self.viewer, n_frame)
-            n_frame += 1
             if self.cfg["slam"]["evaluation"]["enabled"]:
                 self.ekfslam_evaluation = SlamEvaluation(self.world.supervisors[0].ekfslam, self.cfg["slam"]["evaluation"])
+            n_frame += 1
 
         if cfg["slam"]["fast_slam"]["enabled"]:
             self.fastslam_plotter = SlamPlotter(self.world.supervisors[0].fastslam, self.viewer, self.cfg["map"]["obstacle"]["octagon"]["radius"], self.cfg["robot"], n_frame)
             if cfg["slam"]["mapping"]["enabled"]:
                 self.fastslam_mapping_plotter = MappingPlotter(self.world.supervisors[0].fastslam_mapping, self.viewer, n_frame)
-            n_frame += 1
             if self.cfg["slam"]["evaluation"]["enabled"]:
                 self.fastslam_evaluation = SlamEvaluation(self.world.supervisors[0].fastslam, self.cfg["slam"]["evaluation"])
+            n_frame += 1
 
         if cfg["slam"]["graph_based_slam"]["enabled"]:
             self.graphbasedslam_plotter = GraphSlamPlotter(self.world.supervisors[0].graphbasedslam, self.viewer, self.cfg["map"]["obstacle"]["octagon"]["radius"], self.cfg["robot"], n_frame)
             if cfg["slam"]["mapping"]["enabled"]:
                 self.graphbasedslam_mapping_plotter = MappingPlotter(self.world.supervisors[0].graphbasedslam_mapping, self.viewer, n_frame)
-            n_frame += 1
             if self.cfg["slam"]["evaluation"]["enabled"]:
                 self.graphbasedslam_evaluation = SlamEvaluation(self.world.supervisors[0].graphbasedslam,
                                                                 self.cfg["slam"]["evaluation"])
+            n_frame += 1
+
         # render the initial world
         self.draw_world()
 
@@ -205,18 +206,20 @@ class Simulator:
     def draw_world(self):
         self.viewer.new_frame()  # start a fresh frame
         self.world_plotter.draw_world_to_frame()  # draw the world onto the frame
-        if self.ekfslam_plotter is not None:
-            self.ekfslam_plotter.draw_slam_to_frame()
-        if self.fastslam_plotter is not None:
-            self.fastslam_plotter.draw_slam_to_frame()
-        if self.graphbasedslam_plotter is not None:
-            self.graphbasedslam_plotter.draw_slam_to_frame()
+
         if self.ekfslam_mapping_plotter is not None:
             self.ekfslam_mapping_plotter.draw_mapping_to_frame()
         if self.fastslam_mapping_plotter is not None:
             self.fastslam_mapping_plotter.draw_mapping_to_frame()
         if self.graphbasedslam_mapping_plotter is not None:
             self.graphbasedslam_mapping_plotter.draw_mapping_to_frame()
+
+        if self.ekfslam_plotter is not None:
+            self.ekfslam_plotter.draw_slam_to_frame()
+        if self.fastslam_plotter is not None:
+            self.fastslam_plotter.draw_slam_to_frame()
+        if self.graphbasedslam_plotter is not None:
+            self.graphbasedslam_plotter.draw_slam_to_frame()
 
         self.viewer.draw_frame()  # render the frame
 

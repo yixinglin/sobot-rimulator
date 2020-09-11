@@ -178,7 +178,7 @@ slam:
       theta: 1
   fast_slam:
     # Determines whether the FastSLAM algorithm shall be executed
-    enabled: false
+    enabled: true
     # The mahalanobis distance threshold used in data association
     distance_threshold: 0.125
     # The number of used particles
@@ -220,7 +220,7 @@ slam:
     # A low interval (for example 1) causes performance problems
     interval: 20
 
-  # Configures the 2D grid map of the SLAM algorithm
+  # Configures the 2D grid map of the occupancy mapping algorithm
   mapping:
     enabled: true
     # Width of the map in meters

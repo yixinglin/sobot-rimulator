@@ -1,6 +1,6 @@
 # Sobot Rimulator - A Robot Programming Tool
 
-![Screenshot](documentation/GUI.png)
+![Screenshot](documentation/GUI_GM.png)
 
 This project is an extension of the [sobot rimulator](https://github.com/nmccrea/sobot-rimulator) developed by Nick McCrea
 which allows the simulation of a mobile robot in a map of obstacles that must be avoided.
