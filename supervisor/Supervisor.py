@@ -24,7 +24,7 @@ from supervisor.slam.GraphBasedSLAM import *
 from supervisor.slam.mapping import OccupancyMapping2d
 from supervisor.SupervisorControllerInterface import *
 from supervisor.SupervisorStateMachine import *
-
+from supervisor.controllers.PathPlanning import *
 
 class Supervisor:
 
@@ -95,13 +95,15 @@ class Supervisor:
             print("Using Graph-based SLAM")
             self.graphbasedslam = GraphBasedSLAM(controller_interface, cfg["slam"], step_time=cfg["period"])
         if cfg["slam"]["mapping"]["enabled"]:
-            max_range = cfg['robot']['sensor']['max_range']
             if self.ekfslam is not None:
-                self.ekfslam_mapping = OccupancyMapping2d(self.ekfslam, cfg["slam"], max_range)
+                path_planner = AStarPlanner() if cfg["slam"]["mapping"]["path_planning"]["enabled"] else None
+                self.ekfslam_mapping = OccupancyMapping2d(self.ekfslam, cfg["slam"], controller_interface, path_planner)
             if self.fastslam is not None:
-                self.fastslam_mapping = OccupancyMapping2d(self.fastslam, cfg["slam"], max_range)
+                path_planner = AStarPlanner() if cfg["slam"]["mapping"]["path_planning"]["enabled"] else None
+                self.fastslam_mapping = OccupancyMapping2d(self.fastslam, cfg["slam"], controller_interface, path_planner)
             if self.graphbasedslam is not None:
-                self.graphbasedslam_mapping = OccupancyMapping2d(self.graphbasedslam, cfg["slam"], max_range)
+                path_planner = AStarPlanner() if cfg["slam"]["mapping"]["path_planning"]["enabled"] else None
+                self.graphbasedslam_mapping = OccupancyMapping2d(self.graphbasedslam, cfg["slam"], controller_interface, path_planner)
 
         # state machine
         self.state_machine = SupervisorStateMachine(self, self.control_cfg)

@@ -1,15 +1,27 @@
+"""
+This file includes
+- occupancy mapping algorithm
+- path planning algorithm
+
+"""
+
 import numpy as np
+import math
+from scipy.ndimage import gaussian_filter
 from math import cos, sin, sqrt
 from utils.geometrics_util import bresenham_line
-class OccupancyMapping2d:
 
-    def __init__ (self, slam, slam_cfg, max_range):
+class OccupancyMapping2d:
+    def __init__ (self, slam, slam_cfg, supervisor_interface, path_planner = None):
         """
         Initialize the OccupancyMapping2d object
         :param slam: The underlying slam algorithm object.
         :param slam_cfg: The slam configuration.
+        :param path_planner: An object of PathPlanner
         """
+        self.supervisor = supervisor_interface
         self.slam = slam
+        self.path_planner = path_planner
         self.width = slam_cfg['mapping']['gridmap']['width'] # width of the map in meters
         self.height = slam_cfg['mapping']['gridmap']['height'] # height of the map in meters
         self.resolution = slam_cfg['mapping']['gridmap']['resolution'] # resolution of the map, i.e. number of pixels per meter
@@ -17,35 +29,76 @@ class OccupancyMapping2d:
         self.H = int(self.height * self.resolution) # height of the map in pixels
         self.offset = (slam_cfg['mapping']['gridmap']['offset']['x'],  # offset in meters in horizontal direction
                         slam_cfg['mapping']['gridmap']['offset']['y']) # offset in meters in vertical directionss
-        self.max_range = max_range
-        self.map = np.zeros((self.H, self.W), dtype=np.float32) # a map where each pixel represents a probability the corresponding grid is occupied.
+        self.max_range = supervisor_interface.proximity_sensor_max_range()
 
         self.prob_unknown = 0.5 # prior
-        self.prob_occ = 0.4 # probability that a grid is occupied
+        self.prob_occ = 0.99 # probability perceptual a grid is occupied
+        self.prob_free = 0.01 # probability perceptual a grid is free
+        self.map = np.full((self.H, self.W), self.prob_unknown, dtype=np.float32)
+        self.L = self.__prob2log(np.full_like(self.map, self.prob_unknown, dtype=np.float32))  # log recursive term of the map
+        self.L0 = self.__prob2log(np.full_like(self.map, self.prob_unknown, dtype=np.float32))  # log prior term of the map
 
-        self.L = self.__prob2log(np.full_like(self.map, self.prob_unknown, dtype=np.float32))  # recursive term of the map
-        self.L0 = self.__prob2log(np.full_like(self.map, self.prob_unknown, dtype=np.float32))  # prior term of the map
+        self.path = list() # a path calculated by path planner
+        self.update_counter = 0
+
+
 
     def update(self, z):
         """
         Update the occupancy gridmap recursively
+        Update the path planning
         :param z: Measurement, represented as tuple of measured distance and measured angle
         """
-        observed_pixs = []
+        observed_pixs = [] # a list of grid positions and its occupancy probabilities
         lines = self.__calc_lines(z)
         for x0, y0, x1, y1 in lines:
             x0, y0 = self.__to_gridmap_position(x0, y0) # from position in meters to position in pixels
             x1, y1 = self.__to_gridmap_position(x1, y1) # from position in meters to position in pixels
             points = bresenham_line(x0, y0, x1, y1) # a list of points on the line
-            points = self.__calc_prob(points)  # calculate the occupancy probabilities on this line
-            observed_pixs += points
+            occ_probs = self.__calc_prob(points)  # calculate the occupancy probabilities on this line
+            observed_pixs += occ_probs
 
-        inverse_sensor = np.full_like(self.map, self.prob_unknown, dtype=np.float32) # initialize the inverse-sensor-model term by prior
+        inverse_sensor = np.copy(self.L0) # initialize the inverse-sensor-model term by prior
 
         for xi, yi, prob_occ in observed_pixs:
             if xi < self.W and xi >= 0 and yi < self.H and yi >= 0:
-                inverse_sensor[yi, xi] = prob_occ
-        self.L = self.L + self.__prob2log(inverse_sensor) - self.L0 # update the recursive term
+                inverse_sensor[yi, xi] = math.log((prob_occ/(1-prob_occ)))
+        self.L = self.L + inverse_sensor - self.L0  # update the recursive term
+
+        self.update_counter += 1
+        self.__update_path_planning()      # update path planning
+
+
+    def __update_path_planning(self):
+        occ_threshold = 0.05
+        if self.path_planner is not None and self.update_counter % 5 ==0 and self.update_counter > 5:
+            goal = self.supervisor.goal()  # get the goal
+            start = self.slam.get_estimated_pose().sunpack() # get the estimated pose from slam
+            gx, gy = self.__to_gridmap_position(goal[0], goal[1])
+            sx, sy = self.__to_gridmap_position(start[0], start[1])
+            self.map[sy, sx] = 0
+            if self.map[gy, gx] < occ_threshold:
+                bool_map = self.blur(self.map)
+               # bool_map = np.copy(self.map)  # calculate a boolean map
+                bool_map[bool_map >= occ_threshold] = True
+                bool_map[bool_map < occ_threshold] = False
+                bool_map = bool_map.astype(np.bool)
+                bool_map[sy, sx] = False
+                bool_map[gy, gx] = False
+                self.path = self.path_planner.planning(sx, sy, gx, gy, bool_map, type='euclidean')
+            else:
+                self.path = list()
+
+    def get_path(self):
+        """
+        Get the path from the path planner.
+        :return: A list of points on the path. A single item is (x, y) in meters.
+        """
+        if len(self.path) > 1:
+            world_path = [self.__to_world_position(xi, yi) for xi, yi in self.path]
+        else:
+            world_path = list()
+        return world_path
 
     def __calc_prob(self, points):
         """
@@ -68,8 +121,8 @@ class OccupancyMapping2d:
 
             distance = sqrt((xi - x0)**2 + (yi - y0)**2)
             if distance < seg_length:                  # free space
-                prob = 1-self.prob_occ
-            probs.append((xi, yi, prob))
+                prob = self.prob_free
+            probs.append((int(xi), int(yi), prob))
         return probs
 
     def get_map(self):
@@ -77,8 +130,8 @@ class OccupancyMapping2d:
         :return: a 2D numpy.array of the occupied gridmap.
                     A single value represents the probability of the occupancy
         """
-        map = self.__log2prob(self.L)
-        return map
+        self.map = self.__log2prob(self.L)
+        return self.map
 
     def map_shape(self):
         """
@@ -87,12 +140,12 @@ class OccupancyMapping2d:
         """
         return self.map.shape
 
-    def blur(self):
+    def blur(self, image):
         """
         Blur the map
         :return:
         """
-        pass
+        return gaussian_filter(image, sigma=1)
 
     def __calc_lines(self, z):
         """
@@ -112,15 +165,28 @@ class OccupancyMapping2d:
     def __to_gridmap_position(self, x, y):
         """
         Calculate the position of a pixel in the grid map
-        :param x: x in meter
-        :param y: y in meter
+        :param x: x in meters
+        :param y: y in meters
         :return:
-                pix_x in pixel
-                pix_y in pixel
+                pix_x in pixels
+                pix_y in pixels
         """
-        pix_x = (x + self.offset[0]) * self.resolution
-        pix_y = (y + self.offset[1]) * self.resolution
+        pix_x = round((x + self.offset[0]) * self.resolution)
+        pix_y = round((y + self.offset[1]) * self.resolution)
         return int(pix_x), int(pix_y)
+
+    def __to_world_position(self, x, y):
+        """
+        Calculate the position of a pixel in the grid map
+        :param x: x in pixels
+        :param y: y in pixels
+        :return:
+                pix_x in meters
+                pix_y in meters
+        """
+        meter_x = x / self.resolution - self.offset[0]
+        meter_y = y / self.resolution - self.offset[1]
+        return meter_x, meter_y
 
     def __prob2log(self, p):
         """

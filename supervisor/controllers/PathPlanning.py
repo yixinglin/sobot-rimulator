@@ -38,6 +38,7 @@ class AStarPlanner(PathPlanner):
         :param gx: goal x position [pix]
         :param gy: goal y position [pix]
         :param obstacle_map: a binary 2d numpy array. The value of a iterm is Ture (obstacle) or False (free).
+                the value of point(x, y) in the map is obstacle_map[y, x].
         :param weight: weight of heuristic
         :param type: name of the method to calculate heuristic term
         :return:
@@ -48,7 +49,7 @@ class AStarPlanner(PathPlanner):
         goal_node = self.Node(gx, gy, 0, -1, 0)
 
         if self.__vertify_node(start_node) == False or self.__vertify_node(goal_node) == False:
-            raise RuntimeError() # start or goal  is not valid
+            raise ValueError() # start or goal  is not valid
 
         open_set = dict() # open set, i.e. a set of nodes to be evaluated
         closed_set = dict() # closed set, i.e. a set of nodes already evaluated
@@ -93,6 +94,7 @@ class AStarPlanner(PathPlanner):
         return self.__calc_final_path(goal_node, closed_set)
 
     class Node:
+
         def __init__(self, x, y, cost, parent_index, score):
             self.x = x  # index of grid
             self.y = y  # index of grid
@@ -187,7 +189,7 @@ if __name__ == '__main__':
     map = np.full((100, 100), False, dtype=np.bool)
     for i in range(80):
         map[i, 20] = True
-    for i in range(10, 100):
+    for i in range(0, 100):
         map[i, 40] = True
     for i in range(90):
         map[i, 60] = True
@@ -202,7 +204,6 @@ if __name__ == '__main__':
     astar = AStarPlanner()
     path = astar.planning(start[0], start[1], goal[0], goal[1], map, weight=5, type='euclidean')
     print ("time cost:", time.time()-start_time)
-
     plt.imshow(map, origin='lower')
     map[start[1], start[0]] = True
     map[goal[1], goal[0]] = True

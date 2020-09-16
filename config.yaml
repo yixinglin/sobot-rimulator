@@ -34,9 +34,9 @@ robot:
   motor:
     noise:
       # Standard deviation of the left wheel's velocity in meters/second while executing a motion command.
-      left_velocity: 0.0001
+      left_velocity: 0.01
       # Standard deviation of the right wheel's velocity in meters/second while executing a motion command.
-      right_velocity: 0.0001
+      right_velocity: 0.01  # 0.0001
 
   # Configures the sensors used by the robot
   sensor:
@@ -49,7 +49,7 @@ robot:
     # Value that is read at minimum range
     max_read_value: 3960
     # Standard deviation of the distance from the sensors to the detected landmark.
-    noise: 0.0001
+    noise: 0.001
     # Specificies the poses and number of sensors
     # Each pose is composed of x position, y position and angle in degrees
     poses: [[-0.038, 0.048, 128],
@@ -194,9 +194,9 @@ slam:
     # Determines whether the Graph-based SLAM algorithm shall be executed
     enabled: true
     # The euclidean distance threshold used in data association
-    distance_threshold: 0.12
+    distance_threshold: 0.2
     # The number interval of pose-vertices added that the graph optimization is executed.
-    optimization_interval: 50
+    optimization_interval: 100
     # The timestep interval of executing the frontend part.
     frontend_interval: 5
     # Configures the motion noise. The values are currently empirically chosen.
@@ -206,11 +206,11 @@ slam:
       # Standard deviation of the robots y-coordinate in meters after executing a motion command.
       y: 0.005
       # Standard deviation of the robots angle in degrees after executing a motion command.
-      theta: 0.09
+      theta: 1.0 #0.09
     # Configures the sensor noise. The values are currently empirically chosen.
     sensor_noise:
-      x: 2
-      y: 2
+      x: 0.2
+      y: 0.2
 
   # Configures the evaluation of the SLAM algorithms
   evaluation:
@@ -222,14 +222,14 @@ slam:
 
   # Configures the 2D grid map of the occupancy mapping algorithm
   mapping:
-    enabled: true
+    enabled: false
     # Width of the map in meters
     gridmap:
       # Width of the map in meters
       width: 5
       # Height of the map in meters
       height: 5
-      # number of pixels per meter
+      # Number of pixels per meter. The GUI has problem while using grid map of high resolution.
       resolution: 10
       # offset the origin in the grid map
       offset:
@@ -237,6 +237,10 @@ slam:
         x: 2.5
         # offset in meters in vertical direction
         y: 2.5
+
+    path_planning:
+        enabled: false
+        heuristic_weight: 1.0
 
 
 
