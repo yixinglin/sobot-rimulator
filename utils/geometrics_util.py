@@ -131,7 +131,7 @@ def directed_line_segment_polygon_intersection(line_segment, test_polygon):
 def bresenham_line(x0, y0, x1, y1):
     """
     A line drawing algorithm that determines the points to approximate to a straight line.
-    https://www.cs.helsinki.fi/group/goa/mallinnus/lines/bresenh.html
+    See article (https://www.cs.helsinki.fi/group/goa/mallinnus/lines/bresenh.html)
     :param x0: start point (x0, y0) on the segment
     :param y0: start point (x0, y0) on the segment
     :param x1: end point (x0, y0) on the segment

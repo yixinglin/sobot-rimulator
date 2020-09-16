@@ -113,13 +113,12 @@ class GraphSlamPlotter(SlamPlotter):
         self.robot_estimated_traverse_path = self.slam.get_estimated_trajectory()
         self.__draw_robot_estimated_traverse_path_to_frame(frame)
 
-
     def __draw_robot_estimated_traverse_path_to_frame(self, frame):
         # Draw traverse path of the robot estimated by the Graph-based SLAM
         frame.add_lines([self.robot_estimated_traverse_path],
-                        linewidth=0.005,
-                        color="red",
-                        alpha=0.5)
+                        linewidth=0.01,
+                        color="black",
+                        alpha=0.8)
 
     def plot_graph(self):
         self.slam.graph.draw()

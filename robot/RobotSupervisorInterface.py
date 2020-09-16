@@ -28,7 +28,8 @@ class RobotSupervisorInterface:
         """
         self.robot = robot
         self.sensor_noise = robot_cfg['sensor']['noise']
-        self.motor_noise = (robot_cfg['motor']['noise']['left_velocity'], robot_cfg['motor']['noise']['right_velocity'])
+        self.motor_noise = (robot_cfg['motor']['noise']['left_velocity'],
+                                robot_cfg['motor']['noise']['right_velocity'])
 
     def read_proximity_sensors(self):
         """

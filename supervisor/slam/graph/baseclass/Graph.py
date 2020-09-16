@@ -85,7 +85,6 @@ class Graph:
             global_err += edge.calc_error() # error of an edge
         return global_err
 
-    @timer
     def graph_optimization(self, animation = False, number_fix = 3, damp_factor = 0.01, max_iter = 10):
         """
         Optimization of the graph
