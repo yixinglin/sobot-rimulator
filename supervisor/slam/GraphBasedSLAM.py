@@ -1,9 +1,12 @@
+from threading import Thread, Lock
 from supervisor.slam.graph.landmark_graph import *
 from supervisor.slam.Slam import Slam
 from utils.math_util import normalize_angle
+from models.Pose import Pose
 import numpy as np
 from math import *
-from models.Pose import Pose
+
+optimize_allowed = True
 
 class GraphBasedSLAM(Slam):
 
@@ -50,6 +53,7 @@ class GraphBasedSLAM(Slam):
         self.fix_hessian = 0 # number of fixed vertices while the graph optimzation.
         self.backend_counter = 0 # counter used for data association
 
+        self.thread_lock = Lock()
         self.__init_first_step()  # initialize the first step
 
 
@@ -67,7 +71,6 @@ class GraphBasedSLAM(Slam):
         return Pose(self.mu[0, 0], self.mu[1, 0], self.mu[2, 0])
 
     def get_estimated_trajectory(self):
-
         traj = []
         for vertex in self.graph.get_estimated_pose_vertices():
             traj.append((vertex.pose[0,0], vertex.pose[1,0]))
@@ -94,8 +97,8 @@ class GraphBasedSLAM(Slam):
         base_length = params['wheel_base_length']
         R = params['wheel_radius']
         N = params['wheel_encoder_ticks_per_revolution']
-        left_wheel_movement = 2 * np.pi * R * ticks[0] / N
-        right_wheel_movement = 2 * np.pi * R * ticks[1] / N
+        left_wheel_movement = 2 * np.pi * R * ticks[0] / N + np.random.normal(0, 0.005)  # add some simulating noise of wheel encoder
+        right_wheel_movement = 2 * np.pi * R * ticks[1] / N + np.random.normal(0, 0.005) # add some simulating noise of wheel encoder
         wheel_record = (left_wheel_movement, right_wheel_movement)
         vl = (wheel_record[0] - self.old_wheel_record[0])/self.dt  # Velocity of the left wheel
         vr = (wheel_record[1] - self.old_wheel_record[1])/self.dt  # Velocity of the right wheel
@@ -116,25 +119,19 @@ class GraphBasedSLAM(Slam):
         """
         self.mu = self.motion_model(self.mu, u, self.dt) # Calculate next step
         J = self.jaco_motion_model(self.mu, u, self.dt)  # Calculate jacobian matrix
-        self.Sigma = J @ self.Sigma @ J.T + self.motion_noise  # Update covariance matrix
+        self.Sigma = J @ self.Sigma @ J.T + self.motion_noise  # Update covariance matrix, propagate it while robot is moving
         self.odom_pose = self.__update_odometry_estimation(self.odom_pose) # Update accumulative odometry estimation
         self.step_counter += 1
 
         """        Update the Graph         """
         if self.step_counter % self.frontend_interval == 0: # create a vertex each n steps
             self.__front_end(z)
-            # self.step_counter = 0
             self.odom_pose = self.__reset_odometry_measurement() # reset odom_pose
             num_poses, _ = self.graph.count_vertices()
 
-            if num_poses % self.optimization_interval == 0 and num_poses > 0 or num_poses == self.optimization_interval//2:
-                #print('[COUNT] POSEES, LANDMARKS :', self.graph.count_vertices())
+            if num_poses % self.optimization_interval == 0 \
+                    and num_poses > 0 or num_poses == self.optimization_interval//2:
                 self.__back_end() # graph optimization
-                last_vertex = self.graph.get_last_pose_vertex()
-                self.mu = np.copy(last_vertex.pose)   # update current state
-                self.Sigma = np.copy(last_vertex.sigma)
-                # print (np.diag(self.Sigma))
-                self.odom_pose = self.__reset_odometry_measurement()  # Reset odometry estimation
 
     def __front_end(self, z):
         """
@@ -146,23 +143,23 @@ class GraphBasedSLAM(Slam):
         vertex1 = self.graph.get_last_pose_vertex()
         vertex2 = PoseVertex(self.mu, self.Sigma)
         self.graph.add_vertex(vertex2)
-        fixed_counter = 3  # counter the total dimensions of the vertices added
+        fixed_counter = 3  # count the total dimensions of the vertices added
         old_landmark_id = -1
         """     calculate landmark vertices    """
         for i, zi in enumerate(z):
-            # Only execute if sensor observed landmark
+            # Only execute if sensor has observed landmark
             if not self.supervisor.proximity_sensor_positive_detections()[i]:
                 continue
-            pos_lm = self.calc_landmark_position(self.mu, zi) # x-y position in world coordinate
+            pos_lm = self.calc_landmark_position(self.mu, zi) # calculate x-y position in world coordinate
             min_index, vertices_lm = self.__data_association(pos_lm)
             N = len(vertices_lm)
-            if min_index == N:
+            if min_index == N: # new landmark was found
                 print ("new landmark was found:", N)
-                vertex3 = LandmarkVertex(pos_lm, self.sensor_noise)  # create a landmark vertex
+                vertex3 = LandmarkVertex(pos_lm, self.sensor_noise)  # create a new landmark vertex
                 self.graph.add_vertex(vertex3)
                 fixed_counter += 2
             else:
-                vertex3 = vertices_lm[min_index]
+                vertex3 = vertices_lm[min_index]  # old landmark.
                 old_landmark_id = vertex3.id
             # calculate actual measurement and information matrix
             meas, info = self.__convert_pose_landmark_raw_measurement(zi)
@@ -174,7 +171,6 @@ class GraphBasedSLAM(Slam):
 
         if self.step_counter < 50:  # vertices created at the beginning are fixed while optimization
             self.fix_hessian += fixed_counter
-            #print (self.fix_hessian, "fix", self.step_counter)
 
         if old_landmark_id != -1: # old_landmark was found
             self.backend_counter -= 1
@@ -187,9 +183,17 @@ class GraphBasedSLAM(Slam):
         """
         Back end part of the Graph based slam where the graph optimization is executed.
         """
-        print('SLAM OPTIMIZATION...')
-        error = self.graph.graph_optimization(number_fix=self.fix_hessian, damp_factor=1)
-        print('SLAM OPTIMIZATION: GLOBAL ERROR', error)
+        print ("__backend", self.step_counter, optimize_allowed)
+        self.graph.graph_optimization(number_fix=self.fix_hessian, damp_factor=1)
+        #if optimize_allowed == True:
+            # optimize_thread = OptimizationThread(self.step_counter, self.thread_lock,
+            #                    self.graph, number_fix=self.fix_hessian, damp_factor=1)
+            # optimize_thread.start()
+            # optimize_thread.join()
+        last_vertex = self.graph.get_last_pose_vertex()
+        self.mu = np.copy(last_vertex.pose)  # update current state
+        self.Sigma = np.copy(last_vertex.sigma)
+        self.odom_pose = self.__reset_odometry_measurement()  # Reset odometry estimation
 
     def __convert_pose_landmark_raw_measurement(self, zi):
         """
@@ -250,7 +254,7 @@ class GraphBasedSLAM(Slam):
             return N, []
         else:
             lms = np.array(lms).T # xy position of landmarks in world coordinate
-            distances = np.linalg.norm(lms - zi, axis=0)
+            distances = np.linalg.norm(lms - zi, axis=0)  # euclidean distances
             distances = np.append(distances, self.min_distance_threshold)
             min_index = np.argmin(distances)
             return min_index, vertices_lm
