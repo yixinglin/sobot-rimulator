@@ -11,7 +11,32 @@ from scipy.ndimage import gaussian_filter
 from math import cos, sin, sqrt
 from utils.geometrics_util import bresenham_line
 
-class OccupancyMapping2d:
+class Mapping:
+    """
+    An abstract class for a mapping algorithm
+    """
+    def update(self, z):
+        """
+        Update the map and the path using mapping and path planning algorithms
+        :param z: Measurements data from sensors
+        """
+        raise NotImplementedError()
+
+    def get_map(self):
+        """
+        Returns the estimated occupancy map
+        """
+        raise NotImplementedError()
+
+    def get_path(self):
+        """
+        Returns the estimated path of planning
+        """
+        raise NotImplementedError()
+
+
+
+class OccupancyMapping2d(Mapping):
     def __init__ (self, slam, slam_cfg, supervisor_interface, path_planner = None):
         """
         Initialize the OccupancyMapping2d object
@@ -41,8 +66,6 @@ class OccupancyMapping2d:
         self.path = list() # a path calculated by path planner
         self.update_counter = 0
 
-
-
     def update(self, z):
         """
         Update the occupancy gridmap recursively
@@ -64,13 +87,38 @@ class OccupancyMapping2d:
             if xi < self.W and xi >= 0 and yi < self.H and yi >= 0:
                 inverse_sensor[yi, xi] = math.log((prob_occ/(1-prob_occ)))
         self.L = self.L + inverse_sensor - self.L0  # update the recursive term
-
+        self.L = np.clip(self.L, -5, 5)
         self.update_counter += 1
         self.__update_path_planning()      # update path planning
 
+    def get_path(self):
+        """
+        Get the path from the path planner.
+        :return: A list of points on the path. A single item is (x, y) in meters.
+        """
+        if len(self.path) > 1:
+            world_path = [self.__to_world_position(xi, yi) for xi, yi in self.path]
+        else:
+            world_path = list()
+        return world_path
+
+    def get_map(self):
+        """
+        :return: a 2D numpy.array of the occupied gridmap.
+                    A single value represents the probability of the occupancy
+        """
+        self.map = self.__log2prob(self.L)
+        return self.map
+
+    def map_shape(self):
+        """
+        Get map shape
+        :return: a tuple of shape, i.e. (rows, columns)
+        """
+        return self.map.shape
 
     def __update_path_planning(self):
-        occ_threshold = 0.05
+        occ_threshold = 0.2
         if self.path_planner is not None and self.update_counter % 5 ==0 and self.update_counter > 5:
             goal = self.supervisor.goal()  # get the goal
             start = self.slam.get_estimated_pose().sunpack() # get the estimated pose from slam
@@ -88,17 +136,6 @@ class OccupancyMapping2d:
                 self.path = self.path_planner.planning(sx, sy, gx, gy, bool_map, type='euclidean')
             else:
                 self.path = list()
-
-    def get_path(self):
-        """
-        Get the path from the path planner.
-        :return: A list of points on the path. A single item is (x, y) in meters.
-        """
-        if len(self.path) > 1:
-            world_path = [self.__to_world_position(xi, yi) for xi, yi in self.path]
-        else:
-            world_path = list()
-        return world_path
 
     def __calc_prob(self, points):
         """
@@ -124,21 +161,6 @@ class OccupancyMapping2d:
                 prob = self.prob_free
             probs.append((int(xi), int(yi), prob))
         return probs
-
-    def get_map(self):
-        """
-        :return: a 2D numpy.array of the occupied gridmap.
-                    A single value represents the probability of the occupancy
-        """
-        self.map = self.__log2prob(self.L)
-        return self.map
-
-    def map_shape(self):
-        """
-        Get map shape
-        :return: a tuple of shape, i.e. (rows, columns)
-        """
-        return self.map.shape
 
     def blur(self, image):
         """
@@ -199,7 +221,6 @@ class OccupancyMapping2d:
         """
         :param lx: log likelihood
         :return: probability that a grid is occupied
-
         """
         return 1 - 1/(1+np.exp(lx))
 
