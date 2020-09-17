@@ -25,40 +25,6 @@ class Edge:
         self.error = None  # error vector
         self.calc_error()
 
-    def linearize(self):
-        """
-        Linearize the constraint.
-
-        :return: an error vector, jacobian matrices A, B.
-                e error vector of the constraint.
-                A Jacobian wrt the pose vector of vertex 1.
-                B Jacobian wrt the pose vector of vertex 2.
-        """
-
-        return self.linearize_constraint(self.vertex1.pose, self.vertex2.pose, self.z)
-
-    def calc_error(self):
-        """
-        Compute error of this constraint
-        :return:
-            error: a scalar.
-                   error = e.T @ Omega @ e
-        """
-        # calculate the error vector from the constraint.
-        self.error = self.calc_error_vector(self.vertex1.pose, self.vertex2.pose, self.z)
-        return (self.error.T @ self.information @ self.error)[0, 0]
-
-
-    def linearize_constraint(self, x1, x2, z):
-        """
-        Calculate error vector and jacobian matrices
-        :return:
-            error: an error vector
-            A: a jacobian matrix, A = d(error)/d(x1)
-            B: a jacobian matrix, B = d(error)/d(x2)
-        """
-        raise NotImplementedError()
-
     def calc_error_vector(self, x1, x2, z):
         """
         Calculate the error vector between the expected measurement and the actual measurement.
@@ -72,6 +38,38 @@ class Edge:
         """
         raise NotImplementedError()
 
+    def linearize(self):
+        """
+        Linearize the constraint.
+
+        :return: an error vector, jacobian matrices A, B.
+                e error vector of the constraint.
+                A Jacobian wrt the pose vector of vertex 1.
+                B Jacobian wrt the pose vector of vertex 2.
+        """
+
+        return self.linearize_constraint(self.vertex1.pose, self.vertex2.pose, self.z)
+
+    def linearize_constraint(self, x1, x2, z):
+        """
+        Calculate error vector and jacobian matrices
+        :return:
+            error: an error vector
+            A: a jacobian matrix, A = d(error)/d(x1)
+            B: a jacobian matrix, B = d(error)/d(x2)
+        """
+        raise NotImplementedError()
+
+    def calc_error(self):
+        """
+        Compute error of this constraint
+        :return:
+            error: a scalar.
+                   error = e.T @ Omega @ e
+        """
+        # calculate the error vector from the constraint.
+        self.error = self.calc_error_vector(self.vertex1.pose, self.vertex2.pose, self.z)
+        return (self.error.T @ self.information @ self.error)[0, 0]
 
     def find_vertice_by_id(self, id):
         """

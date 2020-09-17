@@ -34,35 +34,25 @@ class GraphBasedSLAM(Slam):
         self.optimization_interval = slam_cfg["graph_based_slam"]['optimization_interval'] # the number interval of pose-vertices added that the graph optimization is executed.
         self.frontend_interval = slam_cfg["graph_based_slam"]['frontend_interval']   # the timestep interval of executing the frontend part.
 
-        # """              DEBUG             """
-        # self.sensor_noise = np.diag([2, 2])**2
-        # self.motion_noise = np.diag([0.1, 0.1, np.deg2rad(10)]) ** 2
-        # self.min_distance_threshold = 0.2
-        # """                                 """
         # The estimated combined state vector, initially containing the robot pose at the origin and no landmarks
         self.mu = np.zeros((self.robot_state_size, 1))
         self.Sigma = np.zeros((self.robot_state_size, self.robot_state_size)) # The state covariance, initially set to absolute certainty of the initial robot pose
         self.step_counter = 0
-
         self.max_range = self.supervisor.proximity_sensor_max_range()
         self.min_range = self.supervisor.proximity_sensor_min_range()
-
         self.graph = LMGraph()
         self.old_wheel_record = (0, 0)
         self.odom_pose = self.__reset_odometry_measurement() # accumulative odometry estimation from wheel encoders
         self.fix_hessian = 0 # number of fixed vertices while the graph optimzation.
         self.backend_counter = 0 # counter used for data association
-
         self.thread_lock = Lock()
         self.__init_first_step()  # initialize the first step
-
 
     def __init_first_step(self):
         """    add the initial robot pose as the first pose-vertex     """
         vertex1 = PoseVertex(self.mu, np.eye(3))
         self.graph.add_vertex(vertex1)
         self.fix_hessian += 3 # fix it
-
 
     def get_estimated_pose(self):
         """
@@ -87,6 +77,9 @@ class GraphBasedSLAM(Slam):
         return landmarks
 
     def plot_graph(self):
+        """
+        plot the graph estimated by slam
+        """
         self.graph.draw()
 
     def __update_odometry_estimation(self, odom_pose):
@@ -154,7 +147,6 @@ class GraphBasedSLAM(Slam):
             min_index, vertices_lm = self.__data_association(pos_lm)
             N = len(vertices_lm)
             if min_index == N: # new landmark was found
-                print ("new landmark was found:", N)
                 vertex3 = LandmarkVertex(pos_lm, self.sensor_noise)  # create a new landmark vertex
                 self.graph.add_vertex(vertex3)
                 fixed_counter += 2
@@ -176,14 +168,12 @@ class GraphBasedSLAM(Slam):
             self.backend_counter -= 1
             if self.backend_counter <= 0:
                 self.backend_counter = 10
-                print("old landmark was found, execute backend")
                 self.__back_end()
 
     def __back_end(self):
         """
         Back end part of the Graph based slam where the graph optimization is executed.
         """
-        print ("__backend", self.step_counter, optimize_allowed)
         self.graph.graph_optimization(number_fix=self.fix_hessian, damp_factor=1)
         #if optimize_allowed == True:
             # optimize_thread = OptimizationThread(self.step_counter, self.thread_lock,

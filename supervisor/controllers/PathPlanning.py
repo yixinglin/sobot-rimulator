@@ -18,7 +18,7 @@ class PathPlanner:
         :param sy: start y position [pix]
         :param gx: goal x position [pix]
         :param gy: goal y position [pix]
-        :param obstacle_map: a binary 2d numpy array. The value of a iterm is Ture (obstacle) or False (free).
+        :param obstacle_map: a binary 2d ndarray. The value of a iterm is Ture (obstacle) or False (free).
         :return:
                 shortest_path: a list of grid positions (x, y) in pixels
         """

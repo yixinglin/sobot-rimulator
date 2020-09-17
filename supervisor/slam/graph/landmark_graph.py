@@ -208,7 +208,7 @@ class LMGraph(Graph):
         elif isinstance(vertex1, PoseVertex) and isinstance(vertex2, PoseVertex):
             edge = PosePoseEdge(vertex1.id, vertex2.id, z, information, self.vertices)
         else:
-            raise RuntimeError()
+            raise ValueError()
 
         return edge
 
@@ -288,7 +288,7 @@ class LMGraph(Graph):
             plt.plot(lmx, lmy, 'xb', label = 'Landmark ({0})'.format(num_landmarks))
         num_vertices = len(vertices)
         if num_vertices > 0:
-            k = min(100, num_vertices)
+            k = min(1000, num_vertices)
             vertices = sample(vertices, k)
             vx, vy = zip(*vertices)
             plt.plot(vx, vy, '*r', label='Vertex ({0})'.format(num_vertices))
