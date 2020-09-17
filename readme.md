@@ -9,7 +9,9 @@ the integration of the EKFSLAM and FastSLAM algorithms to perform an estimation
 of the current robot state and its surrounding environment based on its previous motion commands 
 and proximity sensor readings. In my extension Graph-based SLAM algorithm was integrated 
 to perform an estimation of the full traverse trajectory of the robot as well as the surrounding environment based on its 
-previous motion commands and the measurements from the sensors and the wheel encoders. 
+previous motion commands and the measurements from the sensors and the wheel encoders. Occupancy mapping algorithm 
+and A* path planning algorithm were also integrated to search a path from the robot to the goal based on the mapping of the area where the robot has visited. 
+
 
 ## Setup
 
@@ -19,7 +21,7 @@ It is recommended to run the simulator directly on your native machine. For this
 
 Additional dependencies can then be installed using `pip`
 
-    pip3 install matplotlib
+    pip3 install matplotlib numpy scipy
     pip3 install pyyaml
     
 The simulator is then started by 
@@ -30,6 +32,7 @@ which uses the default `config.yaml` configuration file. A specific configuratio
 specified as an additional program parameter:
 
     python rimulator.py original_config.yaml
+    python rimulator.py config_ekf_fastslam.yaml
 
 Alternatively, the simulator can be run using `docker`, as described in [documentation/docker.md](documentation/docker.md).
     
@@ -71,25 +74,39 @@ include
 Only displayed if the EKF SLAM is enabled in the configuration.
 - **Plot Slam Evaluation**: Plots a graph for every enabled SLAM algorithm displaying the accuracy of its estimations 
 over the course of the simulation. Only displayed if the SLAM evaluation is enabled in the configuration.
-
+- **Plot Graph**: Plots a graph estimated by Graph-based SLAM algorithm displaying the pose-vertices 
+representing the robot poses and landmark-vertices representing the landmark positions.
 ## Configuration
 
-The simulator can be configured by a variety of paramters. The default configuration file is [config.yaml](config.yaml)
-where all parameters are documented. The configuration file [ekf_fast_skam_config.yaml](ekf_fast_skam_config.yaml) includes 
-an extension of EKFSlam and FastSlam performs completely identical to the sobot rimulator of Michael Dobler. The configuration file [original_config.yaml](original_config.yaml) does not include
+The simulator can be configured by a variety of parameters. The default configuration file is [config.yaml](config.yaml)
+where all parameters are documented. This file includes the EKF Slam, FastSlam, Graph based Slam, Occupancy mapping and A* path planning that can be enabled or
+disabled. The configuration file [config_ekf_fastslam.yaml](config_ekf_fastslam.yaml) includes 
+an extension performing completely identical to the [sobot rimulator](https://collaborating.tuhh.de/cva9931/sobot-rimulator) of Michael Dobler. The configuration file [original_config.yaml](original_config.yaml) does not include
 any of the extensions made and performs completely identical to the original sobot rimulator.
 
 The most important parameters in terms of the SLAM algorithms are:
 
-- `motion_noise`: Specifies the motion noise used by the algorithm, in my thesis denoted as `R_t`. The currently used motion 
+- `motion_noise`: Specifies the motion noise used by the algorithm, in Dobler's thesis denoted as `R_t`. The currently used motion 
 noise is very low to reflect the very accurate motion of the simulated robot. Increasing the motion noise increases the 
 region that the robot is estimated to be in.
-- `sensor_noise`: Specifies the motion noise used by the algorithm, in my thesis denoted as `Q_t`. The currently used sensor noise
+- `sensor_noise`: Specifies the motion noise used by the algorithm, in Dobler's thesis denoted as `Q_t`. The currently used sensor noise
 is relatively high, so the robot currently rarely makes large modifications of its pose estimate based on sensor readings.
 - `distance_threshold`: Specifies a threshold to be used for the data association. Decreasing this value will increase 
 the frequency of the SLAM algorithm considering a landmark as "new" instead of associating it with an encountered landmark.
 - The evaluation `interval` specifies the interval of simulation cycles after which the SLAM accuracy shall be evaluated.
 Low intervals can lead to performance problems. The SLAM evaluation can also be disabled entirely to further improve performance.
+- `frontend_interval` Specifies the interval of adding a pose-vertex. The lower the interval is, the better graph can be obtained by graph optimization.
+However, the graph will grow faster when smaller interval is applied, which can lead to performance problems during graph optimization    
+- `optimization_interval` Specifies the interval of optimizing the graph. Small interval can lead to performance problems. 
+However, large interval will lead to wrong data-association in case that the robot is moving with a noisy motor, 
+because the current robot pose estimated by the motion model can't be corrected in time. 
+
+The most important parameters in terms of the occupancy mapping and path planning algorithms are:
+- `resolution`: Specifies the resolution of the grid map estimated by occupancy 
+mapping algorithm. The mapping algorithm can handle high resolution maps efficiently, 
+but high resolution can lead to performance problems of the GUI while grids are being drawn on the frames
+- `heuristic_weight`: Determines how important the heuristic term is when planning a path from the robot position to the goal.
+If the value is 0, that means that heuristic term is not considered.   
 
 Other interesting parameters are:
 
@@ -98,6 +115,8 @@ with small, circular obstacles, which can be better represented by point-like la
 - the robots control parameters, particularly the `caution_distance`. This parameter controls the robots transition into
 the `follow wall` state and has been significantly decreased to avoid the problem of the robot looping around the small 
 circular objects. Using large, rectangular objects allows the usage of a larger value.
+- `motor`: Specifies the noise parameters of the motors by configuring the `noise`.
+- `sensor`: Specifies the noise parameters of the sensors by configuring the `noise`.
 
 The robot parameters are based on the *Khepera III* research robot and should **only be modified if you know what you are doing**, 
 since some parameter values are not fully supported. Particularly **the amount of sensors and their placements are currently 
