@@ -29,6 +29,15 @@ robot:
               [0.057, 0.000],
               [0.052, 0.021],
               [0.033, 0.043]]
+
+  # Configures the motor used by the robot
+  motor:
+    noise:
+      # Standard deviation of the left wheel's velocity in meters/second while executing a motion command.
+      left_velocity: 0.00001
+      # Standard deviation of the right wheel's velocity in meters/second while executing a motion command.
+      right_velocity: 0.00001  # 0.0001
+
   # Configures the sensors used by the robot
   sensor:
     # Minimum detection range of the sensor in meters
@@ -39,6 +48,8 @@ robot:
     min_read_value: 18
     # Value that is read at minimum range
     max_read_value: 3960
+    # Standard deviation of the distance from the sensors to the detected landmark.
+    noise: 0.00001
     # Specificies the poses and number of sensors
     # Each pose is composed of x position, y position and angle in degrees
     poses: [[-0.038, 0.048, 128],
@@ -178,10 +189,54 @@ slam:
       translational_velocity: 0.005
       # Standard deviation of the motion command's rotational velocity in rad/s.
       rotational_velocity: 0.005
-  # Configures the evaluation of the slam algorithms
+  graph_based_slam:
+    # Determines whether the Graph-based SLAM algorithm shall be executed
+    enabled: false
+    # The euclidean distance threshold used in data association
+    distance_threshold: 0.2
+    # The number interval of pose-vertices added that the graph optimization is executed.
+    optimization_interval: 100
+    # The timestep interval of executing the frontend part.
+    frontend_interval: 5
+    # Configures the motion noise. The values are currently empirically chosen.
+    motion_noise:
+      # Standard deviation of the robots x-coordinate in meters after executing a motion command.
+      x: 0.005
+      # Standard deviation of the robots y-coordinate in meters after executing a motion command.
+      y: 0.005
+      # Standard deviation of the robots angle in degrees after executing a motion command.
+      theta: 1.0 #0.09
+    # Configures the sensor noise. The values are currently empirically chosen.
+    sensor_noise:
+      x: 0.2
+      y: 0.2
+
+  # Configures the evaluation of the SLAM algorithms
   evaluation:
     # Determines whether the accuracy of the generated maps shall be evaluated
-    enabled: true
+    enabled: false
     # Determines the interval of when the accuracy of the generated maps is calculated
     # A low interval (for example 1) causes performance problems
     interval: 20
+
+  # Configures the 2D grid map of the occupancy mapping algorithm
+  mapping:
+    enabled: false
+    # Width of the map in meters
+    gridmap:
+      # Width of the map in meters
+      width: 5
+      # Height of the map in meters
+      height: 5
+      # Number of pixels per meter. The GUI has problem while using grid map of high resolution.
+      resolution: 10
+      # offset the origin in the grid map
+      offset:
+        # offset in meters in horizontal direction
+        x: 2.5
+        # offset in meters in vertical direction
+        y: 2.5
+
+    path_planning:
+        enabled: false
+        heuristic_weight: 1.0
