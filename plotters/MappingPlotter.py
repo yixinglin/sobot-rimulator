@@ -3,7 +3,7 @@ class MappingPlotter:
     def __init__(self, slam_mapping, viewer, frame_number):
         """
         Initialize a MappingPlotter object
-        :param slam_mapping: An object of OccupancyMapping2d
+        :param slam_mapping: An object of OccupancyGridMapping2d
         :param viewer: The viewer to be used
         :param frame_number: The frame number to be used
         """

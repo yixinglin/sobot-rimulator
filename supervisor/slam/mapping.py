@@ -1,6 +1,6 @@
 """
 This file includes
-- occupancy mapping algorithm
+- occupancy grid mapping algorithm
 - path planning algorithm
 
 """
@@ -36,10 +36,10 @@ class Mapping:
 
 
 
-class OccupancyMapping2d(Mapping):
+class OccupancyGridMapping2d(Mapping):
     def __init__ (self, slam, slam_cfg, supervisor_interface, path_planner = None):
         """
-        Initialize the OccupancyMapping2d object
+        Initialize the OccupancyGridMapping2d object
         :param slam: The underlying slam algorithm object.
         :param slam_cfg: The slam configuration.
         :param path_planner: An object of PathPlanner

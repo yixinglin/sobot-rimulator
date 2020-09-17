@@ -218,7 +218,7 @@ slam:
     # A low interval (for example 1) causes performance problems
     interval: 20
 
-  # Configures the 2D grid map of the occupancy mapping algorithm
+  # Configures the 2D grid map of the occupancy mapping grid algorithm
   mapping:
     enabled: false
     # Width of the map in meters

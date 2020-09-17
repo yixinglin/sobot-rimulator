@@ -9,7 +9,7 @@ the integration of the EKFSLAM and FastSLAM algorithms to perform an estimation
 of the current robot state and its surrounding environment based on its previous motion commands 
 and proximity sensor readings. In my extension Graph-based SLAM algorithm was integrated 
 to perform an estimation of the full traverse trajectory of the robot as well as the surrounding environment based on its 
-previous motion commands and the measurements from the sensors and the wheel encoders. Occupancy mapping algorithm 
+previous motion commands and the measurements from the sensors and the wheel encoders. Occupancy grid mapping algorithm 
 and A* path planning algorithm were also integrated to search a path from the robot to the goal based on the mapping of the area where the robot has visited. 
 
 
@@ -79,7 +79,7 @@ representing the robot poses and landmark-vertices representing the landmark pos
 ## Configuration
 
 The simulator can be configured by a variety of parameters. The default configuration file is [config.yaml](config.yaml)
-where all parameters are documented. This file includes the EKF Slam, FastSlam, Graph based Slam, Occupancy mapping and A* path planning that can be enabled or
+where all parameters are documented. This file includes the EKF Slam, FastSlam, Graph based Slam, Occupancy gird mapping and A* path planning that can be enabled or
 disabled. The configuration file [config_ekf_fastslam.yaml](config_ekf_fastslam.yaml) includes 
 an extension performing completely identical to the [sobot rimulator](https://collaborating.tuhh.de/cva9931/sobot-rimulator) of Michael Dobler. The configuration file [original_config.yaml](original_config.yaml) does not include
 any of the extensions made and performs completely identical to the original sobot rimulator.
@@ -101,8 +101,8 @@ However, the graph will grow faster when smaller interval is applied, which can 
 However, large interval will lead to wrong data-association in case that the robot is moving with a noisy motor, 
 because the current robot pose estimated by the motion model can't be corrected in time. 
 
-The most important parameters in terms of the occupancy mapping and path planning algorithms are:
-- `resolution`: Specifies the resolution of the grid map estimated by occupancy 
+The most important parameters in terms of the occupancy gird mapping and path planning algorithms are:
+- `resolution`: Specifies the resolution of the grid map estimated by occupancy grid 
 mapping algorithm. The mapping algorithm can handle high resolution maps efficiently, 
 but high resolution can lead to performance problems of the GUI while grids are being drawn on the frames
 - `heuristic_weight`: Determines how important the heuristic term is when planning a path from the robot position to the goal.
