@@ -25,15 +25,17 @@ class MappingPlotter:
             for j in range(H):
                 for i in range(W):
                     val = map[j, i]  # the occupancy probability
-                    if val >= 0.1:
+                    if val >= 0.5:
                         x, y = self.__to_meter(i, j)
-                        frame.add_rectangle([x, y], self.pixel_size, self.pixel_size, color=(1-val, 1-val, 1-val), alpha=0.5)
-
-
+                        frame.add_rectangle([x, y], self.pixel_size, self.pixel_size, color=(0.5, 0.5, 0.5), alpha=0.5)
             self.draw_path_planning_to_frame(frame)
             self._draw_goal_to_frame(frame)
 
     def draw_path_planning_to_frame(self, frame):
+        """
+        Draw the path to the frame
+        :param frame: The frame to be used
+        """
         if self.viewer.draw_invisibles == True:
             path = self.slam_mapping.get_path()
             if len(path) > 1:
@@ -44,7 +46,7 @@ class MappingPlotter:
 
     def _draw_goal_to_frame(self, frame):
         """
-        Draws the current goal to the frame
+        Draw the current goal to the frame
         :param frame: The frame to be used
         """
         goal = self.slam_mapping.supervisor.goal()
@@ -68,7 +70,3 @@ class MappingPlotter:
         x = x/self.resolution - self.offset[0]
         y = y/self.resolution - self.offset[1]
         return x, y
-
-
-
-
