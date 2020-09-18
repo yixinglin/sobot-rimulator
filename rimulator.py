@@ -119,7 +119,7 @@ class Simulator:
         self.world_plotter = WorldPlotter(self.world, self.viewer)
         n_frame = 1
         if cfg["slam"]["ekf_slam"]["enabled"]:
-            self.ekfslam_plotter = SlamPlotter(self.world.supervisors[0].ekfslam, self.viewer, self.cfg["map"]["obstacle"]["octagon"]["radius"], self.cfg["robot"], n_frame)
+            self.ekfslam_plotter = SlamPlotter(self.world.supervisors[0].ekfslam, self.viewer, 0.04, self.cfg["robot"], n_frame)
             if cfg["slam"]["mapping"]["enabled"]:
                 self.ekfslam_mapping_plotter = MappingPlotter(self.world.supervisors[0].ekfslam_mapping, self.viewer, n_frame)
             if self.cfg["slam"]["evaluation"]["enabled"]:
@@ -127,7 +127,7 @@ class Simulator:
             n_frame += 1
 
         if cfg["slam"]["fast_slam"]["enabled"]:
-            self.fastslam_plotter = SlamPlotter(self.world.supervisors[0].fastslam, self.viewer, self.cfg["map"]["obstacle"]["octagon"]["radius"], self.cfg["robot"], n_frame)
+            self.fastslam_plotter = SlamPlotter(self.world.supervisors[0].fastslam, self.viewer, 0.04, self.cfg["robot"], n_frame)
             if cfg["slam"]["mapping"]["enabled"]:
                 self.fastslam_mapping_plotter = MappingPlotter(self.world.supervisors[0].fastslam_mapping, self.viewer, n_frame)
             if self.cfg["slam"]["evaluation"]["enabled"]:
@@ -135,7 +135,7 @@ class Simulator:
             n_frame += 1
 
         if cfg["slam"]["graph_based_slam"]["enabled"]:
-            self.graphbasedslam_plotter = GraphSlamPlotter(self.world.supervisors[0].graphbasedslam, self.viewer, self.cfg["map"]["obstacle"]["octagon"]["radius"], self.cfg["robot"], n_frame)
+            self.graphbasedslam_plotter = GraphSlamPlotter(self.world.supervisors[0].graphbasedslam, self.viewer, 0.04, self.cfg["robot"], n_frame)
             if cfg["slam"]["mapping"]["enabled"]:
                 self.graphbasedslam_mapping_plotter = MappingPlotter(self.world.supervisors[0].graphbasedslam_mapping, self.viewer, n_frame)
             if self.cfg["slam"]["evaluation"]["enabled"]:

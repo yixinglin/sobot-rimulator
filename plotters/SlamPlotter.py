@@ -52,9 +52,7 @@ class SlamPlotter:
 
         # draw all the obstacles
         for landmark in self.slam.get_landmarks():
-            obstacle = OctagonObstacle(self.radius, Pose(landmark[0], landmark[1], 0))
-            obstacle_plotter = ObstaclePlotter(obstacle)
-            obstacle_plotter.draw_obstacle_to_frame(frame, "black", alpha=0.6)
+            frame.add_circle((landmark[0], landmark[1]), self.radius, "black", alpha=0.6)
 
         if self.viewer.draw_invisibles and isinstance(self.slam, EKFSlam):
             self.__draw_confidence_ellipse(frame)
