@@ -227,13 +227,14 @@ class Supervisor:
         motion_command = np.array([[v], [yaw]])
         measured_distances = self.proximity_sensor_distances_from_robot_center
         sensor_angles = [pose.theta for pose in self.proximity_sensor_placements]
+        landmark_ids = self.robot.read_landmark_matcher()
         # update LAM estimations
         if self.ekfslam is not None:
             self.ekfslam.update(motion_command, zip(measured_distances, sensor_angles))
         if self.fastslam is not None:
             self.fastslam.update(motion_command, zip(measured_distances, sensor_angles))
         if self.graphbasedslam is not None:
-            self.graphbasedslam.update(motion_command, zip(measured_distances, sensor_angles))
+            self.graphbasedslam.update(motion_command, zip(measured_distances, sensor_angles, landmark_ids))
         # update mappings
         if self.ekfslam_mapping is not None:
             self.ekfslam_mapping.update(zip(measured_distances, sensor_angles))

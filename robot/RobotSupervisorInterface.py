@@ -44,6 +44,13 @@ class RobotSupervisorInterface:
 
         return [e.read() for e in self.robot.wheel_encoders]
 
+    def read_landmark_matcher(self):
+        """
+        :return: List of landmark ids
+        """
+        matcher = self.robot.landmark_matcher.read()
+        return [matcher[sensor.id] for sensor in self.robot.ir_sensors]
+
     def set_wheel_drive_rates(self, v_l, v_r):
         """
         Specify the wheel velocities

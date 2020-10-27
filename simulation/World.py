@@ -87,4 +87,4 @@ class World:
         """
         :return: All solids in the world
         """
-        return self.robots + self.obstacles
+        return self.obstacles + self.robots

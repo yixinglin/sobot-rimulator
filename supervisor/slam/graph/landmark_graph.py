@@ -37,7 +37,7 @@ class PoseVertex(Vertex):
 
 class LandmarkVertex(Vertex):
 
-    def __init__(self, pose, sigma):
+    def __init__(self, pose, sigma, landmark_id):
         """
         :param pose: landmark position. [x, y].T
         :param sigma: covariance matrix
@@ -45,6 +45,7 @@ class LandmarkVertex(Vertex):
         Vertex.__init__(self, pose, sigma, None)
         assert pose.shape[0] == 2
         assert sigma.shape == (2, 2)
+        self.landmark_id = landmark_id
 
 
     def __str__(self):

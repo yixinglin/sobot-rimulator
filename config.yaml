@@ -1,5 +1,5 @@
 # Disrecte time that elapses during one simulation cycle
-period: 0.05
+period: 0.1
 
 # Configures the robot
 # These values are inspired by the Khepera III robot
@@ -49,7 +49,7 @@ robot:
     # Value that is read at minimum range
     max_read_value: 3960
     # Standard deviation of the distance from the sensors to the detected landmark.
-    noise: 0.001
+    noise: 0.0001
     # Specificies the poses and number of sensors
     # Each pose is composed of x position, y position and angle in degrees
     poses: [[-0.038, 0.048, 128],
@@ -142,10 +142,10 @@ control:
   # If a sensor measures a distance smaller than the danger distance, the robot immediately starts moving into the opposite direction
   danger_distance: 0.06
   # If a sensor measures a distance smaller than the caution distance, the robot will follow the wall of the obstacle
-  # Set to danger_distanceto disable wall following, since the map contains small, circle-like objects, where wall following can lead to looping around an object
-  caution_distance: 0.06
+  # Set to danger_distance to disable wall following, since the map contains small, circle-like objects, where wall following can lead to looping around an object
+  caution_distance: 0.8 # 0.06
   # Criterion for stopping the following of a wall
-  progress_epsilon: 0.05
+  progress_epsilon: 0.05 # 0.05
 
 # Configures the SLAM system
 slam:
@@ -182,7 +182,7 @@ slam:
     # The mahalanobis distance threshold used in data association
     distance_threshold: 0.125
     # The number of used particles
-    n_particles: 100
+    n_particles: 80
     # Configures the motion noise. The values are currently empirically chosen.
     motion_noise:
       # Standard deviation of the motion command's translational velocity in m/s.
@@ -194,7 +194,7 @@ slam:
     # Determines whether the Graph-based SLAM algorithm shall be executed
     enabled: true
     # The euclidean distance threshold used in data association
-    distance_threshold: 0.2
+    distance_threshold: 0.125
     # The number interval of pose-vertices added that the graph optimization is executed.
     optimization_interval: 100
     # The timestep interval of executing the frontend part.
@@ -209,8 +209,8 @@ slam:
       theta: 1.0 #0.09
     # Configures the sensor noise. The values are currently empirically chosen.
     sensor_noise:
-      x: 0.2
-      y: 0.2
+      x: 0.02
+      y: 0.02
 
   # Configures the evaluation of the SLAM algorithms
   evaluation:
@@ -222,13 +222,14 @@ slam:
 
   # Configures the 2D grid map of the occupancy grid mapping algorithm
   mapping:
+    # Determines whether the mapping algorithm shall be executed
     enabled: true
     # Width of the map in meters
     gridmap:
       # Width of the map in meters
       width: 5
       # Height of the map in meters
-      height: 5
+      height: 6
       # Number of pixels per meter. The GUI has problem while using grid map of high resolution.
       resolution: 10
       # offset the origin in the grid map
@@ -236,10 +237,12 @@ slam:
         # offset in meters in horizontal direction
         x: 2.5
         # offset in meters in vertical direction
-        y: 2.5
+        y: 3
 
     path_planning:
+        # Determines whether the path planning algorithm shall be executed
         enabled: true
+        # Determines how importance the heuristic term is.
         heuristic_weight: 1.0
 
 

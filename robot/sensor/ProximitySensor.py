@@ -29,16 +29,17 @@ class ProximitySensor(Sensor):
     def __init__(self, robot,  # robot this sensor is attached to
                  placement_pose,
                  # pose of this sensor relative to the robot (NOTE: normalized on robot located at origin and with theta 0, i.e. facing east )
-                 sensor_config):
+                 sensor_config, id):
         """
         Initializes a ProximitySensor object
         :param robot: THe underlying robot
         :param placement_pose: The pose at which the sensor is placed relative to the robot
         :param sensor_config: The sensor configurations
+        :param id: The sensor ID
         """
         # bind the robot
         self.robot = robot
-
+        self.id = id # sensor ID
         # pose attributes
         self.placement_pose = placement_pose  # pose of this sensor relative to the robot
         self.pose = Pose(0.0, 0.0, 0.0)  # global pose of this sensor

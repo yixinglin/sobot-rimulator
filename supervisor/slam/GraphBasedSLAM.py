@@ -108,7 +108,7 @@ class GraphBasedSLAM(Slam):
         """
         Executes an update cycle of the SLAM algorithm
         :param u: Motion command, A single item is a vector of [[translational_velocity], [angular_velocity]]
-        :param z: List of measurements. A single item is a tuple of (range, angle)
+        :param z: List of measurements. A single item is a tuple of (range, angle, landmark_id)
         """
         self.mu = self.motion_model(self.mu, u, self.dt) # Calculate next step
         J = self.jaco_motion_model(self.mu, u, self.dt)  # Calculate jacobian matrix
@@ -143,7 +143,9 @@ class GraphBasedSLAM(Slam):
             # Only execute if sensor has observed landmark
             if not self.supervisor.proximity_sensor_positive_detections()[i]:
                 continue
-            pos_lm = self.calc_landmark_position(self.mu, zi) # calculate x-y position in world coordinate
+            pos_lm = self.calc_landmark_position(self.mu, zi) # calculate x-y position from range-bearing in world coordinate
+            """   Data Association 1.0 """
+            """
             min_index, vertices_lm = self.__data_association(pos_lm)
             N = len(vertices_lm)
             if min_index == N: # new landmark was found
@@ -153,22 +155,33 @@ class GraphBasedSLAM(Slam):
             else:
                 vertex3 = vertices_lm[min_index]  # old landmark.
                 old_landmark_id = vertex3.id
+            """
+            """   Data Association 2.0 """
+            vertex3 = self.__data_association(zi)
+            if vertex3 == None: # this landmark has not been detected in the past
+                vertex3 = LandmarkVertex(pos_lm, self.sensor_noise, zi[2])
+                self.graph.add_vertex(vertex3)
+                fixed_counter += 2
+            else:
+                # old landmark.
+                old_landmark_id = vertex3.id
+
             # calculate actual measurement and information matrix
             meas, info = self.__convert_pose_landmark_raw_measurement(zi)
             self.graph.add_edge(vertex2, vertex3, meas, info)
 
         """      calculate pose-pose edge       """
-        meas, info = self.__convert_pose_pose_raw_measurement(vertex1.pose, self.odom_pose)
+        meas, info = self.__convert_pose_pose_raw_measurement(vertex1.pose, vertex2.pose)
         self.graph.add_edge(vertex1, vertex2, meas, info)
 
         if self.step_counter < 50:  # vertices created at the beginning are fixed while optimization
             self.fix_hessian += fixed_counter
 
-        if old_landmark_id != -1: # old_landmark was found
-            self.backend_counter -= 1
-            if self.backend_counter <= 0:
-                self.backend_counter = 10
-                self.__back_end()
+        # if old_landmark_id != -1: # old_landmark was found
+        #     self.backend_counter -= 1
+        #     if self.backend_counter <= 0:
+        #         self.backend_counter = 10
+        #         self.__back_end()
 
     def __back_end(self):
         """
@@ -227,27 +240,36 @@ class GraphBasedSLAM(Slam):
         return err
 
 
+    # def __data_association(self, zi):
+    #     """
+    #     Data association based on euclidean distance.
+    #         explaination of the return:
+    #             - zi is a measurement of a new landmark, if min_index == N
+    #             - zi is a measurement of an old landmark, if min_index < N
+    #     :param zi: a measurement of landmark in world coordinate. [x, y].T
+    #     :return:
+    #         min_index: index of the nearest landmark in list vertices_lm
+    #         vertices_lm: index of the vertex of this landmark
+    #     """
+    #     lms, vertices_lm = self.get_estimated_landmark_position() # find all landmark vertices from the list
+    #     N = len(lms) # number of the known landmarks
+    #     if N == 0:  # there were no landmarks being found
+    #         return N, []
+    #     else:
+    #         lms = np.array(lms).T # xy position of landmarks in world coordinate
+    #         distances = np.linalg.norm(lms - zi, axis=0)  # euclidean distances
+    #         distances = np.append(distances, self.min_distance_threshold)
+    #         min_index = np.argmin(distances)
+    #         return min_index, vertices_lm
+
     def __data_association(self, zi):
-        """
-        Data association based on euclidean distance.
-            explaination of the return:
-                - zi is a measurement of a new landmark, if min_index == N
-                - zi is a measurement of an old landmark, if min_index < N
-        :param zi: a measurement of landmark in world coordinate. [x, y].T
-        :return:
-            min_index: index of the nearest landmark in list vertices_lm
-            vertices_lm: index of the vertex of this landmark
-        """
-        lms, vertices_lm = self.get_estimated_landmark_position() # find all landmark vertices from the list
-        N = len(lms) # number of the known landmarks
-        if N == 0:  # there were no landmarks being found
-            return N, []
-        else:
-            lms = np.array(lms).T # xy position of landmarks in world coordinate
-            distances = np.linalg.norm(lms - zi, axis=0)  # euclidean distances
-            distances = np.append(distances, self.min_distance_threshold)
-            min_index = np.argmin(distances)
-            return min_index, vertices_lm
+        lm_id = zi[2]
+        landmark_vertices = self.graph.get_estimated_landmark_vertices()
+        vertex = None
+        for v in landmark_vertices:
+            if lm_id == v.landmark_id:
+                vertex = v
+        return vertex
 
     def get_estimated_landmark_position(self):
         lm_pos = []

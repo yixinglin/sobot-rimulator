@@ -21,7 +21,6 @@ import utils.geometrics_util as geometrics
 
 from simulation.exceptions import CollisionException
 
-
 class Physics:
 
     def __init__(self, world):
@@ -71,9 +70,10 @@ class Physics:
 
             for sensor in sensors:
                 dmin = float('inf')
+                solid_id = -1
                 detector_line = sensor.detector_line
 
-                for solid in solids:
+                for i, solid in enumerate(solids):
 
                     if solid is not robot:  # assume that the sensor does not detect it's own robot
                         solid_polygon = solid.global_geometry
@@ -85,9 +85,12 @@ class Physics:
 
                             if intersection_exists and d < dmin:
                                 dmin = d
+                                solid_id = i
 
                 # if there is an intersection, update the sensor with the new delta value
                 if dmin != float('inf'):
                     sensor.detect(dmin)
+                    robot.landmark_matcher.detect(sensor.id, solid_id)
                 else:
                     sensor.detect(None)
+                    robot.landmark_matcher.detect(sensor.id, -1)
