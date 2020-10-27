@@ -97,6 +97,24 @@ class PosePoseEdge(Edge):
         e12 = t2v(inv(Z) @ inv(X1) @ X2)
         return e12
 
+    @staticmethod
+    def encode_measurement(pose, odom_pose, covariance):
+        """
+        Calculate the measurement vector that represents how the robot move from previous pose to the expected pose.
+        The jacobian matrix of the error function is calculated by this model.
+        The vector (x, y, theta) is obtained from a rotation matrix R(theta) and a translational vector t = [x, y].T
+        :param pose: previous pose of the robot
+        :param odom_pose: expected pose of the next step calculated by the motion model
+        :param covariance: covariance matrix
+        return:
+                meas: a converted measurement related to the previous pose, which will be set to an edge as a measurement vector z.
+                info: an information matrix
+        """
+        M = inv(v2t(pose)) @ v2t(odom_pose)  # 3x3 transformation matrix from x_meas to vertex1.pose
+        info = inv(covariance) # information matrix
+        meas = t2v(M)  # a converted measurement.
+        return meas, info
+
     def linearize_constraint(self, x1, x2, z):
         """
         Linearize the pose-pose constraint.
@@ -111,13 +129,15 @@ class PosePoseEdge(Edge):
         """
         c = cos(x1[2, 0] + z[2, 0])
         s = sin(x1[2, 0] + z[2, 0])
-        t = x2[0:2, :] - x1[0:2, :]
-        Rd = np.array([[-s, c], [-c, -s]])
-        Re = np.array([[-c, -s], [s, -c]])
-        A = np.hstack((Re, Rd @ t))
-        A = np.vstack((A, [0, 0, -1]))
-        B = np.hstack((-Re, np.zeros((2, 1))))
-        B = np.vstack((B, [0, 0, 1]))
+        tx = x2[0, 0] - x1[0, 0]
+        ty = x2[1, 0] - x1[1, 0]
+
+        A = np.array([[-c, -s, -tx*s+ty*c],
+                      [s, -c, -tx*c-ty*s],
+                      [0, 0, -1]])
+        B = np.array([[c, s, 0],
+                     [-s, c, 0],
+                     [0, 0, 1]])
 
         e = self.calc_error_vector(x1, x2, z)
         return e, A, B
@@ -135,6 +155,23 @@ class PoseLandmarkEdge(Edge):
         assert isinstance(self.vertex2, LandmarkVertex)
         assert z.shape == (2, 1)
         assert information.shape == (2, 2)
+
+    @staticmethod
+    def encode_measurement(observation, covariance):
+        """
+        Encode the raw_measurement of landmark observation.
+        The vector meas_xy represents how the robot sees a landmark. This vector is a cartesian coordinate (x, y).
+        The Jacobian matrix of the error function is calculated by this model.
+        :param observation: The raw measurement from range bearing sensor (distance, angle)
+        :param covariance: The covariance matrix of the measurement
+        return
+                meas_xy: a encoded measurement vector (x, y) related to the robot, which will be set to an edge as a measurement vector z.
+                info: an information matrix
+        """
+        info = inv(covariance)
+        meas_xy = np.array([[observation[0] * cos(observation[1])],
+                            [observation[0] * sin(observation[1])]])
+        return meas_xy, info
 
     def calc_error_vector(self, x1, x2, z):
 
