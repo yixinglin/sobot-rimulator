@@ -113,13 +113,13 @@ class GraphBasedSLAM(Slam):
         self.mu = self.motion_model(self.mu, u, self.dt) # Calculate next step
         J = self.jaco_motion_model(self.mu, u, self.dt)  # Calculate jacobian matrix
         self.Sigma = J @ self.Sigma @ J.T + self.motion_noise  # Update covariance matrix, propagate it while robot is moving
-        self.odom_pose = self.__update_odometry_estimation(self.odom_pose) # Update accumulative odometry estimation
+        #self.odom_pose = self.__update_odometry_estimation(self.odom_pose) # Update accumulative odometry estimation
         self.step_counter += 1
 
         """        Update the Graph         """
         if self.step_counter % self.frontend_interval == 0: # create a vertex each n steps
             self.__front_end(z)
-            self.odom_pose = self.__reset_odometry_measurement() # reset odom_pose
+            #self.odom_pose = self.__reset_odometry_measurement() # reset odom_pose
             num_poses, _ = self.graph.count_vertices()
 
             if num_poses % self.optimization_interval == 0 \
@@ -137,7 +137,7 @@ class GraphBasedSLAM(Slam):
         vertex2 = PoseVertex(self.mu, self.Sigma)
         self.graph.add_vertex(vertex2)
         fixed_counter = 3  # count the total dimensions of the vertices added
-        old_landmark_id = -1
+        #old_landmark_id = -1
         """     calculate landmark vertices    """
         for i, zi in enumerate(z):
             # Only execute if sensor has observed landmark
@@ -162,9 +162,6 @@ class GraphBasedSLAM(Slam):
                 vertex3 = LandmarkVertex(pos_lm, self.sensor_noise, zi[2])
                 self.graph.add_vertex(vertex3)
                 fixed_counter += 2
-            else:
-                # old landmark.
-                old_landmark_id = vertex3.id
 
             # calculate actual measurement and information matrix
             meas, info = self.__convert_pose_landmark_raw_measurement(zi)
@@ -174,7 +171,7 @@ class GraphBasedSLAM(Slam):
         meas, info = self.__convert_pose_pose_raw_measurement(vertex1.pose, vertex2.pose)
         self.graph.add_edge(vertex1, vertex2, meas, info)
 
-        if self.step_counter < 50:  # vertices created at the beginning are fixed while optimization
+        if self.step_counter < 1:  # vertices created at the beginning are fixed while optimization
             self.fix_hessian += fixed_counter
 
         # if old_landmark_id != -1: # old_landmark was found
@@ -196,7 +193,7 @@ class GraphBasedSLAM(Slam):
         last_vertex = self.graph.get_last_pose_vertex()
         self.mu = np.copy(last_vertex.pose)  # update current state
         self.Sigma = np.copy(last_vertex.sigma)
-        self.odom_pose = self.__reset_odometry_measurement()  # Reset odometry estimation
+        #self.odom_pose = self.__reset_odometry_measurement()  # Reset odometry estimation
 
     def __convert_pose_landmark_raw_measurement(self, zi):
         """

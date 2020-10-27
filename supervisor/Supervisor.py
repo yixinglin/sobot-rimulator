@@ -230,9 +230,9 @@ class Supervisor:
         landmark_ids = self.robot.read_landmark_matcher()
         # update LAM estimations
         if self.ekfslam is not None:
-            self.ekfslam.update(motion_command, zip(measured_distances, sensor_angles))
+            self.ekfslam.update(motion_command, zip(measured_distances, sensor_angles, landmark_ids))
         if self.fastslam is not None:
-            self.fastslam.update(motion_command, zip(measured_distances, sensor_angles))
+            self.fastslam.update(motion_command, zip(measured_distances, sensor_angles, landmark_ids))
         if self.graphbasedslam is not None:
             self.graphbasedslam.update(motion_command, zip(measured_distances, sensor_angles, landmark_ids))
         # update mappings

@@ -34,9 +34,9 @@ robot:
   motor:
     noise:
       # Standard deviation of the left wheel's velocity in meters/second while executing a motion command.
-      left_velocity: 0.001
+      left_velocity: 0.0001
       # Standard deviation of the right wheel's velocity in meters/second while executing a motion command.
-      right_velocity: 0.001
+      right_velocity: 0.0001
 
   # Configures the sensors used by the robot
   sensor:
@@ -157,15 +157,19 @@ slam:
   # These are x position and y position
   # Currently only supports 2
   landmark_state_size: 2
+  # Determines whether landmark-matcher is used
+  # It determines whether correspondences of landmarks are given, i.e. identifies of landmarks are given
+  landmark_matcher: true
+
   # Configures the sensor noise. The values are currently empirically chosen.
   sensor_noise:
-    # Standard deviation of the detected distance in meters
-    detected_distance: 0.2
+    # Standard deviation of the detected distance in meters 0.2
+    detected_distance: 0.1
     # Standard deviation of the detected angle in degrees
     detected_angle: 30
   ekf_slam:
     # Determines whether the EKF SLAM algorithm shall be executed
-    enabled: false
+    enabled: true
     # The mahalanobis distance threshold used in data association
     distance_threshold: 1
     # Configures the motion noise. The values are currently empirically chosen.

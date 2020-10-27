@@ -33,10 +33,13 @@ class EKFSlam(Slam):
         self.motion_noise = np.diag([slam_cfg["ekf_slam"]["motion_noise"]["x"],
                                      slam_cfg["ekf_slam"]["motion_noise"]["y"],
                                      np.deg2rad(slam_cfg["ekf_slam"]["motion_noise"]["theta"])]) ** 2
+        self.landmark_correspondence_given = slam_cfg["landmark_matcher"]
         # The estimated combined state vector, initially containing the robot pose at the origin and no landmarks
         self.mu = np.zeros((self.robot_state_size, 1))
         # The state covariance, initially set to absolute certainty of the initial robot pose
         self.Sigma = np.zeros((self.robot_state_size, self.robot_state_size))
+        # The list of landmark IDs.
+        self.landmark_id = list()
 
     def get_estimated_pose(self):
         """
@@ -86,19 +89,22 @@ class EKFSlam(Slam):
     def correction_step(self, z):
         """
         Update the predicted state and uncertainty using the sensor measurements.
-        :param z: List of sensor measurements. A single measurement is a tuple of measured distance and measured angle.
+        :param z: List of sensor measurements. A single measurement is a tuple of measured distance, measured angle and identify.
         """
         # Iterate through all sensor readings
         for i, measurement in enumerate(z):
             # Only execute if sensor observed landmark
             if not self.supervisor.proximity_sensor_positive_detections()[i]:
                 continue
-            lm_id = self.data_association(self.mu, self.Sigma, measurement)
+            if not self.landmark_correspondence_given:
+                lm_id = self.data_association(self.mu, self.Sigma, measurement[0:2])
+            else:
+                lm_id = self.data_association_v2(self.mu, measurement[2])
             nLM = self.get_n_lm(self.mu)
             if lm_id == nLM:  # If the landmark is new
-                self.add_new_landmark(measurement)
+                self.add_new_landmark(measurement[0:2], measurement[2])
             lm = self.get_landmark_position(self.mu, lm_id)
-            innovation, Psi, H = self.calc_innovation(lm, self.mu, self.Sigma, measurement, lm_id)
+            innovation, Psi, H = self.calc_innovation(lm, self.mu, self.Sigma, measurement[0:2], lm_id)
 
             K = (self.Sigma @ H.T) @ np.linalg.inv(Psi)
             self.mu += K @ innovation
@@ -135,7 +141,21 @@ class EKFSlam(Slam):
         minid = mdist.index(min(mdist))
         return minid
 
-    def add_new_landmark(self, measurement):
+    def data_association_v2(self, mu, id):
+        """
+        Associates the identify to a landmark.
+        :param particle: Particle that will be updated
+        :param id: Identify of the observed landmark
+        return: The landmark index in the list.
+        """
+        nLM = self.get_n_lm(mu)
+        lm_index = nLM
+        for i in range(nLM):
+            if self.landmark_id[i] == id:
+                lm_index = i
+        return lm_index
+
+    def add_new_landmark(self, measurement, id):
         """
         Adds a new landmark.
         State vector is extended using the measured position.
@@ -149,6 +169,7 @@ class EKFSlam(Slam):
         self.Sigma = np.vstack((np.hstack((self.Sigma, np.zeros((len(self.mu), L)))),
                                 np.hstack((np.zeros((L, len(self.mu))), np.identity(L)))))
         self.mu = xEstTemp
+        self.landmark_id.append(id)
 
     @staticmethod
     def motion_model(x, u, dt):

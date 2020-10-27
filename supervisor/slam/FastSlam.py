@@ -37,6 +37,8 @@ class Particle:
         self.lm = np.zeros((0, lm_state_size))
         # List of landmark position covariances
         self.lmP = np.zeros((0, lm_state_size))
+        # List of landmark ids
+        self.id = list()
 
 
 class FastSlam(Slam):
@@ -60,7 +62,7 @@ class FastSlam(Slam):
                                      np.deg2rad(slam_cfg["sensor_noise"]["detected_angle"])]) ** 2
         self.motion_noise = np.diag([slam_cfg["fast_slam"]["motion_noise"]["translational_velocity"],
                                      slam_cfg["fast_slam"]["motion_noise"]["rotational_velocity"]]) ** 2
-
+        self.landmark_correspondence_given = slam_cfg["landmark_matcher"]
     # Create initial list of particles
         self.particles = [Particle(self.landmark_state_size) for _ in range(self.n_particles)]
 
@@ -136,13 +138,16 @@ class FastSlam(Slam):
         """
         # Removing the importance factors of the previous cycle
         particles = self.clear_importance_factors(particles)
-        for i, (distance, theta) in enumerate(z):
-            measurement = np.asarray([distance, theta])
+        for i, (distance, theta, id) in enumerate(z):
+            measurement = np.asarray([distance, theta, id])
             # Skip the measuremnt if no landmark was detected
             if not self.supervisor.proximity_sensor_positive_detections()[i]:
                 continue
             for particle in particles:
-                lm_id = self.data_association(particle, measurement)
+                if not self.landmark_correspondence_given:
+                    lm_id = self.data_association(particle, measurement)
+                else:
+                    lm_id = self.data_association_v2(particle, id)
                 nLM = self.get_n_lms(particle.lm)
                 if lm_id == nLM:  # If the landmark is new
                     self.add_new_lm(particle, measurement)
@@ -174,6 +179,20 @@ class FastSlam(Slam):
         # Choose the landmark that is closest to the measured location
         min_id = distances.index(min(distances))
         return min_id
+
+    def data_association_v2(self, particle, id):
+        """
+        Associates the identify to a landmark.
+        :param particle: Particle that will be updated
+        :param id: Identify of the observed landmark
+        return: The landmark index in the list.
+        """
+        nLM = self.get_n_lms(particle.lm)
+        lm_index = nLM
+        for i in range(nLM):
+            if particle.id[i] == id:
+                lm_index = i
+        return lm_index
 
     def normalize_weight(self, particles):
         """
@@ -229,6 +248,7 @@ class FastSlam(Slam):
         Gz = np.array([[measured_x, -r * measured_y],
                        [measured_y, r * measured_x]])
         particle.lmP = np.vstack((particle.lmP, Gz @ self.sensor_noise @ Gz.T))
+        particle.id.append(z[2])
 
         return particle
 
@@ -258,7 +278,7 @@ class FastSlam(Slam):
         # Computing the covariance of the measurement
         Psi = H @ landmark_cov @ H.T + self.sensor_noise
         # Computing the innovation, the difference between actual measurement and expected measurement
-        innovation = z.reshape(2, 1) - expected_measurement
+        innovation = z[0:2].reshape(2, 1) - expected_measurement
         innovation[1, 0] = normalize_angle(innovation[1, 0])
 
         landmark, landmark_cov = self.ekf_update(landmark, landmark_cov, innovation, H, Psi)
