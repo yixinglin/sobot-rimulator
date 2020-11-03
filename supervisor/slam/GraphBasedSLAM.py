@@ -58,20 +58,15 @@ class GraphBasedSLAM(Slam):
         return Pose(self.mu[0, 0], self.mu[1, 0], self.mu[2, 0])
 
     def get_estimated_trajectory(self):
-        traj = []
-        for vertex in self.graph.get_estimated_pose_vertices():
-            traj.append((vertex.pose[0,0], vertex.pose[1,0]))
-        return traj
+        return [ (v.pose[0,0], v.pose[1,0])  \
+                 for v in self.graph.get_estimated_pose_vertices()]
 
     def get_landmarks(self):
         """
         Returns the estimated landmark positions
         """
-        landmarks = []
-        vertices = self.graph.get_estimated_landmark_vertices()
-        for v in vertices:
-            landmarks.append((v.pose[0, 0], v.pose[1, 0]))
-        return landmarks
+        return [(v.pose[0, 0], v.pose[1, 0]) \
+                for v in self.graph.get_estimated_landmark_vertices() ]
 
     def plot_graph(self):
         """

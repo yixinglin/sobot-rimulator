@@ -34,9 +34,9 @@ robot:
   motor:
     noise:
       # Standard deviation of the left wheel's velocity in meters/second while executing a motion command.
-      left_velocity: 0.0001
+      left_velocity: 0.001 # 0.0001
       # Standard deviation of the right wheel's velocity in meters/second while executing a motion command.
-      right_velocity: 0.0001
+      right_velocity: 0.001 # 0.0001
 
   # Configures the sensors used by the robot
   sensor:
@@ -49,7 +49,7 @@ robot:
     # Value that is read at minimum range
     max_read_value: 3960
     # Standard deviation of the distance from the sensors to the detected landmark.
-    noise: 0.0001
+    noise: 0.0001 # 0.0001
     # Specificies the poses and number of sensors
     # Each pose is composed of x position, y position and angle in degrees
     poses: [[-0.038, 0.048, 128],
@@ -164,7 +164,7 @@ slam:
   # Configures the sensor noise. The values are currently empirically chosen.
   sensor_noise:
     # Standard deviation of the detected distance in meters 0.2
-    detected_distance: 0.1
+    detected_distance: 0.01
     # Standard deviation of the detected angle in degrees
     detected_angle: 30
   ekf_slam:
@@ -200,21 +200,21 @@ slam:
     # The euclidean distance threshold used in data association
     distance_threshold: 0.125
     # The number interval of pose-vertices added that the graph optimization is executed.
-    optimization_interval: 100
+    optimization_interval: 20
     # The timestep interval of executing the frontend part.
     frontend_interval: 5
     # Configures the motion noise. The values are currently empirically chosen.
     motion_noise:
       # Standard deviation of the robots x-coordinate in meters after executing a motion command.
-      x: 0.005
+      x: 0.004 # 0.005
       # Standard deviation of the robots y-coordinate in meters after executing a motion command.
-      y: 0.005
+      y: 0.004 # 0.005
       # Standard deviation of the robots angle in degrees after executing a motion command.
       theta: 1.0 #0.09
     # Configures the sensor noise. The values are currently empirically chosen.
     sensor_noise:
-      x: 0.02
-      y: 0.02
+      x: 0.01 # 0.02
+      y: 0.5236 # 0.02
 
   # Configures the evaluation of the SLAM algorithms
   evaluation:
