@@ -238,6 +238,13 @@ class PoseLandmarkEdge(Edge):
         return meas_rb, info
 
     def calc_error_vector(self, x, lm, z):
+        """
+        Calculate the error vector of the actual and expected measurements
+        :param x: Robot pose of the graph configuration. (expected)
+        :param lm: Landmark pose with respect to the graph configuration. (expected)
+        :param z: Actual measurement. A range-bearing vector, i.e. z == [distance, angle].T
+        :return:
+        """
         delta = lm - x[0:2]
         distance = math.sqrt(delta[0,0]**2 + delta[1, 0]**2) # expected measurement
         angle = math.atan2(delta[1, 0], delta[0, 0])
@@ -248,10 +255,9 @@ class PoseLandmarkEdge(Edge):
     def linearize_constraint(self, x, lm, z):
         """
         Compute the error of a pose-landmark constraint.
-        :param x1: 3x1 vector (x,y,theta) of the robot pose.
-        :param lm: 2x1 vector (x,y) of the landmark.
-        :param z: 2x1 vector (x,y) of the measurement, the position of the landmark in.
-                the coordinate frame of the robot given by the vector x.
+        :param x1: 3x1 vector [x,y,theta].T of the robot pose.
+        :param lm: 2x1 vector [x, y].T of the landmark position.
+        :param z: 2x1 vector [distance, angle].T of the actual measurement
         :return:
             e 2x1 error of the constraint.
             A 2x3 Jacobian wrt x.
@@ -327,10 +333,12 @@ class LMGraph(Graph):
     def normalize_angles(self, vertices):
         for v in vertices:
             if isinstance(v, PoseVertex):
-                # v.pose[2, 0] = atan2(sin(v.pose[2, 0]), cos(v.pose[2, 0]))
                 v.pose[2, 0] = normalize_angle(v.pose[2, 0])
 
     def get_last_pose_vertex(self):
+        """
+            Return the last vertex of poses
+        """
         v_pose = None
         for v in reversed(self.vertices):
             if isinstance(v, PoseVertex):
@@ -339,6 +347,9 @@ class LMGraph(Graph):
         return v_pose
 
     def get_estimated_pose_vertices(self):
+        """
+            Return a list of vertices that represent poses
+        """
         poses = []
         for v in self.vertices:
             if isinstance(v, PoseVertex):
@@ -346,18 +357,29 @@ class LMGraph(Graph):
         return poses
 
     def get_estimated_landmark_vertices(self):
+        """
+            Return a list of vertices that represent landmarks
+        """
         poses = []
         for v in self.vertices:
             if isinstance(v, LandmarkVertex):
                 poses.append(v)
         return poses
 
+    def get_hessian(self):
+        """
+        Return the hessian matrix H and the information vector b
+        :return:  H, b
+            H: the hessian matrix
+            b: the information vector
+        """
+        return self.linearize_constraints(self.vertices, self.edges, 0, 1)
+
     def draw(self):
         """
         Visualize the graph
         """
         # draw vertices
-        plt.cla()
         landmarks = []
         vertices = []
         for v in self.vertices:
@@ -387,8 +409,3 @@ class LMGraph(Graph):
             vertices = sample(vertices, k)
             vx, vy = zip(*vertices)
             plt.plot(vx, vy, '*r', label='Vertex ({0})'.format(num_vertices))
-
-        plt.title("Graph")
-        plt.legend()
-        plt.axis('square')
-        plt.show()

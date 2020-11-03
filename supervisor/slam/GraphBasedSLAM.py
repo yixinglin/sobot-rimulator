@@ -61,6 +61,16 @@ class GraphBasedSLAM(Slam):
         return [ (v.pose[0,0], v.pose[1,0])  \
                  for v in self.graph.get_estimated_pose_vertices()]
 
+    def get_hessian(self):
+        """
+        Return the hessian matrix H and the information vector b
+        :return:  H, b
+            H: the hessian matrix
+            b: the information vector
+        """
+        H, b = self.graph.get_hessian()
+        return H.toarray(), b
+
     def get_landmarks(self):
         """
         Returns the estimated landmark positions

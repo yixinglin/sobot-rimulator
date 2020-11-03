@@ -119,4 +119,17 @@ class GraphSlamPlotter(SlamPlotter):
                         alpha=0.8)
 
     def plot_graph(self):
+        fig = plt.figure()
+        fig.add_subplot(121)
         self.slam.graph.draw()
+        plt.title("Graph")
+        plt.legend()
+        plt.axis('square')
+
+        fig.add_subplot(122)
+        H, _ = self.slam.get_hessian()
+        H = np.abs(H)
+        plt.matshow(H, cmap="Greys", fignum=False)
+        plt.title("Hessian Matrix")
+
+        plt.show()

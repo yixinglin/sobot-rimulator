@@ -98,7 +98,7 @@ class Graph:
         preError = np.inf
         for i in range(max_iter):
             """     linearize the problem   """
-            H, b = self.__linearize_constraints(self.vertices, self.edges, number_fix, damp_factor)
+            H, b = self.linearize_constraints(self.vertices, self.edges, number_fix, damp_factor)
             """     solve sparse matrix    """
             dx = self.__solve_sparse(H, b)
             """     update vertices        """
@@ -142,7 +142,7 @@ class Graph:
         plt.axis('square')
         plt.show()
 
-    def __linearize_constraints(self, vertices, edges, number_fix, damp_factor):
+    def linearize_constraints(self, vertices, edges, number_fix, damp_factor):
         """
         Linearize the problem (global) i.e. compute the hessian matrix and the information vector
         :return:
