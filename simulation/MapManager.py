@@ -25,7 +25,7 @@ from models.obstacles.OctagonObstacle import OctagonObstacle
 from models.Pose import Pose
 from models.Polygon import Polygon
 from models.obstacles.RectangleObstacle import RectangleObstacle
-
+from models.obstacles.FeaturePoint import FeaturePoint
 seed(42)
 
 
@@ -50,6 +50,8 @@ class MapManager:
             obstacles += self.__generate_octagon_obstacles(world)
         if self.cfg["obstacle"]["rectangle"]["enabled"]:
             obstacles += self.__generate_rectangle_obstacles(world)
+
+        obstacles += self.__generate_features(world, obstacles)
 
         # update the current obstacles and goal
         self.current_obstacles = obstacles
@@ -152,6 +154,49 @@ class MapManager:
             if not intersects:
                 obstacles.append(obstacle)
         return obstacles
+
+    def __generate_feature_line(self, world, x0, y0, x1, y1):
+        r = 8  # resolution: pixs/meter
+        obs_radius = 0.04
+        line = geometrics.bresenham_line(x0*r, y0*r, x1*r, y1*r)
+        test_geometries = [r.global_geometry for r in world.robots]
+        obstacles = []
+        for x, y in line:
+            x = x/r
+            y = y/r
+            theta = -pi + (random() * 2 * pi)
+            obstacle = FeaturePoint(obs_radius, Pose(x, y, theta), 0)
+            intersects = False
+            for test_geometry in test_geometries:
+                intersects |= geometrics.convex_polygon_intersect_test(test_geometry, obstacle.global_geometry)
+            if not intersects:
+                obstacles.append(obstacle)
+        return obstacles
+
+    def __generate_feature_obstacle(self, world, vertexes):
+        num_vertexes = len(vertexes)
+        obstacles = []
+        for i in range(num_vertexes):
+            j = 0 if i+1 >= num_vertexes else i+1
+            x0 = vertexes[i][0]
+            y0 = vertexes[i][1]
+            x1 = vertexes[j][0]
+            y1 = vertexes[j][1]
+            obstacles += self.__generate_feature_line(world, x0, y0, x1, y1)
+            obstacles.pop()
+        return obstacles
+
+    def __generate_features(self, world, obstacles):
+        features = []
+        for obstacle in obstacles:
+            if type(obstacle) == FeaturePoint:
+                continue
+            features += self.__generate_feature_obstacle(world, obstacle.global_geometry.vertexes)
+        # add identifier for each feature.
+        for i, f in enumerate(features):
+            f.id = i
+
+        return features
 
     def __generate_new_goal(self):
         """

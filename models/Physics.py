@@ -18,7 +18,7 @@
 
 
 import utils.geometrics_util as geometrics
-
+from models.obstacles.FeaturePoint import FeaturePoint
 from simulation.exceptions import CollisionException
 
 class Physics:
@@ -72,7 +72,7 @@ class Physics:
                 dmin = float('inf')
                 solid_id = -1
                 detector_line = sensor.detector_line
-
+                solid_object = None
                 for i, solid in enumerate(solids):
 
                     if solid is not robot:  # assume that the sensor does not detect it's own robot
@@ -86,11 +86,16 @@ class Physics:
                             if intersection_exists and d < dmin:
                                 dmin = d
                                 solid_id = i
+                                solid_object = solid
 
                 # if there is an intersection, update the sensor with the new delta value
                 if dmin != float('inf'):
-                    sensor.detect(dmin)
-                    robot.landmark_matcher.detect(sensor.id, solid_id)
+                    sensor.detect(dmin)  # distance to the nearest solid
                 else:
                     sensor.detect(None)
+
+                # if a feature has been extracted from the environment, update the matcher with the feature identifier
+                if dmin != float('inf') and type(solid_object) == FeaturePoint:
+                    robot.landmark_matcher.detect(sensor.id, solid_object.id)
+                else:
                     robot.landmark_matcher.detect(sensor.id, -1)

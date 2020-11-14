@@ -96,12 +96,12 @@ map:
     octagon:
       # Determines whether octagon obstacles shall be generated
       enabled: true
-      # Radius of obstacles
-      radius: 0.04
-      # Minimum amount of generated obstacles
-      min_count: 25
-      # Maximum amount of generated obstacles
-      max_count: 50
+      # Radius of obstacles 0.04
+      radius: 1
+      # Minimum amount of generated obstacles 25
+      min_count: 2
+      # Maximum amount of generated obstacles 30
+      max_count: 4
       # Minimum distance to origin
       min_distance: 0.2
       # Maximum distance to origin
@@ -109,17 +109,17 @@ map:
     # Configures rectangle obstacles
     rectangle:
       # Determines whether rectangle obstacles shall be generated
-      enabled: false
+      enabled: true
       # Minimum side length of a rectangle
-      min_dim: 0.1
+      min_dim: 0.5
       # Maximum side length of a rectangle
       max_dim: 2.5
       # Maximum sum of the two side lengths of a rectangle
-      max_combined_dim: 2.6
+      max_combined_dim: 3.0
       # Minimum amount of generated obstacles
-      min_count: 10
+      min_count: 2
       # Maximum amount of generated obstacles
-      max_count: 30
+      max_count: 4
       # Minimum distance to origin
       min_distance: 0.4
       # Maximum distance to origin
@@ -213,8 +213,10 @@ slam:
       theta: 1.0 #0.09
     # Configures the sensor noise. The values are currently empirically chosen.
     sensor_noise:
-      x: 0.01 # 0.02
-      y: 0.5236 # 0.02
+      #x: 0.02 # 0.02 constraint range-bearing
+      #y: 0.5236 # 0.02
+      x: 0.02 # 0.02 constraint x-y
+      y: 0.02 # 0.02
 
   # Configures the evaluation of the SLAM algorithms
   evaluation:
