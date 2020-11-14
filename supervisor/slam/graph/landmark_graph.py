@@ -148,71 +148,71 @@ class PosePoseEdge(Edge):
         s = "PPE: id1:{0},id2: {1},z: [{2}, {3}, {4}]".format(self.id1, self.id2, x, y, yaw)
         return s
 
-# class PoseLandmarkEdge(Edge):
-#
-#     def __init__(self, id_vertex1, id_vertex2, z, information, list_vertices):
-#         Edge.__init__(self, id_vertex1, id_vertex2, z, information, list_vertices)
-#         assert isinstance(self.vertex1, PoseVertex)
-#         assert isinstance(self.vertex2, LandmarkVertex)
-#         assert z.shape == (2, 1)
-#         assert information.shape == (2, 2)
-#
-#     @staticmethod
-#     def encode_measurement(observation, covariance):
-#         """
-#         Encode the raw_measurement of landmark observation.
-#         The vector meas_xy represents how the robot sees a landmark. This vector is a cartesian coordinate (x, y).
-#         The Jacobian matrix of the error function is calculated by this model.
-#         :param observation: The raw measurement from range bearing sensor (distance, angle)
-#         :param covariance: The covariance matrix of the measurement
-#         return
-#                 meas_xy: a encoded measurement vector (x, y) related to the robot, which will be set to an edge as a measurement vector z.
-#                 info: an information matrix
-#         """
-#         info = inv(covariance)
-#         meas_xy = np.array([[observation[0] * cos(observation[1])],
-#                             [observation[0] * sin(observation[1])]])
-#         return meas_xy, info
-#
-#     def calc_error_vector(self, x1, x2, z):
-#
-#         X1 = v2t(x1) # homogeneous matrix of vector x1
-#         R1 = X1[0:2, 0:2]  # rotation matrix
-#         e12 = R1.T @ (x2 - x1[0:2, :]) - z
-#         return e12
-#
-#     def linearize_constraint(self, x, lm, z):
-#         """
-#         Compute the error of a pose-landmark constraint.
-#         :param x1: 3x1 vector (x,y,theta) of the robot pose.
-#         :param lm: 2x1 vector (x,y) of the landmark.
-#         :param z: 2x1 vector (x,y) of the measurement, the position of the landmark in.
-#                 the coordinate frame of the robot given by the vector x.
-#         :return:
-#             e 2x1 error of the constraint.
-#             A 2x3 Jacobian wrt x.
-#             B 2x2 Jacobian wrt lm.
-#         """
-#         theta_i = x[2, 0]
-#         xi, yi = x[0, 0], x[1, 0]
-#         xl, yl = lm[0, 0], lm[1, 0]
-#         # Compute eij partial derivative with respect to pose x
-#         c = cos(theta_i)
-#         s = sin(theta_i)
-#         A = np.array([[-c, -s, -(xl - xi) * s + (yl - yi) * c],
-#                       [s, -c, -(xl - xi) * c - (yl - yi) * s]])
-#         B = np.array([[c, s],
-#                       [-s, c]])
-#
-#         e = self.calc_error_vector(x, lm, z)
-#         return e, A, B
-#
-#     def __str__(self):
-#         x, y, yaw = np.squeeze(self.z)
-#         s = "PLE: id1:{0},id2: {1},z: [{2}, {3}]".format(self.id1, self.id2, x, y)
-#         return s
-
 class PoseLandmarkEdge(Edge):
+
+    def __init__(self, id_vertex1, id_vertex2, z, information, list_vertices):
+        Edge.__init__(self, id_vertex1, id_vertex2, z, information, list_vertices)
+        assert isinstance(self.vertex1, PoseVertex)
+        assert isinstance(self.vertex2, LandmarkVertex)
+        assert z.shape == (2, 1)
+        assert information.shape == (2, 2)
+
+    @staticmethod
+    def encode_measurement(observation, covariance):
+        """
+        Encode the raw_measurement of landmark observation.
+        The vector meas_xy represents how the robot sees a landmark. This vector is a cartesian coordinate (x, y).
+        The Jacobian matrix of the error function is calculated by this model.
+        :param observation: The raw measurement from range bearing sensor (distance, angle)
+        :param covariance: The covariance matrix of the measurement
+        return
+                meas_xy: a encoded measurement vector (x, y) related to the robot, which will be set to an edge as a measurement vector z.
+                info: an information matrix
+        """
+        info = inv(covariance)
+        meas_xy = np.array([[observation[0] * cos(observation[1])],
+                            [observation[0] * sin(observation[1])]])
+        return meas_xy, info
+
+    def calc_error_vector(self, x1, x2, z):
+
+        X1 = v2t(x1) # homogeneous matrix of vector x1
+        R1 = X1[0:2, 0:2]  # rotation matrix
+        e12 = R1.T @ (x2 - x1[0:2, :]) - z
+        return e12
+
+    def linearize_constraint(self, x, lm, z):
+        """
+        Compute the error of a pose-landmark constraint.
+        :param x1: 3x1 vector (x,y,theta) of the robot pose.
+        :param lm: 2x1 vector (x,y) of the landmark.
+        :param z: 2x1 vector (x,y) of the measurement, the position of the landmark in.
+                the coordinate frame of the robot given by the vector x.
+        :return:
+            e 2x1 error of the constraint.
+            A 2x3 Jacobian wrt x.
+            B 2x2 Jacobian wrt lm.
+        """
+        theta_i = x[2, 0]
+        xi, yi = x[0, 0], x[1, 0]
+        xl, yl = lm[0, 0], lm[1, 0]
+        # Compute eij partial derivative with respect to pose x
+        c = cos(theta_i)
+        s = sin(theta_i)
+        A = np.array([[-c, -s, -(xl - xi) * s + (yl - yi) * c],
+                      [s, -c, -(xl - xi) * c - (yl - yi) * s]])
+        B = np.array([[c, s],
+                      [-s, c]])
+
+        e = self.calc_error_vector(x, lm, z)
+        return e, A, B
+
+    def __str__(self):
+        x, y, yaw = np.squeeze(self.z)
+        s = "PLE: id1:{0},id2: {1},z: [{2}, {3}]".format(self.id1, self.id2, x, y)
+        return s
+
+class PoseLandmarkEdge2(Edge):
 
     def __init__(self, id_vertex1, id_vertex2, z, information, list_vertices):
         Edge.__init__(self, id_vertex1, id_vertex2, z, information, list_vertices)
