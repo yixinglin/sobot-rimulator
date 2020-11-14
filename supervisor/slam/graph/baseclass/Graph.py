@@ -151,22 +151,22 @@ class Graph:
         """
         indices, hess_size = self.get_block_index_(vertices)  # calculate indices for each block of the hessian matrix
         b = np.zeros((hess_size, 1), dtype=np.float32)  # information vector
-        Hessian_data = []  # store data of hessian matrix
-        row_indices = []   # row indices of the corresponding values in H matrix
-        col_indices = []   # column indices of the corresponding values in H matrix
+        Hessian_data = list()  # a list of block matrices
+        row_indices = list()   # row indices of the corresponding values in H matrix
+        col_indices = list()   # column indices of the corresponding values in H matrix
 
         for edge in edges:
             err, A, B = edge.linearize() # calculate error and jacobian matrix
-
             omega = edge.information
+            """     Compute the block matrices and vectors   """
             b1 = (err.T @ omega @ A).T
             b2 = (err.T @ omega @ B).T
             Hii = A.T @ omega @ A
             Hjj = B.T @ omega @ B
             Hij = A.T @ omega @ B
-            Hji = B.T @ omega @ A  # Hij.T
+            Hji = B.T @ omega @ A
 
-            # Update hessian matrix
+            """     Compute the hessian matrix and vector    """
             i1, i2 = indices[edge.id1]
             j1, j2 = indices[edge.id2]
             b[i1:i2, :] += b1
@@ -178,7 +178,7 @@ class Graph:
             H[i1:i2, j1:j2] += Hij
             H[j1:j2, i1:i2] += Hji
             """
-            # calculate indices for block Hessian
+            """     Calculate the indices of the block in the Hessian """
             inxii_1, inxii_2 = self.cartesian_product(i1, i2, i1, i2)
             inxjj_1, inxjj_2 = self.cartesian_product(j1, j2, j1, j2)
             inxij_1, inxij_2 = self.cartesian_product(i1, i2, j1, j2)
@@ -188,13 +188,13 @@ class Graph:
             Hessian_data += (Hii.flatten().tolist() + Hjj.flatten().tolist()
                              + Hij.flatten().tolist() + Hji.flatten().tolist())
 
-        """    add dampling factor     """
+        """    Add damping factor     """
         I = [damp_factor]*number_fix
         ii = [i for i in range(number_fix)]
         Hessian_data += I
         row_indices += ii
         col_indices += ii
-        """   Create a sparse hessian matrix in a efficient way.      """
+        """   Create a sparse hessian matrix and store it by a memory efficient representation.    """
         H = coo_matrix((Hessian_data, (row_indices, col_indices)), shape=(hess_size, hess_size), dtype=np.float32)
         return H, b
 

@@ -24,7 +24,7 @@ from gi.repository import Gtk as gtk
 
 from gui.Frame import Frame
 from gui.Painter import Painter
-
+from matplotlib import pyplot as plt
 # user response codes for file chooser dialog buttons
 LS_DIALOG_RESPONSE_CANCEL = 1
 LS_DIALOG_RESPONSE_ACCEPT = 2
@@ -389,12 +389,14 @@ class Viewer:
         Callback function that handles a click on the "Slam evaluation" button
         :param widget: The corresponding widget
         """
+
         if self.simulator.ekfslam_evaluation is not None:
             self.simulator.ekfslam_evaluation.plot()
         if self.simulator.fastslam_evaluation is not None:
             self.simulator.fastslam_evaluation.plot()
         if self.simulator.graphbasedslam_evaluation is not None:
             self.simulator.graphbasedslam_evaluation.plot()
+
 
     def on_plot_covariances(self, widget):
         """

@@ -236,12 +236,13 @@ class Supervisor:
         if self.graphbasedslam is not None:
             self.graphbasedslam.update(motion_command, zip(measured_distances, sensor_angles, landmark_ids))
         # update mappings
-        if self.ekfslam_mapping is not None:
-            self.ekfslam_mapping.update(zip(measured_distances, sensor_angles))
-        if self.fastslam_mapping is not None:
-            self.fastslam_mapping.update(zip(measured_distances, sensor_angles))
-        if self.graphbasedslam_mapping is not None:
-            self.graphbasedslam_mapping.update(zip(measured_distances, sensor_angles))
+        if self.time > 500:
+            if self.ekfslam_mapping is not None:
+                self.ekfslam_mapping.update(zip(measured_distances, sensor_angles))
+            if self.fastslam_mapping is not None:
+                self.fastslam_mapping.update(zip(measured_distances, sensor_angles))
+            if self.graphbasedslam_mapping is not None:
+                self.graphbasedslam_mapping.update(zip(measured_distances, sensor_angles))
 
     def _send_robot_commands(self):
         """
