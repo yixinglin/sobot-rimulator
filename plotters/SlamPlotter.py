@@ -120,16 +120,21 @@ class GraphSlamPlotter(SlamPlotter):
 
     def plot_graph(self):
         fig = plt.figure()
-        fig.add_subplot(121)
+        fig.add_subplot(131)
         self.slam.graph.draw()
         plt.title("Graph")
         plt.legend()
         plt.axis('square')
 
-        fig.add_subplot(122)
+        fig.add_subplot(132)
         H, _ = self.slam.get_hessian()
         H = np.abs(H)
         plt.matshow(H, cmap="Greys", fignum=False)
-        plt.title("Hessian Matrix")
+        plt.title("Hessian Matrix (Intensity)")
+        H = H / np.max(H)
+        H[H > 0] = 1
+        fig.add_subplot(133)
+        plt.matshow(H, cmap="Greys", fignum=False)
+        plt.title("Hessian Matrix (Binary)")
 
         plt.show()
