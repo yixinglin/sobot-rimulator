@@ -123,7 +123,7 @@ class Simulator:
             if cfg["slam"]["mapping"]["enabled"]:
                 self.ekfslam_mapping_plotter = MappingPlotter(self.world.supervisors[0].ekfslam_mapping, self.viewer, n_frame)
             if self.cfg["slam"]["evaluation"]["enabled"]:
-                self.ekfslam_evaluation = SlamEvaluation(self.world.supervisors[0].ekfslam, self.cfg["slam"]["evaluation"])
+                self.ekfslam_evaluation = SlamEvaluation(self.world.supervisors[0].ekfslam, self.cfg["slam"]["evaluation"], self.world.robots[0])
             n_frame += 1
 
         if cfg["slam"]["fast_slam"]["enabled"]:
@@ -131,7 +131,7 @@ class Simulator:
             if cfg["slam"]["mapping"]["enabled"]:
                 self.fastslam_mapping_plotter = MappingPlotter(self.world.supervisors[0].fastslam_mapping, self.viewer, n_frame)
             if self.cfg["slam"]["evaluation"]["enabled"]:
-                self.fastslam_evaluation = SlamEvaluation(self.world.supervisors[0].fastslam, self.cfg["slam"]["evaluation"])
+                self.fastslam_evaluation = SlamEvaluation(self.world.supervisors[0].fastslam, self.cfg["slam"]["evaluation"], self.world.robots[0])
             n_frame += 1
 
         if cfg["slam"]["graph_based_slam"]["enabled"]:
@@ -140,7 +140,7 @@ class Simulator:
                 self.graphbasedslam_mapping_plotter = MappingPlotter(self.world.supervisors[0].graphbasedslam_mapping, self.viewer, n_frame)
             if self.cfg["slam"]["evaluation"]["enabled"]:
                 self.graphbasedslam_evaluation = SlamEvaluation(self.world.supervisors[0].graphbasedslam,
-                                                                self.cfg["slam"]["evaluation"])
+                                                                self.cfg["slam"]["evaluation"], self.world.robots[0])
             n_frame += 1
 
         # render the initial world

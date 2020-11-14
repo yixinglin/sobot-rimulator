@@ -4,18 +4,22 @@ from matplotlib import pyplot as plt
 from supervisor.slam.EKFSlam import EKFSlam
 from supervisor.slam.FastSlam import FastSlam
 from supervisor.slam.GraphBasedSLAM import GraphBasedSLAM
+from models.obstacles.FeaturePoint import FeaturePoint
 
 class SlamEvaluation:
-    def __init__(self, slam, evaluation_cfg):
+    def __init__(self, slam, evaluation_cfg, robot):
         """
         Initializes an object of the SlamEvaluation class
         :param slam: The slam algorithm that will be evaluated
         :param evaluation_cfg: The configurations for the class.
                                Currently only used to calculate number of simulation cycles
+        :param robot: robot object in the real world
         """
         self.slam = slam
         self.cfg = evaluation_cfg
-        self.average_distances = []
+        self.average_distances_lm = []
+        self.distances_robot = []
+        self.robot = robot
 
     def evaluate(self, obstacles):
         """
@@ -24,8 +28,22 @@ class SlamEvaluation:
         :param obstacles: The list of actual obstacles of the map
         """
         slam_obstacles = self.slam.get_landmarks()
-        min_distances = [self.__find_min_distance(slam_obstacle, obstacles) for slam_obstacle in slam_obstacles]
-        self.average_distances.append(sum(min_distances) / len(min_distances))
+        # min_distances = [self.__find_min_distance(slam_obstacle, obstacles) for slam_obstacle in slam_obstacles]
+
+        # average_distance =
+        #squared_distances = [self.__calc_squared_distance(slam_obstacle, obstacle.pose.sunpack()) for obstacle in
+        #                     obstacles]
+        squared_distances = []
+        for i, slam_obstacle in enumerate(slam_obstacles):
+            slam_obstacle_id = slam_obstacle[2]
+            for obstacle in obstacles:
+                if type(obstacle) == FeaturePoint and obstacle.id == slam_obstacle_id:
+                    sq_dist = self.__calc_squared_distance(slam_obstacle[:2], obstacle.pose.sunpack())
+                    squared_distances.append(sq_dist)
+        self.average_distances_lm.append(sum(squared_distances) / len(squared_distances))
+
+        slam_pose = self.slam.get_estimated_pose()
+        self.distances_robot.append(self.__calc_squared_distance(slam_pose.sunpack(), self.robot.pose.sunpack()))
 
     def plot(self):
         """
@@ -34,8 +52,9 @@ class SlamEvaluation:
         """
         fig, ax = plt.subplots()
         # Calculates number of elapsed simulation cycles
-        sim_cycles = len(self.average_distances) * self.cfg["interval"]
-        ax.plot(range(0, sim_cycles, self.cfg["interval"]), self.average_distances)
+        sim_cycles = len(self.average_distances_lm) * self.cfg["interval"]
+        ax.plot(range(0, sim_cycles, self.cfg["interval"]), self.average_distances_lm)
+        ax.plot(range(0, sim_cycles, self.cfg["interval"]), self.distances_robot)
         ax.grid()
         if isinstance(self.slam, EKFSlam):
             ax.set(xlabel='Simulation cycles', ylabel='Average distance to true landmark in meters',
