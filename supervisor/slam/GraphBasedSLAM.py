@@ -75,8 +75,8 @@ class GraphBasedSLAM(Slam):
         """
         Returns the estimated landmark positions
         """
-        return [(v.pose[0, 0], v.pose[1, 0]) \
-                for v in self.graph.get_estimated_landmark_vertices() ]
+        return [(v.pose[0, 0], v.pose[1, 0], v.landmark_id) \
+                for v in self.graph.get_estimated_landmark_vertices()]
 
     def plot_graph(self):
         """
@@ -121,10 +121,10 @@ class GraphBasedSLAM(Slam):
         """     calculate landmark vertices    """
         for i, zi in enumerate(z):
             # Only execute if sensor has observed landmark
-            if not self.supervisor.proximity_sensor_positive_detections()[i]:
+            if not self.supervisor.proximity_sensor_positive_detections()[i] \
+                or zi[2] == -1: # not a feature
                 continue
             pos_lm = self.calc_landmark_position(self.mu, zi) # calculate x-y position from range-bearing in world coordinate
-
             """   Data Association  """
             vertex3 = self.__data_association(zi) # vertex3 is a vertex of landmark
             if vertex3 == None: # Detect a new landmark, this landmark has not been detected in the past
@@ -138,11 +138,14 @@ class GraphBasedSLAM(Slam):
         measurement, info = PosePoseEdge.encode_measurement(vertex1.pose, vertex2.pose, self.motion_noise)
         self.graph.add_edge(vertex1, vertex2, measurement, info)
 
+        #lm_ids = [v.id for v in self.graph.get_estimated_landmark_vertices()]
+        #print ("graph based slam", lm_ids)
+
     def __back_end(self):
         """
         Back end part of the Graph based slam where the graph optimization is executed.
         """
-        self.graph.graph_optimization(number_fix=self.fix_hessian, damp_factor=1)
+        self.graph.graph_optimization(number_fix=self.fix_hessian, damp_factor=5)
         last_vertex = self.graph.get_last_pose_vertex()
         self.mu = np.copy(last_vertex.pose)  # update current state
         self.Sigma = np.copy(last_vertex.sigma)

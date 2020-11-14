@@ -80,7 +80,7 @@ class FastSlam(Slam):
         :return: List of estimated landmark positions
         """
         particle = self.get_best_particle()
-        return [(x, y) for (x, y) in zip(particle.lm[:, 0], particle.lm[:, 1])]
+        return [(x, y, id) for (x, y, id) in zip(particle.lm[:, 0], particle.lm[:, 1], particle.id)]
 
     def update(self, u, z):
         """
@@ -141,7 +141,8 @@ class FastSlam(Slam):
         for i, (distance, theta, id) in enumerate(z):
             measurement = np.asarray([distance, theta, id])
             # Skip the measuremnt if no landmark was detected
-            if not self.supervisor.proximity_sensor_positive_detections()[i]:
+            if not self.supervisor.proximity_sensor_positive_detections()[i] \
+                or  measurement[2] == -1: # not a feature
                 continue
             for particle in particles:
                 if not self.landmark_correspondence_given:

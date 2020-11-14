@@ -53,7 +53,7 @@ class EKFSlam(Slam):
         Returns the estimated landmark positions
         :return: List of estimated landmark positions
         """
-        return [(x, y) for (x, y) in zip(self.mu[self.robot_state_size::2], self.mu[self.robot_state_size + 1::2])]
+        return [(x, y, id) for (x, y, id) in zip(self.mu[self.robot_state_size::2], self.mu[self.robot_state_size + 1::2], self.landmark_id)]
 
     def get_covariances(self):
         """
@@ -94,7 +94,8 @@ class EKFSlam(Slam):
         # Iterate through all sensor readings
         for i, measurement in enumerate(z):
             # Only execute if sensor observed landmark
-            if not self.supervisor.proximity_sensor_positive_detections()[i]:
+            if not self.supervisor.proximity_sensor_positive_detections()[i]\
+                or measurement[2] == -1: # not a feature
                 continue
             if not self.landmark_correspondence_given:
                 lm_id = self.data_association(self.mu, self.Sigma, measurement[0:2])
