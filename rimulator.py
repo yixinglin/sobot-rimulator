@@ -24,7 +24,7 @@ import gi
 from gi.repository import GLib
 
 from plotters.SlamPlotter import *
-from supervisor.slam.SlamEvaluation import SlamEvaluation
+from supervisor.slam.SlamEvaluation2 import SlamEvaluation2
 
 
 from plotters.MappingPlotter import MappingPlotter
@@ -122,25 +122,18 @@ class Simulator:
             self.ekfslam_plotter = SlamPlotter(self.world.supervisors[0].ekfslam, self.viewer, 0.04, self.cfg["robot"], n_frame)
             if cfg["slam"]["mapping"]["enabled"]:
                 self.ekfslam_mapping_plotter = MappingPlotter(self.world.supervisors[0].ekfslam_mapping, self.viewer, n_frame)
-            if self.cfg["slam"]["evaluation"]["enabled"]:
-                self.ekfslam_evaluation = SlamEvaluation(self.world.supervisors[0].ekfslam, self.cfg["slam"]["evaluation"], self.world.robots[0])
             n_frame += 1
 
         if cfg["slam"]["fast_slam"]["enabled"]:
             self.fastslam_plotter = SlamPlotter(self.world.supervisors[0].fastslam, self.viewer, 0.04, self.cfg["robot"], n_frame)
             if cfg["slam"]["mapping"]["enabled"]:
                 self.fastslam_mapping_plotter = MappingPlotter(self.world.supervisors[0].fastslam_mapping, self.viewer, n_frame)
-            if self.cfg["slam"]["evaluation"]["enabled"]:
-                self.fastslam_evaluation = SlamEvaluation(self.world.supervisors[0].fastslam, self.cfg["slam"]["evaluation"], self.world.robots[0])
             n_frame += 1
 
         if cfg["slam"]["graph_based_slam"]["enabled"]:
             self.graphbasedslam_plotter = GraphSlamPlotter(self.world.supervisors[0].graphbasedslam, self.viewer, 0.04, self.cfg["robot"], n_frame)
             if cfg["slam"]["mapping"]["enabled"]:
                 self.graphbasedslam_mapping_plotter = MappingPlotter(self.world.supervisors[0].graphbasedslam_mapping, self.viewer, n_frame)
-            if self.cfg["slam"]["evaluation"]["enabled"]:
-                self.graphbasedslam_evaluation = SlamEvaluation(self.world.supervisors[0].graphbasedslam,
-                                                                self.cfg["slam"]["evaluation"], self.world.robots[0])
             n_frame += 1
 
         # register mapping plotters to the system
@@ -148,6 +141,13 @@ class Simulator:
                             self.graphbasedslam_mapping_plotter]
         # register slam plotters to the system
         self.reg_slam_plotters = [self.ekfslam_plotter, self.fastslam_plotter, self.graphbasedslam_plotter]
+        # register slam estimations to the system
+        self.reg_slam_evaluations = [self.ekfslam_evaluation, self.fastslam_evaluation, self.graphbasedslam_evaluation]
+
+        if self.cfg["slam"]["evaluation"]["enabled"]:
+            list_slam = [self.world.supervisors[0].ekfslam, self.world.supervisors[0].fastslam, self.world.supervisors[0].graphbasedslam]
+            self.slam_evaluations = SlamEvaluation2(list_slam,
+                    self.cfg["slam"]["evaluation"], self.world.robots[0])
 
         # render the initial world
         self.draw_world()
@@ -235,12 +235,7 @@ class Simulator:
     def _update_slam_accuracies(self):
         # Only perform the SLAM evaluation on specific simulation cycles. The period is configurable.
         if self.num_cycles % self.cfg["slam"]["evaluation"]["interval"] == 0:
-            if self.ekfslam_evaluation is not None:
-                self.ekfslam_evaluation.evaluate(self.world.obstacles)
-            if self.fastslam_evaluation is not None:
-                self.fastslam_evaluation.evaluate(self.world.obstacles)
-            if self.graphbasedslam_evaluation is not None:
-                self.graphbasedslam_evaluation.evaluate(self.world.obstacles)
+            self.slam_evaluations.evaluate(self.world.obstacles)
 
     def _step_sim(self):
         self.num_cycles += 1

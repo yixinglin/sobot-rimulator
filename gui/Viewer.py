@@ -401,12 +401,8 @@ class Viewer:
         :param widget: The corresponding widget
         """
 
-        if self.simulator.ekfslam_evaluation is not None:
-            self.simulator.ekfslam_evaluation.plot()
-        if self.simulator.fastslam_evaluation is not None:
-            self.simulator.fastslam_evaluation.plot()
-        if self.simulator.graphbasedslam_evaluation is not None:
-            self.simulator.graphbasedslam_evaluation.plot()
+        if self.simulator.slam_evaluations is not None:
+            self.simulator.slam_evaluations.plot()
 
 
     def on_plot_covariances(self, widget):

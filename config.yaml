@@ -169,7 +169,7 @@ slam:
     detected_angle: 30
   ekf_slam:
     # Determines whether the EKF SLAM algorithm shall be executed
-    enabled: false
+    enabled: true
     # The mahalanobis distance threshold used in data association
     distance_threshold: 1
     # Configures the motion noise. The values are currently empirically chosen.
