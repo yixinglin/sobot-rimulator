@@ -49,6 +49,7 @@ class Viewer:
         self.fastslam_enabled = slam_cfg["fast_slam"]["enabled"]
         self.graphslambased_enabled = slam_cfg["graph_based_slam"]["enabled"]
         self.use_slam_evaluation = slam_cfg["evaluation"]["enabled"]
+        self.mapping_enabled = slam_cfg["mapping"]["enabled"]
 
         # initialize camera parameters
         self.num_frames = num_frames
@@ -174,6 +175,13 @@ class Viewer:
         self.button_plot_graph.set_image_position(gtk.PositionType.LEFT)
         self.button_plot_graph.connect('clicked', self.on_plot_graph)
 
+        # build the start-mapping button
+        self.start_mapping = False  # controls whether mapping is executed.
+        self.button_start_mapping = gtk.Button("Start Mapping")
+        self._decorate_start_mapping_button_inactive()
+        self.button_start_mapping.set_image_position(gtk.PositionType.LEFT)
+        self.button_start_mapping.connect('clicked', self.on_start_mapping)
+
         # == lay out the window
 
         labels_box = gtk.HBox(spacing=self.view_width_pixels - 52)  # Subtract number of pixels that the text of the labels roughly need
@@ -209,6 +217,9 @@ class Viewer:
 
         if self.graphslambased_enabled:
             information_box.pack_start(self.button_plot_graph, False, False, 0)
+
+        if self.mapping_enabled:
+            information_box.pack_start(self.button_start_mapping, False, False, 0)
 
         if num_frames > 1 and self.use_slam_evaluation:
             information_box.pack_start(self.button_slam_evaluation, False, False, 0)
@@ -412,6 +423,20 @@ class Viewer:
         """
         self.simulator.graphbasedslam_plotter.plot_graph()
 
+    def on_start_mapping(self, widget):
+        """
+        Callback function that handles a click on the "Start Mapping" button
+        :param widget: The corresponding widget
+        :return:
+        """
+        self.start_mapping = not self.start_mapping
+        if self.start_mapping:
+            self._decorate_start_mapping_button_active()
+            self.simulator.draw_world()
+        else:
+            self._decorate_start_mapping_button_inactive()
+            self.simulator.reset_grid_map()
+
 
     def on_expose1(self, widget, context):
         """
@@ -472,3 +497,21 @@ class Viewer:
         draw_invisibles_image.set_from_stock(gtk.STOCK_ADD, gtk.IconSize.BUTTON)
         self.button_draw_invisibles.set_image(draw_invisibles_image)
         self.button_draw_invisibles.set_label('Show Invisibles')
+
+    def _decorate_start_mapping_button_inactive(self):
+        """
+        Specifies the "Start Mapping" button while it is disabled
+        """
+        draw_invisibles_image = gtk.Image()
+        draw_invisibles_image.set_from_stock(gtk.STOCK_ADD, gtk.IconSize.BUTTON)
+        self.button_start_mapping.set_image(draw_invisibles_image)
+        self.button_start_mapping.set_label('Start Mapping')
+
+    def _decorate_start_mapping_button_active(self):
+        """
+        Specifies the "Start Mapping" button while it is enabled
+        """
+        draw_invisibles_image = gtk.Image()
+        draw_invisibles_image.set_from_stock(gtk.STOCK_ADD, gtk.IconSize.BUTTON)
+        self.button_start_mapping.set_image(draw_invisibles_image)
+        self.button_start_mapping.set_label('Reset Mapping')

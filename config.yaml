@@ -169,7 +169,7 @@ slam:
     detected_angle: 30
   ekf_slam:
     # Determines whether the EKF SLAM algorithm shall be executed
-    enabled: true
+    enabled: false
     # The mahalanobis distance threshold used in data association
     distance_threshold: 1
     # Configures the motion noise. The values are currently empirically chosen.
@@ -224,7 +224,7 @@ slam:
     enabled: true
     # Determines the interval of when the accuracy of the generated maps is calculated
     # A low interval (for example 1) causes performance problems
-    interval: 20
+    interval: 18
 
   # Configures the 2D grid map of the occupancy grid mapping algorithm
   mapping:
@@ -237,7 +237,7 @@ slam:
       # Height of the map in meters
       height: 6
       # Number of pixels per meter. The GUI has problem while using grid map of high resolution.
-      resolution: 10
+      resolution: 20
       # offset the origin in the grid map
       offset:
         # offset in meters in horizontal direction

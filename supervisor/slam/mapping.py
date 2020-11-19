@@ -59,6 +59,16 @@ class OccupancyGridMapping2d(Mapping):
         self.prob_unknown = 0.5 # prior
         self.prob_occ = 0.99 # probability perceptual a grid is occupied
         self.prob_free = 0.01 # probability perceptual a grid is free
+
+        self.reset() # initialize the algorithm
+
+
+
+    def reset(self):
+        """
+        reset the map
+        """
+        self.update_enabled = False
         self.map = np.full((self.H, self.W), self.prob_unknown, dtype=np.float32)
         self.L = self.__prob2log(np.full_like(self.map, self.prob_unknown, dtype=np.float32))  # log recursive term of the map
         self.L0 = self.__prob2log(np.full_like(self.map, self.prob_unknown, dtype=np.float32))  # log prior term of the map
@@ -72,6 +82,9 @@ class OccupancyGridMapping2d(Mapping):
         Update the path planning
         :param z: Measurement, represented as tuple of measured distance and measured angle
         """
+        if not self.update_enabled:
+            return
+
         observed_pixs = [] # a list of grid positions and its occupancy probabilities
         lines = self.__calc_lines(z)
         for x0, y0, x1, y1 in lines:
