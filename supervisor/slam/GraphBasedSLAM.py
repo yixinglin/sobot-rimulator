@@ -172,6 +172,7 @@ class GraphBasedSLAM(Slam):
         for v in landmark_vertices:
             if lm_id == v.landmark_id:
                 vertex = v
+                break
         return vertex
 
     def get_estimated_landmark_position(self):

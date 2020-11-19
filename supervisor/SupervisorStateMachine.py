@@ -96,7 +96,7 @@ class SupervisorStateMachine:
 
     def execute_state_slide_right(self):
         if self.condition_at_goal():
-            self.transistion_to_state_at_goal()
+            self.transition_to_state_at_goal()
         elif self.condition_danger():
             self.transition_to_state_avoid_obstacles()
         elif self.condition_progress_made() and not self.condition_slide_right():
