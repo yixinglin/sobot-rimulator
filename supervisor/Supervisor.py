@@ -105,6 +105,10 @@ class Supervisor:
                 path_planner = AStarPlanner() if cfg["slam"]["mapping"]["path_planning"]["enabled"] else None
                 self.graphbasedslam_mapping = OccupancyGridMapping2d(self.graphbasedslam, cfg["slam"], controller_interface, path_planner)
 
+        # register slam objects and mapping objects to the system
+        self.reg_slam = [self.ekfslam, self.fastslam, self.graphbasedslam]
+        self.reg_mapping = [self.ekfslam_mapping, self.fastslam_mapping, self.graphbasedslam_mapping]
+
         # state machine
         self.state_machine = SupervisorStateMachine(self, self.control_cfg)
 
@@ -229,20 +233,20 @@ class Supervisor:
         sensor_angles = [pose.theta for pose in self.proximity_sensor_placements]
         landmark_ids = self.robot.read_landmark_matcher()
         # update LAM estimations
-        if self.ekfslam is not None:
-            self.ekfslam.update(motion_command, zip(measured_distances, sensor_angles, landmark_ids))
-        if self.fastslam is not None:
-            self.fastslam.update(motion_command, zip(measured_distances, sensor_angles, landmark_ids))
-        if self.graphbasedslam is not None:
-            self.graphbasedslam.update(motion_command, zip(measured_distances, sensor_angles, landmark_ids))
-        # update mappings
-        if self.time > 500:
-            if self.ekfslam_mapping is not None:
-                self.ekfslam_mapping.update(zip(measured_distances, sensor_angles))
-            if self.fastslam_mapping is not None:
-                self.fastslam_mapping.update(zip(measured_distances, sensor_angles))
-            if self.graphbasedslam_mapping is not None:
-                self.graphbasedslam_mapping.update(zip(measured_distances, sensor_angles))
+        for slam in self.reg_slam:
+            if slam is not None:
+                slam.update(motion_command, zip(measured_distances, sensor_angles, landmark_ids))
+
+        # update mapping estimations
+        for mapping in self.reg_mapping:
+            if mapping is not None:
+                mapping.update(zip(measured_distances, sensor_angles))
+
+    def reset_grid_mapping(self):
+        # reset mappings
+        for mapping in self.reg_mapping:
+            if mapping is not None:
+                mapping.reset()
 
     def _send_robot_commands(self):
         """

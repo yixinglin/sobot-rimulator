@@ -143,6 +143,12 @@ class Simulator:
                                                                 self.cfg["slam"]["evaluation"], self.world.robots[0])
             n_frame += 1
 
+        # register mapping plotters to the system
+        self.reg_mapping_plotters = [self.ekfslam_mapping_plotter, self.fastslam_mapping_plotter,
+                            self.graphbasedslam_mapping_plotter]
+        # register slam plotters to the system
+        self.reg_slam_plotters = [self.ekfslam_plotter, self.fastslam_plotter, self.graphbasedslam_plotter]
+
         # render the initial world
         self.draw_world()
 
@@ -203,23 +209,22 @@ class Simulator:
         self.pause_sim()
         self.initialize_sim(random=True)
 
+    def reset_grid_map(self):
+        for robot in self.world.robots:
+            robot.supervisor.reset_grid_mapping()
+
     def draw_world(self):
         self.viewer.new_frame()  # start a fresh frame
         self.world_plotter.draw_world_to_frame()  # draw the world onto the frame
-
-        if self.ekfslam_mapping_plotter is not None:
-            self.ekfslam_mapping_plotter.draw_mapping_to_frame()
-        if self.fastslam_mapping_plotter is not None:
-            self.fastslam_mapping_plotter.draw_mapping_to_frame()
-        if self.graphbasedslam_mapping_plotter is not None:
-            self.graphbasedslam_mapping_plotter.draw_mapping_to_frame()
-
-        if self.ekfslam_plotter is not None:
-            self.ekfslam_plotter.draw_slam_to_frame()
-        if self.fastslam_plotter is not None:
-            self.fastslam_plotter.draw_slam_to_frame()
-        if self.graphbasedslam_plotter is not None:
-            self.graphbasedslam_plotter.draw_slam_to_frame()
+        # draw occupancy grid maps to the frame
+        if self.viewer.start_mapping:
+            for plotter in self.reg_mapping_plotters:
+                if plotter is not None:
+                    plotter.draw_mapping_to_frame()
+        # draw the slam estimations to the frame
+        for plotter in self.reg_slam_plotters:
+            if plotter is not None:
+                plotter.draw_slam_to_frame()
 
         self.viewer.draw_frame()  # render the frame
 
