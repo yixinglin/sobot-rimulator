@@ -32,18 +32,41 @@ class SlamEvaluation2:
       if slam is None:
         continue
       slam_obstacles = slam.get_landmarks()
-      squared_distances = []
+      distances = []
       for i, slam_obstacle in enumerate(slam_obstacles):
-        slam_obstacle_id = slam_obstacle[2]
-        for obstacle in obstacles:
-          if type(obstacle) == FeaturePoint and obstacle.id == slam_obstacle_id:
-            sq_dist = self.__calc_squared_distance(slam_obstacle[:2], obstacle.pose.sunpack())
-            squared_distances.append(sq_dist)
+        if self.cfg["associate_by_id"] == True:
+          dist = self.__find_distance_by_landmark_id(slam_obstacle, obstacles)
+        else:
+          dist = self.__find_min_distance(slam_obstacle, obstacles)
+        distances.append(dist)
 
-      self.average_distances_lm[j].append(sum(squared_distances) / len(squared_distances))
+      if (len(distances)) > 0:
+        self.average_distances_lm[j].append(sum(distances) / len(distances))
+        slam_pose = slam.get_estimated_pose()
+        self.distances_robot[j].append(self.__calc_squared_distance(slam_pose.sunpack(), self.robot.pose.sunpack()))
 
-      slam_pose = slam.get_estimated_pose()
-      self.distances_robot[j].append(self.__calc_squared_distance(slam_pose.sunpack(), self.robot.pose.sunpack()))
+  def __find_distance_by_landmark_id(self, slam_obstacle, obstacles):
+    """
+    Finds the distance of the estimated obstacle to the actual obstacle regarding its identifier
+    :param slam_obstacle: An estimated obstacle position of a SLAM algorithm
+    :param obstacles: The list of actual obstacles in the map
+    :return: Distance of estimated obstacle to the actual obstacle
+    """
+    slam_obstacle_id = slam_obstacle[2]
+    for obstacle in obstacles:
+      if type(obstacle) == FeaturePoint and obstacle.id == slam_obstacle_id:
+        sq_dist = self.__calc_squared_distance(slam_obstacle[:2], obstacle.pose.sunpack())
+        return sqrt(sq_dist)
+
+  def __find_min_distance(self, slam_obstacle, obstacles):
+      """
+      Finds the distance of the estimated obstacle to the the closest actual obstacle
+      :param slam_obstacle: An estimated obstacle position of a SLAM algorithm
+      :param obstacles: The list of actual obstacles in the map
+      :return: Distance of estimated obstacle to closest actual obstacle
+      """
+      squared_distances = [self.__calc_squared_distance(slam_obstacle, obstacle.pose.sunpack()) for obstacle in obstacles]
+      return sqrt(min(squared_distances))
 
   def plot(self):
     """

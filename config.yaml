@@ -169,7 +169,7 @@ slam:
     detected_angle: 30
   ekf_slam:
     # Determines whether the EKF SLAM algorithm shall be executed
-    enabled: true
+    enabled: ture
     # The mahalanobis distance threshold used in data association
     distance_threshold: 1
     # Configures the motion noise. The values are currently empirically chosen.
@@ -225,6 +225,9 @@ slam:
     # Determines the interval of when the accuracy of the generated maps is calculated
     # A low interval (for example 1) causes performance problems
     interval: 18
+    # Determine the method of data association,
+    # if true, data wil be associated by landmark identifiers, otherwise by minimum distance
+    associate_by_id: true
 
   # Configures the 2D grid map of the occupancy grid mapping algorithm
   mapping:

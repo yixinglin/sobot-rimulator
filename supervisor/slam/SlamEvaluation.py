@@ -28,11 +28,6 @@ class SlamEvaluation:
         :param obstacles: The list of actual obstacles of the map
         """
         slam_obstacles = self.slam.get_landmarks()
-        # min_distances = [self.__find_min_distance(slam_obstacle, obstacles) for slam_obstacle in slam_obstacles]
-
-        # average_distance =
-        #squared_distances = [self.__calc_squared_distance(slam_obstacle, obstacle.pose.sunpack()) for obstacle in
-        #                     obstacles]
         squared_distances = []
         for i, slam_obstacle in enumerate(slam_obstacles):
             slam_obstacle_id = slam_obstacle[2]
