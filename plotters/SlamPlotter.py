@@ -23,6 +23,7 @@ from matplotlib import pyplot as plt
 import numpy as np
 
 from supervisor.slam.EKFSlam import EKFSlam
+from supervisor.slam.FastSlam import FastSlam
 
 
 class SlamPlotter:
@@ -52,7 +53,7 @@ class SlamPlotter:
 
         # draw all the obstacles
         for landmark in self.slam.get_landmarks():
-            frame.add_circle((landmark[0], landmark[1]), self.radius, "black", alpha=0.6)
+            frame.add_circle((landmark[0], landmark[1]), self.radius, "darkgreen", alpha=0.8)
 
         if self.viewer.draw_invisibles and isinstance(self.slam, EKFSlam):
             self.__draw_confidence_ellipse(frame)

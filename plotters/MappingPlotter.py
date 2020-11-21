@@ -1,3 +1,4 @@
+from math import log
 class MappingPlotter:
 
     def __init__(self, slam_mapping, viewer, frame_number):
@@ -25,9 +26,14 @@ class MappingPlotter:
         for j in range(H):
             for i in range(W):
                 val = map[j, i]  # the occupancy probability
-                if val >= 0.5:
+                if abs(val - 0.5) < 0.0001: # unknown area
                     x, y = self.__to_meter(i, j)
-                    frame.add_rectangle([x, y], self.pixel_size, self.pixel_size, color=(0.5, 0.5, 0.5), alpha=0.5)
+                    frame.add_rectangle([x, y], self.pixel_size, self.pixel_size, color=(0.5, 0.5, 0.5), alpha=0.3)
+                elif val > 0.5:  # occupied area
+                    x, y = self.__to_meter(i, j)
+                    val = 1-val
+                    frame.add_rectangle([x, y], self.pixel_size, self.pixel_size, color=(val, val, val), alpha=0.8)
+
         self.draw_path_planning_to_frame(frame)
         self._draw_goal_to_frame(frame)
 

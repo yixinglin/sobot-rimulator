@@ -57,8 +57,8 @@ class OccupancyGridMapping2d(Mapping):
         self.max_range = supervisor_interface.proximity_sensor_max_range()
 
         self.prob_unknown = 0.5 # prior
-        self.prob_occ = 0.99 # probability perceptual a grid is occupied
-        self.prob_free = 0.01 # probability perceptual a grid is free
+        self.prob_occ = 0.9 # probability perceptual a grid is occupied
+        self.prob_free = 0.1 # probability perceptual a grid is free
 
         self.reset() # initialize the algorithm
 
@@ -91,7 +91,7 @@ class OccupancyGridMapping2d(Mapping):
             x0, y0 = self.__to_gridmap_position(x0, y0) # from position in meters to position in pixels
             x1, y1 = self.__to_gridmap_position(x1, y1) # from position in meters to position in pixels
             points = bresenham_line(x0, y0, x1, y1) # a list of points on the line
-            occ_probs = self.__calc_prob(points)  # calculate the occupancy probabilities on this line
+            occ_probs = self.__inverse_sensor_model(points)  # calculate the occupancy probabilities on this line
             observed_pixs += occ_probs
 
         inverse_sensor = np.copy(self.L0) # initialize the inverse-sensor-model term by prior
@@ -150,30 +150,32 @@ class OccupancyGridMapping2d(Mapping):
             else:
                 self.path = list()
 
-    def __calc_prob(self, points):
+    def __inverse_sensor_model(self, points):
         """
-        Calculate the probability the occupied points on a segment
+        Inverse sensor model. Calculate the probability the occupied points on a segment
         :param points: points on a segment in pixels
         :return:  A list of occupancy probabilities of the grids on the segment.
                     A single item is (x, y, prob) where (x, y) is the prosition of a grid, and prob is the occupancy probability.
         """
+        a = 0.3*self.resolution # the thick of the obstacles
         x0, y0 = points[0] # start point position
-        xn, yn = points[-1] # end point position
-        seg_length = sqrt((xn - x0)**2 + (yn - y0)**2) # the length of the segment
-        max_range_seg =  self.max_range*self.resolution
+        xn, yn = points[-1] # end point position, the position of a obstacle
+        z_t = sqrt((xn - x0)**2 + (yn - y0)**2) # the length of the segment, z_t
+        z_max =  self.max_range*self.resolution
         probs = [] # occupancy probabilities of the grids on the segment.
         for xi, yi in points:
+            r = sqrt((xi - x0) ** 2 + (yi - y0) ** 2)  # a distance of a cell from the robot
             prob = self.prob_unknown
-            if seg_length >= max_range_seg:     # out of range
-                prob = self.prob_unknown        # assign prob with prior
-            if seg_length < max_range_seg:    # likely to be an object
-                prob = self.prob_occ            # assign prob with the occupied probability
-
-            distance = sqrt((xi - x0)**2 + (yi - y0)**2)
-            if distance < seg_length:                  # free space
+            if r > min(z_max, z_t + a*0.5): # return a prior
+                prob = self.prob_unknown
+            if z_t < z_max and abs(r-z_t) < a*0.5: # return a occ probability
+                prob = self.prob_occ
+            if r < z_t:
                 prob = self.prob_free
             probs.append((int(xi), int(yi), prob))
+
         return probs
+
 
     def blur(self, image):
         """
