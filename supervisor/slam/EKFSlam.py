@@ -10,7 +10,7 @@ from models.Pose import Pose
 
 from supervisor.slam.Slam import Slam
 from utils.math_util import normalize_angle
-
+from itertools import cycle
 
 class EKFSlam(Slam):
 
@@ -53,7 +53,7 @@ class EKFSlam(Slam):
         Returns the estimated landmark positions
         :return: List of estimated landmark positions
         """
-        return [(x, y, id) for (x, y, id) in zip(self.mu[self.robot_state_size::2], self.mu[self.robot_state_size + 1::2], self.landmark_id)]
+        return [(x, y, id) for (x, y, id) in zip(self.mu[self.robot_state_size::2], self.mu[self.robot_state_size + 1::2], cycle(self.landmark_id))]
 
     def get_covariances(self):
         """

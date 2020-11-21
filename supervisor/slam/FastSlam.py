@@ -16,6 +16,7 @@ import numpy as np
 from models.Pose import Pose
 from supervisor.slam.Slam import Slam
 from utils.math_util import normalize_angle
+from itertools import cycle
 
 
 class Particle:
@@ -80,7 +81,8 @@ class FastSlam(Slam):
         :return: List of estimated landmark positions
         """
         particle = self.get_best_particle()
-        return [(x, y, id) for (x, y, id) in zip(particle.lm[:, 0], particle.lm[:, 1], particle.id)]
+        landmarks = [(x, y, id) for x, y, id in zip(particle.lm[:, 0], particle.lm[:, 1], cycle(particle.id))]
+        return landmarks
 
     def update(self, u, z):
         """
