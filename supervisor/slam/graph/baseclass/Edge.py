@@ -9,6 +9,7 @@ class Edge:
 
     def __init__(self, id_vertex1, id_vertex2, z, information, list_vertices):
         """
+        A Edge class. It is a component of a graph
         :param id_vertex1: id of previous vertex
         :param id_vertex2: id of current vertex
         :param z: actual measurement obtained by sensor

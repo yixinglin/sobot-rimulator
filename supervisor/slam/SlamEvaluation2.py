@@ -47,7 +47,7 @@ class SlamEvaluation2:
 
   def __find_distance_by_landmark_id(self, slam_obstacle, obstacles):
     """
-    Finds the distance of the estimated obstacle to the actual obstacle regarding its identifier
+    Finds the distance of the estimated obstacle to the actual obstacle regarding its identifiers
     :param slam_obstacle: An estimated obstacle position of a SLAM algorithm
     :param obstacles: The list of actual obstacles in the map
     :return: Distance of estimated obstacle to the actual obstacle
