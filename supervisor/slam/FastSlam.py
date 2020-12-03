@@ -63,7 +63,7 @@ class FastSlam(Slam):
                                      np.deg2rad(slam_cfg["sensor_noise"]["detected_angle"])]) ** 2
         self.motion_noise = np.diag([slam_cfg["fast_slam"]["motion_noise"]["translational_velocity"],
                                      slam_cfg["fast_slam"]["motion_noise"]["rotational_velocity"]]) ** 2
-        self.landmark_correspondence_given = slam_cfg["landmark_matcher"]
+        self.landmark_correspondence_given = slam_cfg["feature_detector"]
     # Create initial list of particles
         self.particles = [Particle(self.landmark_state_size) for _ in range(self.n_particles)]
 

@@ -94,8 +94,8 @@ class Physics:
                 else:
                     sensor.detect(None)
 
-                # if a feature has been extracted from the environment, update the matcher with the feature identifier
+                # if a feature has been extracted from the environment, update the identifiers with the feature identifiers
                 if dmin != float('inf') and type(solid_object) == FeaturePoint:
-                    robot.landmark_matcher.detect(sensor.id, solid_object.id)
+                    robot.feature_detector.detect(sensor.id, solid_object.id)
                 else:
-                    robot.landmark_matcher.detect(sensor.id, -1)
+                    robot.feature_detector.detect(sensor.id, -1)

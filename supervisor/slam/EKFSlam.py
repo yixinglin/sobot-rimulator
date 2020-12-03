@@ -33,7 +33,7 @@ class EKFSlam(Slam):
         self.motion_noise = np.diag([slam_cfg["ekf_slam"]["motion_noise"]["x"],
                                      slam_cfg["ekf_slam"]["motion_noise"]["y"],
                                      np.deg2rad(slam_cfg["ekf_slam"]["motion_noise"]["theta"])]) ** 2
-        self.landmark_correspondence_given = slam_cfg["landmark_matcher"]
+        self.landmark_correspondence_given = slam_cfg["feature_detector"]
         # The estimated combined state vector, initially containing the robot pose at the origin and no landmarks
         self.mu = np.zeros((self.robot_state_size, 1))
         # The state covariance, initially set to absolute certainty of the initial robot pose
@@ -206,11 +206,11 @@ class EKFSlam(Slam):
         if u[1, 0] == 0:
             G = np.array([[0, 0, -dt * u[0] * sin(x[2, 0])],
                            [0, 0, dt * u[0] * cos(x[2, 0])],
-                           [0, 0, 0]])
+                           [0, 0, 0]], dtype=np.float)
         else:
             G = np.array([[0, 0, u[0, 0] / u[1, 0] * (cos(x[2, 0] + dt * u[1, 0]) - cos(x[2, 0]))],
                           [0, 0, u[0, 0] / u[1, 0] * (sin(x[2, 0] + dt * u[1, 0]) - sin(x[2, 0]))],
-                          [0, 0, 0]])
+                          [0, 0, 0]], dtype=np.float)
 
         G = np.identity(self.robot_state_size) + G
         return G

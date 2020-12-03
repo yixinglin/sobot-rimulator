@@ -192,7 +192,7 @@ class MapManager:
             if type(obstacle) == FeaturePoint:
                 continue
             features += self.__generate_feature_obstacle(world, obstacle.global_geometry.vertexes)
-        # add identifier for each feature.
+        # add identifiers for each feature.
         for i, f in enumerate(features):
             f.id = i
 

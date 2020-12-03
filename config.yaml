@@ -157,9 +157,9 @@ slam:
   # These are x position and y position
   # Currently only supports 2
   landmark_state_size: 2
-  # Determines whether landmark-matcher is used
+  # Determines whether landmark-identifiers is used
   # It determines whether correspondences of landmarks are given, i.e. identifies of landmarks are given
-  landmark_matcher: true
+  feature_detector: true
 
   # Configures the sensor noise. The values are currently empirically chosen.
   sensor_noise:

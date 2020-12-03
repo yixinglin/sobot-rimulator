@@ -231,7 +231,7 @@ class Supervisor:
         motion_command = np.array([[v], [yaw]])
         measured_distances = self.proximity_sensor_distances_from_robot_center
         sensor_angles = [pose.theta for pose in self.proximity_sensor_placements]
-        landmark_ids = self.robot.read_landmark_matcher()
+        landmark_ids = self.robot.read_feature_detector()
         # update LAM estimations
         for slam in self.reg_slam:
             if slam is not None:

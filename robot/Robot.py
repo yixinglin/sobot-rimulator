@@ -22,7 +22,7 @@ from models.Polygon import *
 from robot.sensor.ProximitySensor import *
 from supervisor.Supervisor import *
 from robot.sensor.WheelEncoder import *
-from robot.sensor.LandmarkMatcher import *
+from robot.sensor.FeatureDetector import *
 
 class Robot:  # Khepera III robot
 
@@ -54,8 +54,8 @@ class Robot:  # Khepera III robot
             ir_pose = Pose(_pose[0], _pose[1], radians(_pose[2]))
             self.ir_sensors.append(
                 ProximitySensor(self, ir_pose, robot_cfg["sensor"], id))
-        # Landmark Matcher
-        self.landmark_matcher = LandmarkMatcher()
+        # Feature detector
+        self.feature_detector = FeatureDetector()
 
         # dynamics
         self.dynamics = DifferentialDriveDynamics(self.wheel_radius, self.wheel_base_length)
