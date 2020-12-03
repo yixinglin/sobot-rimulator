@@ -14,6 +14,9 @@ import time
 from scipy.sparse import coo_matrix
 from scipy.sparse.linalg import spsolve
 
+import warnings
+from scipy.sparse import (SparseEfficiencyWarning)
+warnings.simplefilter('ignore',SparseEfficiencyWarning)
 
 def timer(function):
     """
