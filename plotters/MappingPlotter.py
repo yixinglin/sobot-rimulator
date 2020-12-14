@@ -26,8 +26,8 @@ class MappingPlotter:
         map = self.slam_mapping.get_map()
         map = 255 - map * 255
         map.astype(int)
+        image = self.matrix_to_image(map, self.pixels_per_meter//self.grid_resolution, self.alpha)
 
-        image = self.matrix_to_image(map, self.pixels_per_meter/self.grid_resolution, self.alpha)
         tx, ty = self.offset
         frame.add_background_image(image, (tx*self.pixels_per_meter, ty*self.pixels_per_meter))
 
@@ -58,28 +58,9 @@ class MappingPlotter:
         :return: an image of map in RGBA format
         """
         H, W = m.shape
-        #resolution = resolution
-        img = np.zeros(( round(H * resolution),
-                         round(W * resolution), 4))
-        img[:, :, 3] = alpha
-        for j in range(0, H):
-            for i in range(0, W):
-                ii1 = round(i * resolution)
-                ii2 = round((i+1) * resolution)
-                jj1 = round(j * resolution)
-                jj2 = round((j+1) * resolution)
-                img[jj1:jj2, ii1:ii2, 0:3] = m[j, i]
+        img = np.full((round(H * resolution), round(W * resolution), 4), alpha)
+        img[:, :, 0:3] = np.kron(m, np.ones((resolution, resolution)))[:,:,np.newaxis]
         return img
-
-    def pixbuf_from_array(z):
-        " Convert from numpy array to GdkPixbuf "
-        z = z.astype('uint8')
-        h, w, c = z.shape
-        assert c == 3 or c == 4
-        if hasattr(GdkPixbuf.Pixbuf, 'new_from_bytes'):
-            Z = GLib.Bytes.new(z.tobytes())
-            return GdkPixbuf.Pixbuf.new_from_bytes(Z, GdkPixbuf.Colorspace.RGB, c == 4, 8, w, h, w * c)
-        return GdkPixbuf.Pixbuf.new_from_data(z.tobytes(), GdkPixbuf.Colorspace.RGB, c == 4, 8, w, h, w * c, None, None)
 
     def _draw_goal_to_frame(self, frame):
         """
