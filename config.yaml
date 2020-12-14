@@ -34,9 +34,9 @@ robot:
   motor:
     noise:
       # Standard deviation of the left wheel's velocity in meters/second while executing a motion command.
-      left_velocity: 0.01 # 0.0001
+      left_velocity: 0.1 # 0.0001
       # Standard deviation of the right wheel's velocity in meters/second while executing a motion command.
-      right_velocity: 0.01 # 0.0001
+      right_velocity: 0.1 # 0.0001
 
   # Configures the sensors used by the robot
   sensor:
@@ -101,7 +101,7 @@ map:
       # Minimum amount of generated obstacles 25
       min_count: 2
       # Maximum amount of generated obstacles 30
-      max_count: 4
+      max_count: 2
       # Minimum distance to origin
       min_distance: 0.2
       # Maximum distance to origin
@@ -196,7 +196,7 @@ slam:
 
   graph_based_slam:
     # Determines whether the Graph-based SLAM algorithm shall be executed
-    enabled: false
+    enabled: true
     # The euclidean distance threshold [m] used in data association.
     # If the distance between the estimated landmarks via slam and via actual measurement
     # larger than the threshold, start backend
@@ -205,8 +205,8 @@ slam:
     optimization_interval: 50
     # The timestep interval of executing the frontend part.
     frontend_interval: 5
-    # Vertex density of frontend. minimum distance [m] between the current pose and the last pose.
-    frontend_density: 0.1
+    # Pose density of frontend, meaning the minimum distance [m] between the current pose and the last pose.
+    frontend_pose_density: 0.1
     # Configures the motion noise. The values are currently empirically chosen.
     motion_noise:
       # Standard deviation of the robots x-coordinate in meters after executing a motion command.

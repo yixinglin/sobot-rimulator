@@ -41,7 +41,7 @@ from robot.RobotSupervisorInterface import *
 from simulation.World import *
 
 from plotters.WorldPlotter import *
-from simulation.exceptions import CollisionException
+from simulation.exceptions import CollisionException, GoalNotReachedException
 
 
 class Simulator:
@@ -265,6 +265,12 @@ class Simulator:
         except GoalReachedException:
             if self.cfg["map"]["goal"]["endless"]:
                 self.map_manager.add_new_goal()
+                self.map_manager.apply_to_world(self.world)
+            else:
+                self.end_sim("Goal Reached!")
+        except GoalNotReachedException:
+            if self.cfg["map"]["goal"]["endless"]:
+                self.map_manager.add_new_goal(self.world) # add a new goal not far from the robot
                 self.map_manager.apply_to_world(self.world)
             else:
                 self.end_sim("Goal Reached!")

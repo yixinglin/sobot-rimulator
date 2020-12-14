@@ -23,3 +23,6 @@ class CollisionException(Exception):
 
 class GoalReachedException(Exception):
     pass
+
+class GoalNotReachedException(Exception):
+    pass

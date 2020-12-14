@@ -18,9 +18,9 @@
 
 
 from supervisor.ControlState import *
-from simulation.exceptions import GoalReachedException
+from simulation.exceptions import GoalReachedException, GoalNotReachedException
 from utils import linalg2_util as linalg
-
+from supervisor.slam.Timer import Timer
 
 class SupervisorStateMachine:
 
@@ -40,6 +40,8 @@ class SupervisorStateMachine:
 
         self.cfg = control_config
 
+        self.timer = Timer()
+
     def update_state(self):
         """
         Update the control state
@@ -56,6 +58,12 @@ class SupervisorStateMachine:
             self.execute_state_go_to_goal()
         else:
             raise Exception("undefined supervisor state or behavior", self.current_state)
+
+        # change the goal if robot cannot reach it in time
+        if self.timer.not_reach_goal_in_time(self.supervisor.goal):
+            self.transition_to_state_go_to_goal()
+            print ("GoalNotReachedException: Not reach the goal in time.")
+            raise GoalNotReachedException()  # add a new goal not far from the robot
 
     # === STATE PROCEDURES ===
     def execute_state_go_to_goal(self):
@@ -91,7 +99,9 @@ class SupervisorStateMachine:
             self.transition_to_state_at_goal()
         elif self.condition_danger():
             self.transition_to_state_avoid_obstacles()
-        elif self.condition_progress_made() and not self.condition_slide_left():
+        elif self.condition_progress_made() and \
+            (self.timer.previous_best_distance_not_changed_in_time(self.best_distance_to_goal)
+                or not self.condition_slide_left()):
             self.transition_to_state_go_to_goal()
 
     def execute_state_slide_right(self):
@@ -99,7 +109,9 @@ class SupervisorStateMachine:
             self.transition_to_state_at_goal()
         elif self.condition_danger():
             self.transition_to_state_avoid_obstacles()
-        elif self.condition_progress_made() and not self.condition_slide_right():
+        elif self.condition_progress_made() and \
+            (self.timer.previous_best_distance_not_changed_in_time(self.best_distance_to_goal)
+             or not self.condition_slide_right()):
             self.transition_to_state_go_to_goal()
 
     # def execute_state_gtg_and_ao( self ):
