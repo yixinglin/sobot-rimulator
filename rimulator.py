@@ -97,6 +97,8 @@ class Simulator:
         Initializes the simulated world
         :param random: Boolean value specifying if a random map shall be generated
         """
+        # reset the simulation cycles
+        self.num_cycles = 0
         # reset the viewer
         self.viewer.control_panel_state_init()
 
@@ -144,10 +146,19 @@ class Simulator:
         # register slam estimations to the system
         self.reg_slam_evaluations = [self.ekfslam_evaluation, self.fastslam_evaluation, self.graphbasedslam_evaluation]
 
+        self.slam_evaluation = None
         if self.cfg["slam"]["evaluation"]["enabled"]:
             list_slam = [self.world.supervisors[0].ekfslam, self.world.supervisors[0].fastslam, self.world.supervisors[0].graphbasedslam]
-            self.slam_evaluations = SlamEvaluation2(list_slam,
-                    self.cfg["slam"]["evaluation"], self.world.robots[0])
+            self.slam_evaluation = SlamEvaluation2(list_slam,
+                                                   self.cfg["slam"]["evaluation"], self.world.robots[0])
+            for slam in list_slam:
+                if slam is not None:
+                    slam.callback = self.slam_evaluation.time_per_step  # set the callback function
+            list_mapping = [self.world.supervisors[0].ekfslam_mapping, self.world.supervisors[0].fastslam_mapping,
+                         self.world.supervisors[0].graphbasedslam_mapping]
+            for mapping in list_mapping:
+                if mapping is not None:
+                    mapping.callback = self.slam_evaluation.time_per_step  # set the callback function
 
         # render the initial world
         self.draw_world()
@@ -189,6 +200,9 @@ class Simulator:
         """
         self.pause_sim()
         self.initialize_sim()
+
+        if self.slam_evaluation is not None:
+            self.slam_evaluation.reset_record()
 
     def save_map(self, filename):
         """
@@ -234,8 +248,12 @@ class Simulator:
 
     def _update_slam_accuracies(self):
         # Only perform the SLAM evaluation on specific simulation cycles. The period is configurable.
-        if self.num_cycles % self.cfg["slam"]["evaluation"]["interval"] == 0:
-            self.slam_evaluations.evaluate(self.world.obstacles)
+        if self.num_cycles % self.cfg["slam"]["evaluation"]["interval"] == 0 \
+            and self.slam_evaluation is not None:
+            self.slam_evaluation.evaluate(self.world.obstacles)
+        # record data on each the simulation cycles
+        if self.slam_evaluation is not None:
+            self.slam_evaluation.record(self.num_cycles, self.world.obstacles)
 
     def _step_sim(self):
         self.num_cycles += 1

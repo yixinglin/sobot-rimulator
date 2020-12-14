@@ -19,9 +19,13 @@ It is recommended to run the simulator directly on your native machine. For this
 - Python 3: Please follow the instructions at http://www.python.org/download/
 - PyGTK 3: Please follow the instructions at https://pygobject.readthedocs.io/en/latest/getting_started.html
 
+An additional dependency (see [scikit-sparse](https://scikit-sparse.readthedocs.io/en/latest/overview.html)) is required:
+
+    sudo apt-get install libsuitesparse-dev
+
 Additional dependencies can then be installed using `pip`
 
-    pip3 install matplotlib numpy scipy
+    pip3 install matplotlib numpy scipy pandas
     pip3 install pyyaml
     
 The simulator is then started by 
