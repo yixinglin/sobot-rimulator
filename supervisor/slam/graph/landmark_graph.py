@@ -5,7 +5,6 @@ from supervisor.slam.graph.baseclass.Vertex import Vertex
 from supervisor.slam.graph.baseclass.Edge import Edge
 from supervisor.slam.graph.baseclass.Graph import Graph
 from supervisor.slam.graph.vetor2matrix import *
-from utils.math_util import normalize_angle
 import math
 
 """       Define Vertex Classes        
@@ -330,10 +329,7 @@ class LMGraph(Graph):
                 raise RuntimeError()
         return pose, landmarks
 
-    def normalize_angles(self, vertices):
-        for v in vertices:
-            if isinstance(v, PoseVertex):
-                v.pose[2, 0] = normalize_angle(v.pose[2, 0])
+
 
     def get_last_pose_vertex(self):
         """

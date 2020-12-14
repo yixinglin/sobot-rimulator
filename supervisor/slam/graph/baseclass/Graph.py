@@ -6,6 +6,11 @@ The parent class of any types of graph
 The Graph class has to be inherited and the following methods has to be implemented,
         - generate_edge_object(self, vertex1, vertex2, z, information)
         - normalize_angles(self, vertices):
+
+Please install the scikit-sparse package (https://scikit-sparse.readthedocs.io/en/latest/overview.html)
+    On Debian/Ubuntu systems, the following command should suffice:
+        $ sudo apt-get install python-scipy libsuitesparse-dev
+        $ pip install --user scikit-sparse
 """
 
 import matplotlib.pyplot as plt
@@ -13,10 +18,8 @@ import numpy as np
 import time
 from scipy.sparse import coo_matrix
 from scipy.sparse.linalg import spsolve
-
-import warnings
-from scipy.sparse import (SparseEfficiencyWarning)
-warnings.simplefilter('ignore',SparseEfficiencyWarning)
+from sksparse.cholmod import cholesky
+from utils.math_util import normalize_angle
 
 def timer(function):
     """
@@ -77,7 +80,9 @@ class Graph:
         In this method you're going to normalize angles of robot's orientation of the vertices
         :param vertices: vertices of the graph
         """
-        raise NotImplementedError()
+        for v in vertices:
+            if v.dim == 3: # a robot pose
+                v.pose[2, 0] = normalize_angle(v.pose[2, 0])
 
     def compute_global_error(self):
         """
@@ -88,38 +93,54 @@ class Graph:
             global_err += edge.calc_error() # error of an edge
         return global_err
 
-    def graph_optimization(self, animation = False, number_fix = 3, damp_factor = 0.01, max_iter = 10):
+    def graph_optimization(self, number_fix = 3,
+                           damp_factor = 0.01, max_iter = 10,
+                           solver = "spsolve", callback = None, epsilon = 1e-2):
         """
         Optimization of the graph
-        :param animation: decide whether animation shall be shown
         :param number_fix: fix the estimation of the initial step
         :param damp_factor: how fasten you want to fix a vertex.
         :param max_iter: the maximum number of iterations
-        :return: global error after optimization
+        :param callback: a callback function, callback(vertices, edges, info)
+        :param difference for determining convergence
+        :return: epsilon global error after optimization
         """
         global_error = np.inf
         preError = np.inf
         for i in range(max_iter):
             """     linearize the problem   """
+            start_time = time.time()
             H, b = self.linearize_constraints(self.vertices, self.edges, number_fix, damp_factor)
+            linearize_time_cost = time.time() - start_time
             """     solve sparse matrix    """
-            dx = self.__solve_sparse(H, b)
+            start_time = time.time()
+            dx = self.solve_sparse(H, b, solver = solver)
+            solve_time_cost = time.time() - start_time
             """     update vertices        """
-            self.__apply_dx(dx) # x = x + dx;
+            self.apply_dx(dx) # x = x + dx;
             global_error = self.compute_global_error()
             diff = dx.T @ dx
-            #print ("iter: {0}, diff: {1}, Global Error: {2}".format(i, diff, global_error))
-            if animation == True:
-                self.draw()
+
+            if callback is not None:
+                info = {"global_error": global_error, "iteration": i+1,
+                        "linearize_time_cost": linearize_time_cost,
+                        "solve_time_cost": solve_time_cost}
+                callback(self.vertices, self.edges, info)
 
             dError = abs(preError - global_error)  # check convergence
             preError = global_error
-            if dError < 0.01 or diff < 0.01:
-                self.__apply_covariance(H)
+            if dError < epsilon or diff < epsilon:
+                self.apply_covariance(H)
                 break
+
+            if np.max(np.abs(dx)) < 0.001:
+                damp_factor *= 2
+            else:
+                damp_factor /= 2
+
         return global_error
 
-    def __apply_covariance(self, H):
+    def apply_covariance(self, H):
         H = H.tocsr()
         indices, hess_size = self.get_block_index_(self.vertices)
         for id, vertex in enumerate(self.vertices):
@@ -152,28 +173,30 @@ class Graph:
                 H: the hessian matrix (information matrix)
                 b: information vector
         """
-        indices, hess_size = self.get_block_index_(vertices)  # calculate indices for each block of the hessian matrix
-        b = np.zeros((hess_size, 1), dtype=np.float32)  # information vector
-        Hessian_data = list()  # a list of block matrices
-        row_indices = list()   # row indices of the corresponding values in H matrix
-        col_indices = list()   # column indices of the corresponding values in H matrix
+        indices, hess_size = self.get_block_index_(vertices)  # calculate indices for each block in the hessian matrix
+        b = np.zeros((hess_size, 1), dtype=np.float64)  # initialize an information vector
+        Hessian_data = list()  # a list to store the block matrices (flattened)
+        row_indices = list()   # a list of row indices for the corresponding values in H matrix
+        col_indices = list()   # a list of column indices for the corresponding values in H matrix
 
+        """    [ISSUE] This for-loop for calculating H and b cost time!    """
         for edge in edges:
-            err, A, B = edge.linearize() # calculate error and jacobian matrix
-            omega = edge.information
+            err, A, B = edge.linearize() # calculate error and obtain the Jacobian matrices A and B
+            omega = edge.information # the information matrix
             """     Compute the block matrices and vectors   """
-            b1 = (err.T @ omega @ A).T
-            b2 = (err.T @ omega @ B).T
+            bi = (err.T @ omega @ A).T
+            bj = (err.T @ omega @ B).T
             Hii = A.T @ omega @ A
             Hjj = B.T @ omega @ B
             Hij = A.T @ omega @ B
             Hji = B.T @ omega @ A
 
+
             """     Compute the hessian matrix and vector    """
             i1, i2 = indices[edge.id1]
             j1, j2 = indices[edge.id2]
-            b[i1:i2, :] += b1
-            b[j1:j2, :] += b2
+            b[i1:i2, :] += bi
+            b[j1:j2, :] += bj
 
             """
             H[i1:i2, i1:i2] += Hii
@@ -181,7 +204,7 @@ class Graph:
             H[i1:i2, j1:j2] += Hij
             H[j1:j2, i1:i2] += Hji
             """
-            """     Calculate the indices of the block in the Hessian """
+            """     Calculate the indices of the block in the Hessian  """
             inxii_1, inxii_2 = self.cartesian_product(i1, i2, i1, i2)
             inxjj_1, inxjj_2 = self.cartesian_product(j1, j2, j1, j2)
             inxij_1, inxij_2 = self.cartesian_product(i1, i2, j1, j2)
@@ -197,23 +220,38 @@ class Graph:
         Hessian_data += I
         row_indices += ii
         col_indices += ii
-        """   Create a sparse hessian matrix and store it by a memory efficient representation.    """
-        H = coo_matrix((Hessian_data, (row_indices, col_indices)), shape=(hess_size, hess_size), dtype=np.float32)
+        """ Storing the sparse matrix with a memory efficient representation.
+                Fast constructing a sparse hessian matrix (COO format). 
+                Note that duplicate entries are summed together.    
+                Convert CSC format for faster arithmetic and matrix vector operations.
+        """
+        H = coo_matrix((Hessian_data, (row_indices, col_indices)),
+                       shape=(hess_size, hess_size),
+                       dtype=np.float64).tocsc()
+
         return H, b
 
-    def __solve_sparse(self, H, b):
+    def solve_sparse(self, H, b, solver = "spsolve"):
         """
         Solve the linear system H @ dx = -b, where dx is unknown
-        :param H: A sparse hessian matrix
-        :param b: An information matrix
+        :param H: A sparse hessian matrix, and also a sparse, symmetric, positive-definite matrix.
+        :param b: An information matrix.
+        :param solver: solver to solve the linear system.
         :return:
                 dx: the solution.
         """
-        dx = spsolve(H, -b)
-        dx = np.array(dx)[:, np.newaxis]
+        if solver == "cholesky":
+            factor = cholesky(H)
+            dx = factor(-b)
+        elif solver == "spsolve":
+            dx = spsolve(H, -b)
+            dx = np.array(dx)[:, np.newaxis]
+        else:
+            print(" Incorrect solver name!")
+            raise ValueError
         return dx
 
-    def __apply_dx(self, dx):
+    def apply_dx(self, dx):
         """
         A apply the increment dx on all vertices of the graph
         :param dx: increment
