@@ -26,6 +26,7 @@ from models.Pose import Pose
 from models.Polygon import Polygon
 from models.obstacles.RectangleObstacle import RectangleObstacle
 from models.obstacles.FeaturePoint import FeaturePoint
+from utils import linalg2_util as linalg
 seed(42)
 
 
@@ -60,16 +61,28 @@ class MapManager:
         # apply the new obstacles and goal to the world
         self.apply_to_world(world)
 
-    def add_new_goal(self):
+    def add_new_goal(self, world = None):
         """
         Adds a new goal
         """
+        i = 100000
+        max_dist = self.cfg["goal"]["max_distance"]
         while True:
+            i -= 1
             goal = self.__generate_new_goal()
             intersects = self.__check_obstacle_intersections(goal)
-            if not intersects:
+            if not intersects and world is None:
                 self.current_goal = goal
                 break
+            elif not intersects and world is not None: # add a new goal not far from the robot
+                rob_x, rob_y = world.robots[0].supervisor.estimated_pose.vposition()
+                distance_to_robot = linalg.distance([rob_x, rob_y], goal)
+                if distance_to_robot < 1 and distance_to_robot > 0.5: # being able to a new goal not far from the robot
+                    self.current_goal = goal
+                    break
+                if rob_x**2 + rob_y**2 > max_dist**2: # not being able to a new goal near the robot
+                    self.current_goal = goal
+                    break
 
     def __generate_octagon_obstacles(self, world):
         """
