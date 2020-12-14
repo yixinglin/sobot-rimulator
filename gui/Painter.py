@@ -20,7 +20,9 @@
 from math import *
 
 from gui.ColorPalette import *
-
+import gi
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gdk, GdkPixbuf, GLib
 
 class Painter:
 
@@ -38,11 +40,11 @@ class Painter:
         :param widget: The widget onto which the frame is drawn
         :param context: The cairo context to be used
         """
-        width_pixels = widget.get_allocated_width()
-        height_pixels = widget.get_allocated_height()
+        self.width_pixels = widget.get_allocated_width()
+        self.height_pixels = widget.get_allocated_height()
 
         # transform the the view to metric coordinates
-        context.translate(width_pixels / 2.0, height_pixels / 2.0)  # move origin to center of window
+        context.translate(self.width_pixels / 2.0, self.height_pixels / 2.0)  # move origin to center of window
         context.scale(self.pixels_per_meter,
                       -self.pixels_per_meter)  # pull view to edges of window ( also flips y-axis )
 
@@ -87,6 +89,10 @@ class Painter:
                                     component['height'],
                                     component['color'],
                                     component['alpha'])
+            elif component['type'] == 'bg_image':
+                self.draw_background_image(context,
+                                           component['image'],
+                                           component['translate'])
 
     def draw_ellipse(self, context,
                      pos, angle,
@@ -181,6 +187,24 @@ class Painter:
         context.rectangle(pos[0], pos[1], width, height)
         context.fill()
 
+    def draw_background_image(self, context, image, translate):
+      """
+      Draws an background_image
+      :param context:
+      :param image:  Image in RGBA format, (numpy array)
+      :param alpha: Alpha value of the color
+      : param translate: (tx, ty), tx: amount to translate in the X direction, ty: amount to translate in the Y direction
+      """
+      context.scale(1/self.pixels_per_meter, 1/self.pixels_per_meter)
+      h, w, c = image.shape
+      assert c == 3 or c == 4
+      pixbuf = self.array_to_pixbuf(image)
+      tx, ty = translate
+      Gdk.cairo_set_source_pixbuf(context, pixbuf, -tx, -ty)
+      context.paint()
+      context.scale(self.pixels_per_meter,
+                    self.pixels_per_meter)
+
     def set_color(self, cairo_context, color_string, alpha):
         """
         Sets a color of the cairo context
@@ -189,6 +213,22 @@ class Painter:
         :param alpha: Alpha value of the color
         """
         ColorPalette.dab(cairo_context, color_string, alpha)
+
+    def array_to_pixbuf(self, arr):
+      """
+      Convert from numpy array to GdkPixbuf
+      :param arr: an numpy array of image in RGBA format
+      :return: GdkPixbuf object
+      """
+      arr = arr.astype('uint8')
+      h, w, c = arr.shape
+      assert c == 3 or c == 4
+      if hasattr(GdkPixbuf.Pixbuf, 'new_from_bytes'):
+        Z = GLib.Bytes.new(arr.tobytes())
+        return GdkPixbuf.Pixbuf.new_from_bytes(Z, GdkPixbuf.Colorspace.RGB, c == 4, 8, w, h, w * c)
+      return GdkPixbuf.Pixbuf.new_from_data(arr.tobytes(), GdkPixbuf.Colorspace.RGB, c == 4, 8, w, h, w * c, None, None)
+
+
 
 
 

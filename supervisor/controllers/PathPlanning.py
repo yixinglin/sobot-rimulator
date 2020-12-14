@@ -49,7 +49,8 @@ class AStarPlanner(PathPlanner):
         goal_node = self.Node(gx, gy, 0, -1, 0)
 
         if self.__vertify_node(start_node) == False or self.__vertify_node(goal_node) == False:
-            raise ValueError() # start or goal  is not valid
+            # raise ValueError() # start or goal  is not valid
+            return list()
 
         open_set = dict() # open set, i.e. a set of nodes to be evaluated
         closed_set = dict() # closed set, i.e. a set of nodes already evaluated

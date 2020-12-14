@@ -401,8 +401,8 @@ class Viewer:
         :param widget: The corresponding widget
         """
 
-        if self.simulator.slam_evaluations is not None:
-            self.simulator.slam_evaluations.plot()
+        if self.simulator.slam_evaluation is not None:
+            self.simulator.slam_evaluation.plot()
 
 
     def on_plot_covariances(self, widget):

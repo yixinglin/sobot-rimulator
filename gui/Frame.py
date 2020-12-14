@@ -118,6 +118,19 @@ class Frame:
             'alpha': alpha
         })
 
+    def add_background_image(self, image, translate):
+        """
+        Adds a background image to the list of objects to be drawn
+        :param pixbuf: image in RGBA format, (numpy array)
+        :param translate: (tx, ty), tx: amount to translate in the X direction, ty: amount to translate in the Y direction
+        """
+        self.draw_list.append({
+            'type': 'bg_image',
+            'image': image,
+            'translate': translate
+        })
+
+
 
 
 
