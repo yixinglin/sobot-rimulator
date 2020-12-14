@@ -3,7 +3,7 @@ EKF SLAM
 Based on implementation of Atsushi Sakai (https://github.com/AtsushiSakai/PythonRobotics),
 which I have also made contributions to, see pull requests #255, #258 and #305
 """
-
+import time
 import numpy as np
 from math import *
 from models.Pose import Pose
@@ -14,12 +14,13 @@ from itertools import cycle
 
 class EKFSlam(Slam):
 
-    def __init__(self, supervisor_interface, slam_cfg, step_time):
+    def __init__(self, supervisor_interface, slam_cfg, step_time, callback = None):
         """
         Initializes an object of the EKFSlam class
         :param supervisor_interface: The interface to interact with the robot supervisor
         :param slam_cfg: The configuration for the SLAM algorithm
         :param step_time: The discrete time that a single simulation cycle increments
+        :param callback: callback function
         """
         # Bind the supervisor interface
         self.supervisor = supervisor_interface
@@ -41,6 +42,8 @@ class EKFSlam(Slam):
         # The list of landmark IDs.
         self.landmark_id = list()
 
+        self.callback = callback
+
     def get_estimated_pose(self):
         """
         Returns the estimated robot pose by retrieving the first three elements of the combined state vector
@@ -53,7 +56,7 @@ class EKFSlam(Slam):
         Returns the estimated landmark positions
         :return: List of estimated landmark positions
         """
-        return [(x, y, id) for (x, y, id) in zip(self.mu[self.robot_state_size::2], self.mu[self.robot_state_size + 1::2], cycle(self.landmark_id))]
+        return [(x[0], y[0], id) for (x, y, id) in zip(self.mu[self.robot_state_size::2], self.mu[self.robot_state_size + 1::2], cycle(self.landmark_id))]
 
     def get_covariances(self):
         """
@@ -68,8 +71,14 @@ class EKFSlam(Slam):
         :param u: Motion command
         :param z: List of sensor measurements. A single measurement is a tuple of measured distance and measured angle.
         """
+        start_time = time.time()
+
         self.prediction_step(u)
         self.correction_step(z)
+
+        if self.callback is not None:
+            self.callback(str(self), time.time() - start_time) # time used for updating
+
 
     def prediction_step(self, u):
         """
@@ -291,3 +300,5 @@ class EKFSlam(Slam):
         lm = mu[R + L * i: R + L * (i + 1), :]
         return lm
 
+    def __str__(self):
+        return "EKF SLAM"

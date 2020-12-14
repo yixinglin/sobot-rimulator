@@ -8,6 +8,7 @@ Most significant changes made:
 - Change resampling algorithm
 """
 
+import time
 from math import cos, sin, sqrt, atan2, exp, pi
 
 import numpy as np
@@ -44,12 +45,13 @@ class Particle:
 
 class FastSlam(Slam):
 
-    def __init__(self, supervisor_interface, slam_cfg, step_time):
+    def __init__(self, supervisor_interface, slam_cfg, step_time, callback = None):
         """
         Creates a FastSlam object
         :param supervisor_interface: The interface to interact with the robot supervisor
         :param slam_cfg: The configuration for the SLAM algorithm
         :param step_time: The discrete time that a single simulation cycle increments
+        :param callback: callback function
         """
         # Bind the supervisor interface
         self.supervisor = supervisor_interface
@@ -66,6 +68,7 @@ class FastSlam(Slam):
         self.landmark_correspondence_given = slam_cfg["feature_detector"]
     # Create initial list of particles
         self.particles = [Particle(self.landmark_state_size) for _ in range(self.n_particles)]
+        self.callback = callback
 
     def get_estimated_pose(self):
         """
@@ -91,10 +94,16 @@ class FastSlam(Slam):
         :param z: Sensor measurements
         :return: Updated list of particles
         """
+        start_time = time.time()
+
         # prediction step
         self.particles = self.predict_particles(self.particles, u)
         # correction step
         self.correction_step(z)
+
+        if self.callback is not None:
+            self.callback(str(self), time.time() - start_time) # time used for updating
+
         return self.particles
 
     def correction_step(self, z):
@@ -393,3 +402,5 @@ class FastSlam(Slam):
         lm[0, 1] = particle.y + z[0] * sin(z[1] + particle.theta)
         return lm
 
+    def __str__(self):
+        return "FastSLAM"
