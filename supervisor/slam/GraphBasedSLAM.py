@@ -1,12 +1,10 @@
 import time
-from supervisor.slam.graph.landmark_graph import *
+from supervisor.slam.graph.landmark_graph import LMGraph, PoseLandmarkEdge, PosePoseEdge, PoseVertex, LandmarkVertex
 from supervisor.slam.Slam import Slam
 from utils.math_util import normalize_angle
 from models.Pose import Pose
 import numpy as np
 from math import *
-
-optimize_allowed = True
 
 class GraphBasedSLAM(Slam):
 
@@ -20,7 +18,7 @@ class GraphBasedSLAM(Slam):
         """
         # Bind the supervisor interface
         self.supervisor = supervisor_interface
-
+        self.draw_trajectory = slam_cfg["graph_based_slam"]["draw_trajectory"]
         # Extract relevant configurations
         self.dt = step_time
         self.robot_state_size = slam_cfg["robot_state_size"]
@@ -29,27 +27,24 @@ class GraphBasedSLAM(Slam):
         self.motion_noise = np.diag([slam_cfg["graph_based_slam"]["motion_noise"]["x"],
                                      slam_cfg["graph_based_slam"]["motion_noise"]["y"],
                                      np.deg2rad(slam_cfg["graph_based_slam"]["motion_noise"]["theta"])]) ** 2
-        self.min_distance_threshold = slam_cfg["graph_based_slam"]["distance_threshold"] # minimum distance for data assosiation
+        # distance threshold for determining optimization
+        self.min_distance_threshold = slam_cfg["graph_based_slam"]["distance_threshold"]
         self.frontend_pose_density = slam_cfg["graph_based_slam"]["frontend_pose_density"]
-        self.optimization_interval = slam_cfg["graph_based_slam"]['optimization_interval'] # the number interval of pose-vertices added that the graph optimization is executed.
         self.frontend_interval = slam_cfg["graph_based_slam"]['frontend_interval']   # the timestep interval of executing the frontend part.
-
+        self.num_fixed_vertices = slam_cfg["graph_based_slam"]["num_fixed_vertexes"]
         # The estimated combined state vector, initially containing the robot pose at the origin and no landmarks
         self.mu = np.zeros((self.robot_state_size, 1))
         self.Sigma = np.zeros((self.robot_state_size, self.robot_state_size)) # The state covariance, initially set to absolute certainty of the initial robot pose
         self.step_counter = 0
         self.graph = LMGraph()
-        self.fix_hessian = 0 # number of fixed vertices while the graph optimzation.
-        self.__init_first_step()  # initialize the first step
-        self.flg_optim = False
 
+        self.flg_optim = False
         self.callback = callback
 
-    def __init_first_step(self):
-        """    add the initial robot pose as the first pose-vertex     """
+        # add the first node to the graph
         vertex1 = PoseVertex(self.mu, np.eye(3))
         self.graph.add_vertex(vertex1)
-        self.fix_hessian += 3 # fix this vertex
+
 
     def get_estimated_pose(self):
         """
@@ -164,7 +159,11 @@ class GraphBasedSLAM(Slam):
         """
         Back end part of the Graph based slam where the graph optimization is executed.
         """
-        self.graph.graph_optimization(number_fix=self.fix_hessian, damp_factor=5, solver="cholesky")
+        fix_hessian = 0
+        for i in range(self.num_fixed_vertices): # fix the first 20 vertices
+            fix_hessian += self.graph.vertices[i].dim
+
+        self.graph.graph_optimization(number_fix=fix_hessian, damp_factor=5, solver="cholesky")
         last_vertex = self.graph.get_last_pose_vertex()
         self.mu = np.copy(last_vertex.pose)  # update current state
         self.Sigma = np.copy(last_vertex.sigma)

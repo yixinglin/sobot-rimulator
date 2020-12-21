@@ -105,12 +105,15 @@ class GraphSlamPlotter(SlamPlotter):
 
     def __init__(self, slam, viewer, radius, robot_config, frame_number):
         SlamPlotter.__init__(self, slam, viewer, radius, robot_config, frame_number)
+        self.count = 0
 
     def draw_slam_to_frame(self):
         SlamPlotter.draw_slam_to_frame(self)
         frame = self.viewer.current_frames[self.frame_number]
-        self.robot_estimated_traverse_path = self.slam.get_estimated_trajectory()
-        self.__draw_robot_estimated_traverse_path_to_frame(frame)
+        self.count += 1
+        if self.slam.draw_trajectory:
+            self.robot_estimated_traverse_path = self.slam.get_estimated_trajectory()
+            self.__draw_robot_estimated_traverse_path_to_frame(frame)
 
     def __draw_robot_estimated_traverse_path_to_frame(self, frame):
         # Draw traverse path of the robot estimated by the Graph-based SLAM

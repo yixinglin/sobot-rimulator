@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 class PoseVertex(Vertex):
 
   def __init__(self, id, pose):
-    Vertex.__init__(self, pose, None, None)
+    Vertex.__init__(self, pose, None)
     assert pose.shape[0] == 3
     self.id = id
 
@@ -24,8 +24,8 @@ class PoseVertex(Vertex):
 
 class PosePoseEdge(Edge):
 
-  def __init__(self, id_vertex1, id_vertex2, z, information, list_vertices):
-    Edge.__init__(self, id_vertex1, id_vertex2, z, information, list_vertices)
+  def __init__(self, vertex1, vertex2, z, information):
+    Edge.__init__(self, vertex1, vertex2, z, information)
 
   def calc_error_vector(self, x1, x2, z):
       """
@@ -56,9 +56,7 @@ class PosePoseEdge(Edge):
     B = np.array([[c, s, 0],
                  [-s, c, 0],
                  [0, 0, 1]])
-
-    e = self.calc_error_vector(x1, x2, z)
-    return e, A, B
+    return A, B
 
   def __str__(self):
       x, y, yaw = np.squeeze(self.z)

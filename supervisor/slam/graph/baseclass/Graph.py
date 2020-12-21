@@ -193,8 +193,8 @@ class Graph:
 
 
             """     Compute the hessian matrix and vector    """
-            i1, i2 = indices[edge.id1]
-            j1, j2 = indices[edge.id2]
+            i1, i2 = indices[edge.vertex1.id]
+            j1, j2 = indices[edge.vertex2.id]
             b[i1:i2, :] += bi
             b[j1:j2, :] += bj
 
@@ -233,7 +233,7 @@ class Graph:
 
     def solve_sparse(self, H, b, solver = "spsolve"):
         """
-        Solve the linear system H @ dx = -b, where dx is unknown
+        Solve the sparse linear system H @ dx = -b, where dx is unknown
         :param H: A sparse hessian matrix, and also a sparse, symmetric, positive-definite matrix.
         :param b: An information matrix.
         :param solver: solver to solve the linear system.

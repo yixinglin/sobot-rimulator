@@ -235,7 +235,7 @@ class Supervisor:
         # update LAM estimations
         for slam in self.reg_slam:
             if slam is not None:
-                slam.update(motion_command, zip(measured_distances, sensor_angles, landmark_ids))
+                slam.update(np.copy(motion_command), zip(measured_distances, sensor_angles, landmark_ids))
 
         # update mapping estimations
         for mapping in self.reg_mapping:

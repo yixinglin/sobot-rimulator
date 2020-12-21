@@ -203,8 +203,8 @@ class OccupancyGridMapping2d(Mapping):
         Calculate the start points end end points of segments.
         :param z: Measurement, represented as tuple of measured distance and measured angle
         :return:
-                A list of segments. A single line is represented by (x0, y0, x1, y1)
-                    where (x0, y0) is the position of the start point and (x1, y1) is the position of the end point.
+                A list of segments. A single line is represented by (x0, y0, x, y1)
+                    where (x0, y0) is the position of the start point and (x, y1) is the position of the end point.
         """
         pose = self.slam.get_estimated_pose().sunpack()
         lines = []

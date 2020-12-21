@@ -62,6 +62,7 @@ class SupervisorStateMachine:
         # change the goal if robot cannot reach it in time
         if self.timer.not_reach_goal_in_time(self.supervisor.goal):
             self.transition_to_state_go_to_goal()
+            self.timer.reset()
             print ("GoalNotReachedException: Not reach the goal in time.")
             raise GoalNotReachedException()  # add a new goal not far from the robot
 

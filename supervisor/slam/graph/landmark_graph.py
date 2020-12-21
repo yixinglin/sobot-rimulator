@@ -14,13 +14,13 @@ Vertex
 """
 class PoseVertex(Vertex):
 
-    def __init__(self, pose, sigma, observation = None):
+    def __init__(self, pose, sigma):
         """
         :param pose: robot pose. [x, y, yaw].T
         :param sigma: covariance matrix
         :param observation: observation of landmarks
         """
-        Vertex.__init__(self, pose, sigma, observation)
+        Vertex.__init__(self, pose, sigma)
         assert pose.shape[0] == 3
         assert sigma.shape == (3, 3)
 
@@ -28,21 +28,15 @@ class PoseVertex(Vertex):
         x, y, yaw = np.squeeze(self.pose)
         return "Pose[id = {0}, pose = {1}]".format(self.id, (x, y, yaw))
 
-    def __sub__(self, other):
-        X2 = v2t(self.pose)  # current
-        X1 = v2t(other.pose)    # previous
-        Z = inv(X1) @ X2
-        z = t2v(Z)
-        return Vertex(z, None)
-
 class LandmarkVertex(Vertex):
 
     def __init__(self, pose, sigma, landmark_id):
         """
         :param pose: landmark position. [x, y].T
         :param sigma: covariance matrix
+        :param landmark_id: the landmark identifier in the map
         """
-        Vertex.__init__(self, pose, sigma, None)
+        Vertex.__init__(self, pose, sigma)
         assert pose.shape[0] == 2
         assert sigma.shape == (2, 2)
         self.landmark_id = landmark_id
@@ -51,10 +45,6 @@ class LandmarkVertex(Vertex):
     def __str__(self):
         x, y = np.squeeze(self.pose)
         return "Landmark[id = {0}, pose = {1}]".format(self.id, (x, y))
-
-    def __sub__(self, other):
-        assert isinstance(other, PoseVertex)
-        return Vertex(self.pose - other.pose[0:2, :], None)
 
 """      Define Edge Classes       
 Edge
@@ -65,16 +55,15 @@ Edge
 
 class PosePoseEdge(Edge):
 
-    def __init__(self, id_vertex1, id_vertex2, z, information, list_vertices):
+    def __init__(self, vertex1, vertex2, z, information):
         """
-        :param id_vertex1: id of previous vertex
-        :param id_vertex2: id of current vertex
+        :param vertex1: id of previous vertex
+        :param vertex2: id of current vertex
         :param z: actual measurement obtained by sensor
         :param information: information matrix
-        :param list_vertices: list of vertices used to look up. a single vertex is a Vertex object.
         """
 
-        Edge.__init__(self, id_vertex1, id_vertex2, z, information, list_vertices)
+        Edge.__init__(self, vertex1, vertex2, z, information)
         assert isinstance(self.vertex1, PoseVertex)
         assert isinstance(self.vertex2, PoseVertex)
         assert z.shape == (3, 1)
@@ -87,13 +76,14 @@ class PosePoseEdge(Edge):
 
         :param x1: 3x1 vector of previous state.
         :param x2: 3x1 vector of current state.
-        :param z:  3x1 vector of measurement from x1 to x2.
-        :return: an error vector, jacobian matrices A, B.
+        :param z:  3x1 vector of measurement from x to m.
+        :return:
+                e12: an error vector, jacobian matrices A, B.
         """
         # calculate homogeneous matrices.
         Z = v2t(z) # homogeneous matrix of vector z
-        X1 = v2t(x1) # homogeneous matrix of vector x1
-        X2 = v2t(x2) # # homogeneous matrix of vector x2
+        X1 = v2t(x1) # homogeneous matrix of vector x
+        X2 = v2t(x2) # # homogeneous matrix of vector m
         e12 = t2v(inv(Z) @ inv(X1) @ X2)
         return e12
 
@@ -121,11 +111,10 @@ class PosePoseEdge(Edge):
 
         :param x1: 3x1 vector of previous pose.
         :param x2: 3x1 vector of current pose.
-        :param z:  3x1 vector of measurement from x1 to x2.
+        :param z:  3x1 vector of measurement from x to m.
         :return: an error vector, jacobian matrices A, B.
-                e 3x1 error of the constraint.
-                A 3x3 Jacobian wrt x1.
-                B 3x3 Jacobian wrt x2.
+                A 3x3 Jacobian wrt x.
+                B 3x3 Jacobian wrt m.
         """
         c = cos(x1[2, 0] + z[2, 0])
         s = sin(x1[2, 0] + z[2, 0])
@@ -138,9 +127,7 @@ class PosePoseEdge(Edge):
         B = np.array([[c, s, 0],
                      [-s, c, 0],
                      [0, 0, 1]])
-
-        e = self.calc_error_vector(x1, x2, z)
-        return e, A, B
+        return A, B
 
     def __str__(self):
         x, y, yaw = np.squeeze(self.z)
@@ -149,8 +136,11 @@ class PosePoseEdge(Edge):
 
 class PoseLandmarkEdge(Edge):
 
-    def __init__(self, id_vertex1, id_vertex2, z, information, list_vertices):
-        Edge.__init__(self, id_vertex1, id_vertex2, z, information, list_vertices)
+    def __init__(self, vertex1, vertex2, z, information):
+        """
+        For x-y sensor model
+        """
+        Edge.__init__(self, vertex1, vertex2, z, information)
         assert isinstance(self.vertex1, PoseVertex)
         assert isinstance(self.vertex2, LandmarkVertex)
         assert z.shape == (2, 1)
@@ -159,52 +149,56 @@ class PoseLandmarkEdge(Edge):
     @staticmethod
     def encode_measurement(observation, covariance):
         """
-        Encode the raw_measurement of landmark observation.
-        The vector meas_xy represents how the robot sees a landmark. This vector is a cartesian coordinate (x, y).
+        Encode the raw_measurement of range-bearing observation.
+        The vector z_xy represents how the robot sees a landmark. This vector is a cartesian coordinate (x, y).
         The Jacobian matrix of the error function is calculated by this model.
         :param observation: The raw measurement from range bearing sensor (distance, angle)
         :param covariance: The covariance matrix of the measurement
         return
-                meas_xy: a encoded measurement vector (x, y) related to the robot, which will be set to an edge as a measurement vector z.
+                z_xy: a encoded measurement vector (x, y) related to the robot, which will be set to an edge as a measurement vector z.
                 info: an information matrix
         """
         info = inv(covariance)
-        meas_xy = np.array([[observation[0] * cos(observation[1])],
+        z_xy = np.array([[observation[0] * cos(observation[1])],
                             [observation[0] * sin(observation[1])]])
-        return meas_xy, info
+        return z_xy, info
 
-    def calc_error_vector(self, x1, x2, z):
-
-        X1 = v2t(x1) # homogeneous matrix of vector x1
-        R1 = X1[0:2, 0:2]  # rotation matrix
-        e12 = R1.T @ (x2 - x1[0:2, :]) - z
-        return e12
-
-    def linearize_constraint(self, x, lm, z):
+    def calc_error_vector(self, x, m, z):
         """
         Compute the error of a pose-landmark constraint.
-        :param x1: 3x1 vector (x,y,theta) of the robot pose.
-        :param lm: 2x1 vector (x,y) of the landmark.
+        :param x: 3x1 vector (x,y,theta) of the robot pose.
+        :param m:  2x1 vector (x,y) of the landmark position.
+        :param z:  2x1 vector (x,y) of the actual measurement.
+        :return:
+               e 2x1 error of the constraint.
+        """
+        X = v2t(x) # homogeneous matrix of pose x
+        R = X[0:2, 0:2]  # rotation matrix
+        e = R.T @ (m - x[0:2, :]) - z
+        return e
+
+    def linearize_constraint(self, x, m, z):
+        """
+        Compute the error of a pose-landmark constraint.
+        :param x: 3x1 vector (x,y,theta) of the robot pose.
+        :param m: 2x1 vector (x,y) of the landmark.
         :param z: 2x1 vector (x,y) of the measurement, the position of the landmark in.
                 the coordinate frame of the robot given by the vector x.
         :return:
-            e 2x1 error of the constraint.
-            A 2x3 Jacobian wrt x.
-            B 2x2 Jacobian wrt lm.
+            A 2x3 Jacobian w.r.t. x.
+            B 2x2 Jacobian w.r.t. m.
         """
         theta_i = x[2, 0]
-        xi, yi = x[0, 0], x[1, 0]
-        xl, yl = lm[0, 0], lm[1, 0]
-        # Compute eij partial derivative with respect to pose x
+        delta_x = m[0, 0] - x[0, 0]
+        delta_y = m[1, 0] - x[1, 0]
+        # Compute  partial derivative of e with respect to pose x and landmark m
         c = cos(theta_i)
         s = sin(theta_i)
-        A = np.array([[-c, -s, -(xl - xi) * s + (yl - yi) * c],
-                      [s, -c, -(xl - xi) * c - (yl - yi) * s]])
+        A = np.array([[-c, -s, -delta_x * s + delta_y * c],
+                      [s, -c, -delta_x * c - delta_y * s]])
         B = np.array([[c, s],
                       [-s, c]])
-
-        e = self.calc_error_vector(x, lm, z)
-        return e, A, B
+        return A, B
 
     def __str__(self):
         x, y, yaw = np.squeeze(self.z)
@@ -213,8 +207,11 @@ class PoseLandmarkEdge(Edge):
 
 class PoseLandmarkEdge2(Edge):
 
-    def __init__(self, id_vertex1, id_vertex2, z, information, list_vertices):
-        Edge.__init__(self, id_vertex1, id_vertex2, z, information, list_vertices)
+    def __init__(self, vertex1, vertex2, z, information):
+        """
+        For range/bearing sensor model
+        """
+        Edge.__init__(self, vertex1, vertex2, z, information)
         assert isinstance(self.vertex1, PoseVertex)
         assert isinstance(self.vertex2, LandmarkVertex)
         assert z.shape == (2, 1)
@@ -254,11 +251,10 @@ class PoseLandmarkEdge2(Edge):
     def linearize_constraint(self, x, lm, z):
         """
         Compute the error of a pose-landmark constraint.
-        :param x1: 3x1 vector [x,y,theta].T of the robot pose.
+        :param x: 3x1 vector [x,y,theta].T of the robot pose.
         :param lm: 2x1 vector [x, y].T of the landmark position.
         :param z: 2x1 vector [distance, angle].T of the actual measurement
         :return:
-            e 2x1 error of the constraint.
             A 2x3 Jacobian wrt x.
             B 2x2 Jacobian wrt lm.
         """
@@ -270,8 +266,7 @@ class PoseLandmarkEdge2(Edge):
                           [delta_y, -delta_x, -q]]) / q
         B = np.array([[sq*delta_x, sq*delta_y],
                           [-delta_y, delta_x]]) / q
-        e = self.calc_error_vector(x, lm, z)
-        return e, A, B
+        return A, B
 
 
 """   Define Graph Class
@@ -304,9 +299,9 @@ class LMGraph(Graph):
 
         if isinstance(vertex1, PoseVertex) and isinstance(vertex2, LandmarkVertex):
             # edge is an Edge object
-            edge = PoseLandmarkEdge(vertex1.id, vertex2.id, z, information, self.vertices)
+            edge = PoseLandmarkEdge(vertex1, vertex2, z, information)
         elif isinstance(vertex1, PoseVertex) and isinstance(vertex2, PoseVertex):
-            edge = PosePoseEdge(vertex1.id, vertex2.id, z, information, self.vertices)
+            edge = PosePoseEdge(vertex1, vertex2, z, information)
         else:
             raise ValueError()
 
@@ -316,7 +311,7 @@ class LMGraph(Graph):
         """
         :return:
                 pose: number of PoseVertex objects
-                landmarks number of LandmarkVertex objects
+                landmarks: number of LandmarkVertex objects
         """
         pose = 0
         landmarks = 0
@@ -333,7 +328,7 @@ class LMGraph(Graph):
 
     def get_last_pose_vertex(self):
         """
-            Return the last vertex of poses
+            Return the last vertex object of poses
         """
         v_pose = None
         for v in reversed(self.vertices):

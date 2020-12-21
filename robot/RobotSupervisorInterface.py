@@ -57,6 +57,6 @@ class RobotSupervisorInterface:
         :param v_l: Velocity of left wheel
         :param v_r: Velocity of right wheel
         """
-        v_l += normal(0, self.motor_noise[0])
-        v_r += normal(0, self.motor_noise[1])
+        v_l = v_l + normal(0, self.motor_noise[0])
+        v_r = v_r + normal(0, self.motor_noise[1])
         self.robot.set_wheel_drive_rates(v_l, v_r)

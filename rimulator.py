@@ -24,7 +24,7 @@ import gi
 from gi.repository import GLib
 
 from plotters.SlamPlotter import *
-from supervisor.slam.SlamEvaluation2 import SlamEvaluation2
+from supervisor.slam.SlamEvaluation import SlamEvaluation2
 
 
 from plotters.MappingPlotter import MappingPlotter
@@ -43,6 +43,7 @@ from simulation.World import *
 from plotters.WorldPlotter import *
 from simulation.exceptions import CollisionException, GoalNotReachedException
 
+import time
 
 class Simulator:
 
@@ -104,6 +105,9 @@ class Simulator:
 
         # create the simulation world
         self.world = World(self.period)
+
+        # time cost in a step [ms]
+        self.t = 0
 
         # create the robot
         robot = Robot(self.cfg["robot"])
@@ -243,8 +247,12 @@ class Simulator:
         self.viewer.draw_frame()  # render the frame
 
     def _run_sim(self):
-        self.sim_event_source = GLib.timeout_add(int(self.period * 1000), self._run_sim)
+        x = 100
+        interval = max(self.t + 10, self.period*1000/x)
+        self.sim_event_source = GLib.timeout_add(int(interval), self._run_sim)
+        start_time = time.time()
         self._step_sim()
+        self.t = int((time.time() - start_time)*1000) # time cost in a step [ms]
 
     def _update_slam_accuracies(self):
         # Only perform the SLAM evaluation on specific simulation cycles. The period is configurable.
@@ -283,7 +291,9 @@ class Simulator:
 
 
 if __name__ == "__main__":
-    filename = "config.yaml" if len(sys.argv) == 1 else sys.argv[1]
+    filename = "config_graph_based_slam.yaml" if len(sys.argv) == 1 else sys.argv[1]
+    # filename = "original_config.yaml" if len(sys.argv) == 1 else sys.argv[1]
+
     with open(filename, 'r') as ymlfile:
         cfg = yaml.safe_load(ymlfile)
     Simulator(cfg)

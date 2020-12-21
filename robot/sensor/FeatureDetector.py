@@ -9,7 +9,7 @@ class FeatureDetector(Sensor):
 
   def __init__(self):
     """
-    Identifiers: a dictionary that maps sensor identifiers to feature identifiers
+    identifiers: a dictionary that maps sensor identifiers to feature identifiers
     """
     self.identifiers = dict()
 

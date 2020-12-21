@@ -9,6 +9,9 @@ class Timer:
     """
 
     def __init__(self):
+        self.reset()
+
+    def reset(self):
         # Timing how long does the robot not reach the goal?
         self.previous_goal = [0, 0]
         self.start_time_to_goal = time.time()

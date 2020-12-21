@@ -69,7 +69,7 @@ class EKFSlam(Slam):
         """
         Performs a full update cycle consisting of prediction and correction step
         :param u: Motion command
-        :param z: List of sensor measurements. A single measurement is a tuple of measured distance and measured angle.
+        :param z: List of sensor measurements. A single measurement is a tuple of measured distance, measured angle and associated index of landmark.
         """
         start_time = time.time()
 
