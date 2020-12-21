@@ -91,7 +91,7 @@ class FastSlam(Slam):
         """
         Performs a full update step of the FastSLAM algorithm
         :param u: Motion command
-        :param z: Sensor measurements
+        :param z: Sensor measurements (r, phi, id).T
         :return: Updated list of particles
         """
         start_time = time.time()
@@ -128,9 +128,9 @@ class FastSlam(Slam):
             px[1, 0] = particle.y
             px[2, 0] = particle.theta
             # Apply noise to the motion command
-            u += (np.random.randn(1, 2) @ self.motion_noise ** 0.5).T
+            ud = u + (np.random.randn(1, 2) @ self.motion_noise ** 0.5).T
             # Apply noise-free motion with noisy motion command
-            px = self.motion_model(px, u, self.dt)
+            px = self.motion_model(px, ud, self.dt)
             # Update particle
             particle.x = px[0, 0]
             particle.y = px[1, 0]
@@ -326,7 +326,7 @@ class FastSlam(Slam):
         :return: updated estimated landmark position, updated landmark covariance
         """
         K = (landmark_cov @ H.T) @ np.linalg.inv(Psi)
-        landmark += K @ innovation
+        landmark = landmark + K @ innovation
         landmark_cov = (np.identity(len(landmark_cov)) - (K @ H)) @ landmark_cov
         return landmark, landmark_cov
 
