@@ -27,7 +27,7 @@ from models.Polygon import Polygon
 from models.obstacles.RectangleObstacle import RectangleObstacle
 from models.obstacles.FeaturePoint import FeaturePoint
 from utils import linalg2_util as linalg
-seed(42)
+#seed(42)
 
 
 class MapManager:
@@ -51,8 +51,8 @@ class MapManager:
             obstacles += self.__generate_octagon_obstacles(world)
         if self.cfg["obstacle"]["rectangle"]["enabled"]:
             obstacles += self.__generate_rectangle_obstacles(world)
-
-        obstacles += self.__generate_features(world, obstacles)
+        if self.cfg["obstacle"]["feature"]["enabled"]:
+            obstacles += self.__generate_features(world, obstacles)
 
         # update the current obstacles and goal
         self.current_obstacles = obstacles
@@ -65,9 +65,9 @@ class MapManager:
         """
         Adds a new goal
         """
-        i = 100000
+        i = 3000
         max_dist = self.cfg["goal"]["max_distance"]
-        while True:
+        while i>0:
             i -= 1
             goal = self.__generate_new_goal()
             intersects = self.__check_obstacle_intersections(goal)
@@ -168,17 +168,22 @@ class MapManager:
                 obstacles.append(obstacle)
         return obstacles
 
-    def __generate_feature_line(self, world, x0, y0, x1, y1):
+    def __generate_feature_line2(self, world, x0, y0, x1, y1):
         r = 8  # resolution: pixs/meter
         obs_radius = 0.04
         line = geometrics.bresenham_line(x0*r, y0*r, x1*r, y1*r)
         test_geometries = [r.global_geometry for r in world.robots]
+
         obstacles = []
         for x, y in line:
             x = x/r
             y = y/r
             theta = -pi + (random() * 2 * pi)
             obstacle = FeaturePoint(obs_radius, Pose(x, y, theta), 0)
+
+            # intersects = self.__check_obstacle_intersections([x,y])
+            # if not intersects:
+            #     obstacles.append(obstacle)
             intersects = False
             for test_geometry in test_geometries:
                 intersects |= geometrics.convex_polygon_intersect_test(test_geometry, obstacle.global_geometry)
@@ -186,7 +191,41 @@ class MapManager:
                 obstacles.append(obstacle)
         return obstacles
 
+    def feature_test_geometry(self, x,y):
+        n = 6
+        r = 0.3
+        goal_test_geometry = []
+        for i in range(n):
+            goal_test_geometry.append(
+                [x + r * cos(i * 2 * pi / n), y + r * sin(i * 2 * pi / n)]
+            )
+        test_geometry = Polygon(goal_test_geometry)
+        return test_geometry
+
+
+    def __generate_feature_line(self, x0, y0, x1, y1, obs_radius, density):
+        c = density  # feature density
+        a = atan2((y1-y0), (x1-x0))
+        obstacles = []
+        x = x0; y = y0
+
+        dx = copysign(c * cos(a), x1 - x0)
+        dy = copysign(c * sin(a), y1 - y0)
+        length = int((x1 - x0) // dx)
+        for i in range(length):
+            x += dx
+            y += dy
+            theta = -pi + (random() * 2 * pi)
+            nx = dx*(random()-1)*2
+            ny = dy*(random()-1)*2
+            feature = FeaturePoint(obs_radius, Pose(x + nx, y + ny, theta), 0)
+
+            obstacles.append(feature)
+        return obstacles
+
     def __generate_feature_obstacle(self, world, vertexes):
+        radius = self.cfg["obstacle"]["feature"]["radius"]
+        density = self.cfg["obstacle"]["feature"]["density"]
         num_vertexes = len(vertexes)
         obstacles = []
         for i in range(num_vertexes):
@@ -195,8 +234,8 @@ class MapManager:
             y0 = vertexes[i][1]
             x1 = vertexes[j][0]
             y1 = vertexes[j][1]
-            obstacles += self.__generate_feature_line(world, x0, y0, x1, y1)
-            obstacles.pop()
+            obstacles += self.__generate_feature_line(x0, y0, x1, y1, radius, density)
+            #obstacles.pop()
         return obstacles
 
     def __generate_features(self, world, obstacles):
@@ -209,6 +248,7 @@ class MapManager:
         for i, f in enumerate(features):
             f.id = i
 
+        print ("#Feature: ", len(features))
         return features
 
     def __generate_new_goal(self):
