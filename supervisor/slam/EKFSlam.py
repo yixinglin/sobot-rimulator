@@ -29,8 +29,8 @@ class EKFSlam(Slam):
         self.distance_threshold = slam_cfg["ekf_slam"]["distance_threshold"]
         self.robot_state_size = slam_cfg["robot_state_size"]
         self.landmark_state_size = slam_cfg["landmark_state_size"]
-        self.sensor_noise = np.diag([slam_cfg["sensor_noise"]["detected_distance"],
-                                     np.deg2rad(slam_cfg["sensor_noise"]["detected_angle"])]) ** 2
+        self.sensor_noise = np.diag([slam_cfg["ekf_slam"]["sensor_noise"]["detected_distance"],
+                                     np.deg2rad(slam_cfg["ekf_slam"]["sensor_noise"]["detected_angle"])]) ** 2
         self.motion_noise = np.diag([slam_cfg["ekf_slam"]["motion_noise"]["x"],
                                      slam_cfg["ekf_slam"]["motion_noise"]["y"],
                                      np.deg2rad(slam_cfg["ekf_slam"]["motion_noise"]["theta"])]) ** 2

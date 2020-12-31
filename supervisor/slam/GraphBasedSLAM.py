@@ -32,6 +32,8 @@ class GraphBasedSLAM(Slam):
         self.frontend_pose_density = slam_cfg["graph_based_slam"]["frontend_pose_density"]
         self.frontend_interval = slam_cfg["graph_based_slam"]['frontend_interval']   # the timestep interval of executing the frontend part.
         self.num_fixed_vertices = slam_cfg["graph_based_slam"]["num_fixed_vertexes"]
+        # solver
+        self.solver = slam_cfg["graph_based_slam"]['solver'].lower()
         # The estimated combined state vector, initially containing the robot pose at the origin and no landmarks
         self.mu = np.zeros((self.robot_state_size, 1))
         self.Sigma = np.zeros((self.robot_state_size, self.robot_state_size)) # The state covariance, initially set to absolute certainty of the initial robot pose
@@ -44,6 +46,8 @@ class GraphBasedSLAM(Slam):
         # add the first node to the graph
         vertex1 = PoseVertex(self.mu, np.eye(3))
         self.graph.add_vertex(vertex1)
+      
+        self.counter = 0
 
 
     def get_estimated_pose(self):
@@ -88,6 +92,7 @@ class GraphBasedSLAM(Slam):
         :param u: Motion command, A single item is a vector of [[translational_velocity], [angular_velocity]]
         :param z: List of measurements. A single item is a tuple of (range, angle, landmark_id)
         """
+        self.counter += 1
         start_time = time.time()
 
         self.mu = self.motion_model(self.mu, u, self.dt) # Calculate next step
@@ -100,7 +105,7 @@ class GraphBasedSLAM(Slam):
             self.__front_end(z)
             num_vertices = len(self.graph.vertices) #  #vertices = #poses + #landmarks
             if num_vertices > 0 and self.flg_optim == True:
-                print ("Graph-based SLAM starts the backend-optimization with " +
+                print (str(self.counter) + ": " + "Graph-based SLAM starts the backend-optimization with " +
                        str(num_vertices) + " vertices")
                 self.flg_optim = False
                 self.__back_end()
@@ -163,7 +168,7 @@ class GraphBasedSLAM(Slam):
         for i in range(self.num_fixed_vertices): # fix the first 20 vertices
             fix_hessian += self.graph.vertices[i].dim
 
-        self.graph.graph_optimization(number_fix=fix_hessian, damp_factor=5, solver="cholesky")
+        self.graph.graph_optimization(number_fix=fix_hessian, damp_factor=5, solver=self.solver)
         last_vertex = self.graph.get_last_pose_vertex()
         self.mu = np.copy(last_vertex.pose)  # update current state
         self.Sigma = np.copy(last_vertex.sigma)

@@ -61,8 +61,8 @@ class FastSlam(Slam):
         self.n_particles = slam_cfg["fast_slam"]["n_particles"]
         self.robot_state_size = slam_cfg["robot_state_size"]
         self.landmark_state_size = slam_cfg["landmark_state_size"]
-        self.sensor_noise = np.diag([slam_cfg["sensor_noise"]["detected_distance"],
-                                     np.deg2rad(slam_cfg["sensor_noise"]["detected_angle"])]) ** 2
+        self.sensor_noise = np.diag([slam_cfg["fast_slam"]["sensor_noise"]["detected_distance"],
+                                     np.deg2rad(slam_cfg["fast_slam"]["sensor_noise"]["detected_angle"])]) ** 2
         self.motion_noise = np.diag([slam_cfg["fast_slam"]["motion_noise"]["translational_velocity"],
                                      slam_cfg["fast_slam"]["motion_noise"]["rotational_velocity"]]) ** 2
         self.landmark_correspondence_given = slam_cfg["feature_detector"]
@@ -300,6 +300,13 @@ class FastSlam(Slam):
         particle.w *= self.compute_importance_factor(innovation, Psi)
 
         return particle
+
+    def get_particles(self):
+        """
+        Get position and weight of particles.
+        :return:
+        """
+        return [(p.x, p.y, p.w) for p in self.particles]
 
     @staticmethod
     def compute_importance_factor(innovation, Psi):

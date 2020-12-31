@@ -110,6 +110,13 @@ class PoseGraph(Graph):
     plt.title("Hessian Matrix (Binary)")
     plt.show()
 
+def find_vertex_by_id(id, vertices):
+  for v in vertices:
+    if id == v.id:
+      return v
+  return None
+
+
 def read_data(filename):
   """
   Read the g2o file
@@ -140,7 +147,9 @@ def read_data(filename):
                        [b, d, e],
                        [c, e, g]], dtype=np.float32)
       z = np.array([x, y, yaw], dtype=np.float32)[:, np.newaxis]
-      edge = PosePoseEdge(i, j, z, info, vertices)
+      vi = find_vertex_by_id(i, vertices)
+      vj = find_vertex_by_id(j, vertices)
+      edge = PosePoseEdge(vi, vj, z, info)
       edges.append(edge)
   f.close()
 
