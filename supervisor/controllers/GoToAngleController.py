@@ -18,9 +18,9 @@
 
 
 from utils import math_util
+from supervisor.controllers.Controller import Controller
 
-
-class GoToAngleController:
+class GoToAngleController(Controller):
 
     def __init__(self, supervisor):
         """

@@ -25,9 +25,9 @@ from math import *
 
 from supervisor.ControlState import *
 from utils import linalg2_util as linalg
+from supervisor.controllers.Controller import Controller
 
-
-class FollowWallController:
+class FollowWallController(Controller):
 
     def __init__(self, supervisor):
         """

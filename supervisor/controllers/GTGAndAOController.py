@@ -19,9 +19,9 @@
 
 from supervisor.controllers.AvoidObstaclesController import *
 from supervisor.controllers.GoToGoalController import *
+from supervisor.controllers.Controller import Controller
 
-
-class GTGAndAOController:
+class GTGAndAOController(Controller):
 
     def __init__(self, supervisor):
         """

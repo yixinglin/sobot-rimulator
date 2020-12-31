@@ -20,9 +20,9 @@
 from math import *
 
 from utils import linalg2_util as linalg
+from supervisor.controllers.Controller import Controller
 
-
-class GoToGoalController:
+class GoToGoalController(Controller):
 
     def __init__(self, supervisor):
         """
