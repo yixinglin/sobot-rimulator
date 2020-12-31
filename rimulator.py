@@ -208,6 +208,10 @@ class Simulator:
         if self.slam_evaluation is not None:
             self.slam_evaluation.reset_record()
 
+        if self.cfg["map"]["goal"]["endless"]:
+            self.map_manager.add_new_goal()
+            self.map_manager.apply_to_world(self.world)
+
     def save_map(self, filename):
         """
         Save the map
@@ -291,8 +295,8 @@ class Simulator:
 
 
 if __name__ == "__main__":
-    filename = "config_graph_based_slam.yaml" if len(sys.argv) == 1 else sys.argv[1]
-    # filename = "original_config.yaml" if len(sys.argv) == 1 else sys.argv[1]
+    #filename = "config_graph_based_slam.yaml" if len(sys.argv) == 1 else sys.argv[1]
+    filename = "config.yaml" if len(sys.argv) == 1 else sys.argv[1]
 
     with open(filename, 'r') as ymlfile:
         cfg = yaml.safe_load(ymlfile)

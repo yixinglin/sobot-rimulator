@@ -47,12 +47,14 @@ class MapManager:
         :param world: The world the map is generated for
         """
         obstacles = []
-        if self.cfg["obstacle"]["octagon"]["enabled"]:
-            obstacles += self.__generate_octagon_obstacles(world)
         if self.cfg["obstacle"]["rectangle"]["enabled"]:
             obstacles += self.__generate_rectangle_obstacles(world)
-        if self.cfg["obstacle"]["feature"]["enabled"]:
+        if self.cfg["obstacle"]["feature"]["enabled"] \
+            and self.cfg["obstacle"]["rectangle"]["enabled"]:
             obstacles += self.__generate_features(world, obstacles)
+        if self.cfg["obstacle"]["feature"]["enabled"] \
+            and not self.cfg["obstacle"]["rectangle"]["enabled"]:
+            obstacles += self.__generate_random_features(world)
 
         # update the current obstacles and goal
         self.current_obstacles = obstacles
@@ -84,17 +86,17 @@ class MapManager:
                     self.current_goal = goal
                     break
 
-    def __generate_octagon_obstacles(self, world):
+    def __generate_random_features(self, world):
         """
         Generate random octagon obstacles
         :param world: The world for which they are generated
         :return: List of generated octagon obstacles
         """
-        obs_radius = self.cfg["obstacle"]["octagon"]["radius"]
-        obs_min_count = self.cfg["obstacle"]["octagon"]["min_count"]
-        obs_max_count = self.cfg["obstacle"]["octagon"]["max_count"]
-        obs_min_dist = self.cfg["obstacle"]["octagon"]["min_distance"]
-        obs_max_dist = self.cfg["obstacle"]["octagon"]["max_distance"]
+        obs_radius = self.cfg["obstacle"]["feature"]["radius"]
+        obs_min_count = self.cfg["obstacle"]["feature"]["min_count"]
+        obs_max_count = self.cfg["obstacle"]["feature"]["max_count"]
+        obs_min_dist = self.cfg["obstacle"]["feature"]["min_distance"]
+        obs_max_dist = self.cfg["obstacle"]["feature"]["max_distance"]
 
         # generate the obstacles
         obstacles = []
@@ -114,12 +116,15 @@ class MapManager:
             theta = -pi + (random() * 2 * pi)
 
             # test if the obstacle overlaps the robots or the goal
-            obstacle = OctagonObstacle(obs_radius, Pose(x, y, theta))
+            obstacle = FeaturePoint(obs_radius, Pose(x, y, theta), 0)
             intersects = False
             for test_geometry in test_geometries:
                 intersects |= geometrics.convex_polygon_intersect_test(test_geometry, obstacle.global_geometry)
             if not intersects:
                 obstacles.append(obstacle)
+
+        for i, feature in enumerate(obstacles):
+            feature.id = i
         return obstacles
 
     def __generate_rectangle_obstacles(self, world):

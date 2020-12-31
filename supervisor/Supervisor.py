@@ -21,10 +21,10 @@ from supervisor.controllers.GoToAngleController import *
 from supervisor.slam.EKFSlam import *
 from supervisor.slam.FastSlam import FastSlam
 from supervisor.slam.GraphBasedSLAM import *
-from supervisor.slam.mapping import OccupancyGridMapping2d
+from supervisor.mapping.OccupancyGridMapping2d import OccupancyGridMapping2d
 from supervisor.SupervisorControllerInterface import *
 from supervisor.SupervisorStateMachine import *
-from supervisor.controllers.PathPlanning import *
+from supervisor.mapping.AStarPlanning import AStarPlanning
 
 class Supervisor:
 
@@ -96,13 +96,13 @@ class Supervisor:
             self.graphbasedslam = GraphBasedSLAM(controller_interface, cfg["slam"], step_time=cfg["period"])
         if cfg["slam"]["mapping"]["enabled"]:
             if self.ekfslam is not None:
-                path_planner = AStarPlanner() if cfg["slam"]["mapping"]["path_planning"]["enabled"] else None
+                path_planner = AStarPlanning() if cfg["slam"]["mapping"]["path_planning"]["enabled"] else None
                 self.ekfslam_mapping = OccupancyGridMapping2d(self.ekfslam, cfg["slam"], controller_interface, path_planner)
             if self.fastslam is not None:
-                path_planner = AStarPlanner() if cfg["slam"]["mapping"]["path_planning"]["enabled"] else None
+                path_planner = AStarPlanning() if cfg["slam"]["mapping"]["path_planning"]["enabled"] else None
                 self.fastslam_mapping = OccupancyGridMapping2d(self.fastslam, cfg["slam"], controller_interface, path_planner)
             if self.graphbasedslam is not None:
-                path_planner = AStarPlanner() if cfg["slam"]["mapping"]["path_planning"]["enabled"] else None
+                path_planner = AStarPlanning() if cfg["slam"]["mapping"]["path_planning"]["enabled"] else None
                 self.graphbasedslam_mapping = OccupancyGridMapping2d(self.graphbasedslam, cfg["slam"], controller_interface, path_planner)
 
         # register slam objects and mapping objects to the system

@@ -124,7 +124,7 @@ class SlamEvaluation2:
     fig, ax = plt.subplots(2, figsize=(9,8))
 
     ax[0].grid()
-    line_styles = ['k-', 'k--', 'k:',  'k-.']
+    line_styles = ['r', 'g', 'b', 'k']
     for i, slam in enumerate(self.list_slam):
       if slam is None:
         continue
