@@ -58,6 +58,15 @@ class SlamPlotter:
         if self.viewer.draw_invisibles and isinstance(self.slam, EKFSlam):
             self.__draw_confidence_ellipse(frame)
 
+        if self.viewer.draw_invisibles and isinstance(self.slam, FastSlam):
+            self.__draw_particles(frame, self.radius/2)
+
+
+    def __draw_particles(self, frame, radius, color = "blue"):
+        for x, y, w in self.slam.get_particles():
+            frame.add_circle((x, y), radius, color, alpha=0.1)
+
+
     def plot_covariances(self):
         """
         Plots the covariance matrix
