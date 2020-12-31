@@ -36,7 +36,7 @@ which uses the default `config.yaml` configuration file. A specific configuratio
 specified as an additional program parameter:
 
     python rimulator.py original_config.yaml
-    python rimulator.py config_ekf_fastslam.yaml
+    python rimulator.py config01.yaml
 
 Alternatively, the simulator can be run using `docker`, as described in [documentation/docker.md](documentation/docker.md).
     
@@ -82,9 +82,9 @@ over the course of the simulation. Only displayed if the SLAM evaluation is enab
 representing the robot poses and landmark-vertices representing the landmark positions.
 ## Configuration
 
-The simulator can be configured by a variety of parameters. The default configuration file is [config.yaml](config.yaml)
+The simulator can be configured by a variety of parameters. The default configuration file is [config.yaml](config01.yaml)
 where all parameters are documented. This file includes the EKF Slam, FastSlam, Graph based Slam, Occupancy gird mapping and A* path planning that can be enabled or
-disabled. The configuration file [config_ekf_fastslam.yaml](config_ekf_fastslam.yaml) includes 
+disabled. The configuration file [config01.yaml](config01.yaml) includes 
 an extension performing completely identical to the [sobot rimulator](https://collaborating.tuhh.de/cva9931/sobot-rimulator) of Michael Dobler. The configuration file [original_config.yaml](original_config.yaml) does not include
 any of the extensions made and performs completely identical to the original sobot rimulator.
 

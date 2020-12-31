@@ -295,8 +295,8 @@ class Simulator:
 
 
 if __name__ == "__main__":
-    #filename = "config_graph_based_slam.yaml" if len(sys.argv) == 1 else sys.argv[1]
-    filename = "config.yaml" if len(sys.argv) == 1 else sys.argv[1]
+    #filename = "config.yaml" if len(sys.argv) == 1 else sys.argv[1]
+    filename = "config01.yaml" if len(sys.argv) == 1 else sys.argv[1]
 
     with open(filename, 'r') as ymlfile:
         cfg = yaml.safe_load(ymlfile)

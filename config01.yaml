@@ -34,9 +34,9 @@ robot:
   motor:
     noise:
       # Standard deviation of the left wheel's velocity in meters/second while executing a motion command.
-      left_velocity: 0.00005 # 0.005, 0.05
+      left_velocity: 0.005 # 0.005
       # Standard deviation of the right wheel's velocity in meters/second while executing a motion command.
-      right_velocity: 0.00005
+      right_velocity: 0.005
 
   # Configures the sensors used by the robot
   sensor:
@@ -48,8 +48,8 @@ robot:
     min_read_value: 18
     # Value that is read at minimum range
     max_read_value: 3960
-    # Standard deviation of the distance from the sensors to the detected landmark in meters.
-    noise: 0.000005 # 0.0001 0.005
+    # Standard deviation of the distance from the sensors to the detected landmark.
+    noise: 0.0001 # 0.0001
     # Specificies the poses and number of sensors
     # Each pose is composed of x position, y position and angle in degrees
     poses: [[-0.038, 0.048, 128],
@@ -78,9 +78,9 @@ robot:
 # Configures the GUI
 viewer:
   # Number of pixels per row of a frame
-  pixels_width: 800
+  pixels_width: 500
   # Number of pixels per column of a frame
-  pixels_height: 800
+  pixels_height: 600
   # Pixels per meter
   zoom: 100
   # Distance in meters of the major gridlines
@@ -92,6 +92,7 @@ viewer:
 map:
   # Configures the generated obstacles
   obstacle:
+    # Configures features
     feature:
       # Determines whether octagon obstacles shall be generated
       enabled: true
@@ -99,38 +100,34 @@ map:
       radius: 0.04
       # Density of features
       density: 0.15
-    # Configures octagon obstacles
-    octagon:
-      # Determines whether octagon obstacles shall be generated
-      enabled: false
-      # Radius of obstacles
-      radius: 1
+      # The following attributes are used if rectangles are disable
       # Minimum amount of generated obstacles
-      min_count: 4
+      min_count: 40
       # Maximum amount of generated obstacles
-      max_count: 6
+      max_count: 60
       # Minimum distance to origin
       min_distance: 0.2
       # Maximum distance to origin
-      max_distance: 3.5
+      max_distance: 2.5
+      # Configures rectangle obstacles
     # Configures rectangle obstacles
     rectangle:
       # Determines whether rectangle obstacles shall be generated
-      enabled: true
+      enabled: false
       # Minimum side length of a rectangle
       min_dim: 0.4
       # Maximum side length of a rectangle
-      max_dim: 4.5
+      max_dim: 2.5
       # Maximum sum of the two side lengths of a rectangle
-      max_combined_dim: 4.9
+      max_combined_dim: 2.9
       # Minimum amount of generated obstacles
-      min_count: 5
+      min_count: 4
       # Maximum amount of generated obstacles
-      max_count: 15
+      max_count: 7
       # Minimum distance to origin
-      min_distance: 1.4
+      min_distance: 0.4
       # Maximum distance to origin
-      max_distance: 4
+      max_distance: 3
   # Configures the goal generation
   goal:
     # Determines if a new goal is generated once the robot reaches its current goal
@@ -138,7 +135,7 @@ map:
     # Minimum distance to origin
     min_distance: 0
     # Maximum distance to origin
-    max_distance: 3.5
+    max_distance: 2
     # Minimum distance to all obstacles
     min_clearance: 0.2
 
@@ -147,10 +144,10 @@ control:
   # If robot is closer than this distance to the goal, it is considered as reached
   goal_reached_distance: 0.05
   # If a sensor measures a distance smaller than the danger distance, the robot immediately starts moving into the opposite direction
-  danger_distance: 0.04 # 0.06
+  danger_distance: 0.06 # 0.06
   # If a sensor measures a distance smaller than the caution distance, the robot will follow the wall of the obstacle
   # Set to danger_distance to disable wall following, since the map contains small, circle-like objects, where wall following can lead to looping around an object
-  caution_distance: 0.15 # 0.06
+  caution_distance: 0.06 # 0.06
   # Criterion for stopping the following of a wall
   progress_epsilon: 0.05 # 0.05
 
@@ -164,73 +161,77 @@ slam:
   # These are x position and y position
   # Currently only supports 2
   landmark_state_size: 2
-  # Determines whether landmark-identifiers is used for slam estimate
-  # It determines whether correspondences are used,
-  # i.e. true for known data association, false for unknown data association.
+  # Determines whether landmark-identifiers is used
+  # It determines whether correspondences of landmarks are given, i.e. identifies of landmarks are given
   feature_detector: true
-
-  # Configures the sensor noise. The values are currently empirically chosen.
-  sensor_noise:
-    # Standard deviation of the detected distance in meters 0.2
-    detected_distance: 0.01
-    # Standard deviation of the detected angle in degrees
-    detected_angle: 30
   ekf_slam:
     # Determines whether the EKF SLAM algorithm shall be executed
-    enabled: false
+    enabled: true
     # The mahalanobis distance threshold used in data association
     distance_threshold: 1
     # Configures the motion noise. The values are currently empirically chosen.
     motion_noise:
       # Standard deviation of the robots x-coordinate in meters after executing a motion command.
-      x: 0.005
+      x: 0.01 # 0.0005
       # Standard deviation of the robots y-coordinate in meters after executing a motion command.
-      y: 0.005
+      y: 0.01 # 0.0005
       # Standard deviation of the robots angle in degrees after executing a motion command.
       theta: 1
+    # Configures the sensor noise. The values are currently empirically chosen.
+    sensor_noise:
+      # Standard deviation of the detected distance in meters 0.2 0.01
+      detected_distance: 0.2
+      # Standard deviation of the detected angle in degrees
+      detected_angle: 30
   fast_slam:
     # Determines whether the FastSLAM algorithm shall be executed
-    enabled: false
+    enabled: true
     # The mahalanobis distance threshold used in data association
     distance_threshold: 0.125
     # The number of used particles
-    n_particles: 150 # 80
+    n_particles: 200 # 80
     # Configures the motion noise. The values are currently empirically chosen.
     motion_noise:
-      # Standard deviation of the motion command's translational velocity in m/s.
+      # Standard deviation of the motion command's translational velocity in m/s. # 0.02,0.015
       translational_velocity: 0.005 #0.005
       # Standard deviation of the motion command's rotational velocity in rad/s.
-      rotational_velocity: 0.005  #0.005
-
-  graph_based_slam:
-    # Determines whether the Graph-based SLAM algorithm shall be executed
-    enabled: true
-    # The euclidean distance threshold [m] used in data association.
-    # If the distance between the estimated landmarks via slam and via actual measurement
-    # larger than the threshold, start backend
-    distance_threshold: 0.2
-    # The timestep interval of executing the frontend part.
-    frontend_interval: 5
-    # Pose density of frontend, meaning the minimum distance [m] between the current pose and the last pose.
-    frontend_pose_density: 0.1
-    # number of fixed vertexes while the graph optimization
-    num_fixed_vertexes: 20
-    # draw trajectory
-    draw_trajectory: false
-    # Configures the motion noise. The values are currently empirically chosen.
-    motion_noise:
-      # Standard deviation of the robots x-coordinate in meters after executing a motion command.
-      x: 0.01 # 0.005
-      # Standard deviation of the robots y-coordinate in meters after executing a motion command.
-      y: 0.01 # 0.005
-      # Standard deviation of the robots angle in degrees after executing a motion command in degrees.
-      theta: 1.0 #0.09
+      rotational_velocity: 0.003 #0.005 0.001
     # Configures the sensor noise. The values are currently empirically chosen.
     sensor_noise:
-      #x: 0.02 # 0.02 constraint range-bearing
-      #y: 0.5236 # rad/s
-      x: 0.02 # 0.02 constraint x-y
-      y: 0.02 # 0.02
+      # Standard deviation of the detected distance in meters 0.2 0.01
+      detected_distance: 0.2 # 0.008
+      # Standard deviation of the detected angle in degrees
+      detected_angle: 30
+
+  graph_based_slam:
+      # Determines whether the Graph-based SLAM algorithm shall be executed
+      enabled: true
+      # The euclidean distance threshold [m] used in data association.
+      # If the distance between the estimated landmarks via slam and via actual measurement
+      # larger than the threshold, start backend
+      distance_threshold: 0.1 #0.2
+      # The timestep interval of executing the frontend part in simulation cycles.
+      frontend_interval: 5
+      # Pose density of frontend, meaning the minimum distance [m] between the current pose and the last pose.
+      frontend_pose_density: 0.1
+      # number of fixed vertexes while the graph optimization.
+      num_fixed_vertexes: 20
+      # draw trajectory on the frame
+      draw_trajectory: false
+      # sparse solver: cholesky or spsolve
+      solver: "cholesky"
+      # Configures the motion noise. The values are currently empirically chosen.
+      motion_noise:
+        # Standard deviation of the robots x-coordinate in meters after executing a motion command.
+        x: 0.005
+        # Standard deviation of the robots y-coordinate in meters after executing a motion command.
+        y: 0.005
+        # Standard deviation of the robots angle in degrees after executing a motion command in degrees.
+        theta: 1.0 #0.09
+      # Configures the sensor noise. The values are currently empirically chosen.
+      sensor_noise:
+        x: 0.02
+        y: 0.02
 
   # Configures the evaluation of the SLAM algorithms
   evaluation:
@@ -240,7 +241,7 @@ slam:
     # A low interval (for example 1) causes performance problems
     interval: 18
     # Determine the method of data association,
-    # if true, landmark identifiers will be associated, otherwise by minimum distance
+    # if true, data wil be associated by landmark identifiers, otherwise by minimum distance
     associate_id: true
 
   # Configures the 2D grid map of the occupancy grid mapping algorithm
@@ -250,9 +251,9 @@ slam:
     # Width of the map in meters
     gridmap:
       # Width of the map in meters
-      width: 8
+      width: 5
       # Height of the map in meters
-      height: 8
+      height: 6
       # Number of grids per meter. Note that high resolution will lead to performance issues.
       resolution: 20
 
@@ -261,3 +262,8 @@ slam:
         enabled: true
         # Determines how importance the heuristic term is.
         heuristic_weight: 1.0
+
+
+
+
+
