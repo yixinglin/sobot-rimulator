@@ -34,7 +34,7 @@ robot:
   motor:
     noise:
       # Standard deviation of the left wheel's velocity in meters/second while executing a motion command.
-      left_velocity: 0.05 # 0.005, 0.05
+      left_velocity: 0.05
       # Standard deviation of the right wheel's velocity in meters/second while executing a motion command.
       right_velocity: 0.05
 
@@ -48,8 +48,8 @@ robot:
     min_read_value: 18
     # Value that is read at minimum range
     max_read_value: 3960
-    # Standard deviation of the distance from the sensors to the detected landmark in meters.
-    noise: 0.005 # 0.0001 0.005
+    # Standard deviation of Gaussian noise in meters.
+    noise: 0.005
     # Specificies the poses and number of sensors
     # Each pose is composed of x position, y position and angle in degrees
     poses: [[-0.038, 0.048, 128],
@@ -92,14 +92,15 @@ viewer:
 map:
   # Configures the generated obstacles
   obstacle:
+    # Configures features of maps
     feature:
-      # Determines whether octagon obstacles shall be generated
+      # Determines whether features of the maps shall be generated
       enabled: true
       # Radius of feature points
       radius: 0.04
       # Density of features
       density: 0.15
-      # The following attributes are used if rectangles are disable
+      # The following attributes are used if rectangular obstacles are disabled
       # Minimum amount of generated obstacles
       min_count: 80
       # Maximum amount of generated obstacles
@@ -135,7 +136,7 @@ map:
     # Minimum distance to origin
     min_distance: 0
     # Maximum distance to origin
-    max_distance: 3.5
+    max_distance: 5.0
     # Minimum distance to all obstacles
     min_clearance: 0.2
 
@@ -147,9 +148,9 @@ control:
   danger_distance: 0.06 # 0.06
   # If a sensor measures a distance smaller than the caution distance, the robot will follow the wall of the obstacle
   # Set to danger_distance to disable wall following, since the map contains small, circle-like objects, where wall following can lead to looping around an object
-  caution_distance: 0.06 # a. 0.06; b. 0.15
+  caution_distance: 0.15 # a. 0.06; b. 0.15
   # Criterion for stopping the following of a wall
-  progress_epsilon: 0.05 # a. 0.05;  b. 0.2
+  progress_epsilon: 0.2 # a. 0.05;  b. 0.2
 
 slam:
   # The amount of variables that describe the robot's state
@@ -172,15 +173,15 @@ slam:
     # Configures the motion noise. The values are currently empirically chosen.
     motion_noise:
       # Standard deviation of the robots x-coordinate in meters after executing a motion command.
-      x: 0.0002 # 0.0005
+      x: 0.0002
       # Standard deviation of the robots y-coordinate in meters after executing a motion command.
-      y: 0.0002 # 0.0005
+      y: 0.0002
       # Standard deviation of the robots angle in degrees after executing a motion command.
       theta: 0.1
     # Configures the sensor noise. The values are currently empirically chosen.
     sensor_noise:
       # Standard deviation of the detected distance in meters 0.2 0.01
-      detected_distance: 0.2 # 0.008
+      detected_distance: 0.2
       # Standard deviation of the detected angle in degrees
       detected_angle: 30
   fast_slam:
@@ -193,13 +194,13 @@ slam:
     # Configures the motion noise. The values are currently empirically chosen.
     motion_noise:
       # Standard deviation of the motion command's translational velocity in m/s.
-      translational_velocity: 0.01 #0.005
+      translational_velocity: 0.01
       # Standard deviation of the motion command's rotational velocity in rad/s.
-      rotational_velocity: 0.0001  #0.005
+      rotational_velocity: 0.0001
     # Configures the sensor noise. The values are currently empirically chosen.
     sensor_noise:
       # Standard deviation of the detected distance in meters 0.2 0.01
-      detected_distance: 0.2 # 0.008
+      detected_distance: 0.2
       # Standard deviation of the detected angle in degrees
       detected_angle: 30
   graph_based_slam:
@@ -215,29 +216,31 @@ slam:
     frontend_pose_density: 0.1
     # number of fixed vertexes while the graph optimization
     num_fixed_vertexes: 20
-    # draw trajectory
-    draw_trajectory: true
-    # sparse solver: cholesky or spsolve
+    # draw trajectory on the frame
+    draw_trajectory: false
+    # sparse solver: cholesky or spsolve.
+    # For the faster sparse solver cholesky, users have to install the scikit-sparse library.
     solver: "cholesky"
     # Configures the motion noise. The values are currently empirically chosen.
     motion_noise:
       # Standard deviation of the robots x-coordinate in meters after executing a motion command.
-      x: 0.01 # 0.005  0.01
+      x: 0.01
       # Standard deviation of the robots y-coordinate in meters after executing a motion command.
-      y: 0.01 # 0.005
+      y: 0.01
       # Standard deviation of the robots angle in degrees after executing a motion command in degrees.
-      theta: 1.0 #0.09
+      theta: 1.0
     # Configures the sensor noise. The values are currently empirically chosen.
     sensor_noise:
-      #x: 0.02 # 0.02 constraint range-bearing
-      #y: 0.5236 # rad/s
-      x: 0.02 # 0.02 constraint x-y
-      y: 0.02 # 0.02
+      x: 0.02
+      y: 0.02
 
   # Configures the evaluation of the SLAM algorithms
   evaluation:
     # Determines whether the accuracy of the generated maps shall be evaluated
-    enabled: true
+    # The raw data will be recorded during the a simulation. After clicking the
+    # button Plot Slam Evaluation, raw data will be stored in
+    # the file \scripts as two csv files, while can be analysed through jupyter notebook.
+    enabled: false
     # Determines the interval of when the accuracy of the generated maps is calculated
     # A low interval (for example 1) causes performance problems
     interval: 18
@@ -245,7 +248,7 @@ slam:
     # if true, landmark identifiers will be associated, otherwise by minimum distance
     associate_id: true
 
-  # Configures the 2D grid map of the occupancy grid mapping algorithm
+  # Configures the 2D occupancy grid mapping algorithm
   mapping:
     # Determines whether the mapping algorithm shall be executed
     enabled: true
