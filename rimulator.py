@@ -251,8 +251,7 @@ class Simulator:
         self.viewer.draw_frame()  # render the frame
 
     def _run_sim(self):
-        x = 100
-        interval = max(self.t + 10, self.period*1000/x)
+        interval = max(self.t + 10, self.period*1000)
         self.sim_event_source = GLib.timeout_add(int(interval), self._run_sim)
         start_time = time.time()
         self._step_sim()
@@ -277,12 +276,14 @@ class Simulator:
         except GoalReachedException:
             if self.cfg["map"]["goal"]["endless"]:
                 self.map_manager.add_new_goal()
+                self.world.obstacles = list()  # clear the list of obstacles in the World object
                 self.map_manager.apply_to_world(self.world)
             else:
                 self.end_sim("Goal Reached!")
         except GoalNotReachedException:
             if self.cfg["map"]["goal"]["endless"]:
                 self.map_manager.add_new_goal(self.world) # add a new goal not far from the robot
+                self.world.obstacles = list() # clear the list of obstacles in the World object
                 self.map_manager.apply_to_world(self.world)
             else:
                 self.end_sim("Goal Reached!")
@@ -295,8 +296,9 @@ class Simulator:
 
 
 if __name__ == "__main__":
-    #filename = "config.yaml" if len(sys.argv) == 1 else sys.argv[1]
-    filename = "config01.yaml" if len(sys.argv) == 1 else sys.argv[1]
+    filename = "config.yaml" if len(sys.argv) == 1 else sys.argv[1]
+    #filename = "config01.yaml" if len(sys.argv) == 1 else sys.argv[1]
+    #filename = "original_config.yaml" if len(sys.argv) == 1 else sys.argv[1]
 
     with open(filename, 'r') as ymlfile:
         cfg = yaml.safe_load(ymlfile)
