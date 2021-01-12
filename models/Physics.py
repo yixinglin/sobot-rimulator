@@ -70,7 +70,6 @@ class Physics:
 
             for sensor in sensors:
                 dmin = float('inf')
-                solid_id = -1
                 detector_line = sensor.detector_line
                 solid_object = None
                 for i, solid in enumerate(solids):
@@ -85,7 +84,6 @@ class Physics:
 
                             if intersection_exists and d < dmin:
                                 dmin = d
-                                solid_id = i
                                 solid_object = solid
 
                 # if there is an intersection, update the sensor with the new delta value

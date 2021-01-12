@@ -21,20 +21,6 @@ from scipy.sparse.linalg import spsolve
 from sksparse.cholmod import cholesky
 from utils.math_util import normalize_angle
 
-def timer(function):
-    """
-    Used to test the efficiency of any functions
-    """
-    def wrapper(*args, **kw):
-        time_start = time.time()
-        result = function(*args, **kw)
-        time_end = time.time()
-        msg = '【TIMER】{0}: time: {1}'.format(function.__name__, time_end - time_start)
-        print (msg)
-        return result
-    return wrapper
-
-
 class Graph:
 
     def __init__(self):

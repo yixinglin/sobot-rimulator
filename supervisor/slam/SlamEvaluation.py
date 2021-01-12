@@ -2,7 +2,6 @@ from math import sqrt
 from matplotlib import pyplot as plt
 from matplotlib.ticker import MaxNLocator
 from models.obstacles.FeaturePoint import FeaturePoint
-import pickle
 import pandas as pd
 
 class SlamEvaluation2:

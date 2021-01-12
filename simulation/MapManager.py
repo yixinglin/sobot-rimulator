@@ -21,7 +21,6 @@ from math import *
 from random import *
 
 import utils.geometrics_util as geometrics
-from models.obstacles.OctagonObstacle import OctagonObstacle
 from models.Pose import Pose
 from models.Polygon import Polygon
 from models.obstacles.RectangleObstacle import RectangleObstacle

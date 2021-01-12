@@ -5,7 +5,6 @@ from supervisor.slam.graph.baseclass.Vertex import Vertex
 from supervisor.slam.graph.baseclass.Edge import Edge
 from supervisor.slam.graph.baseclass.Graph import Graph
 from supervisor.slam.graph.vetor2matrix import *
-import math
 
 """       Define Vertex Classes        
 Vertex
@@ -57,6 +56,7 @@ class PosePoseEdge(Edge):
 
     def __init__(self, vertex1, vertex2, z, information):
         """
+        The constraint is based on motion commands used in a time interval.
         :param vertex1: id of previous vertex
         :param vertex2: id of current vertex
         :param z: actual measurement obtained by sensor
@@ -91,7 +91,7 @@ class PosePoseEdge(Edge):
     def encode_measurement(pose, odom_pose, covariance):
         """
         Calculate the measurement vector that represents how the robot move from previous pose to the expected pose.
-        The jacobian matrix of the error function is calculated by this model.
+        The Jacobian matrix of the error function is calculated by this model.
         The vector (x, y, theta) is obtained from a rotation matrix R(theta) and a translational vector t = [x, y].T
         :param pose: previous pose of the robot
         :param odom_pose: expected pose of the next step calculated by the motion model
@@ -138,7 +138,7 @@ class PoseLandmarkEdge(Edge):
 
     def __init__(self, vertex1, vertex2, z, information):
         """
-        For x-y sensor model
+        The constraint is based on an x-y sensor model
         """
         Edge.__init__(self, vertex1, vertex2, z, information)
         assert isinstance(self.vertex1, PoseVertex)
@@ -204,69 +204,6 @@ class PoseLandmarkEdge(Edge):
         x, y, yaw = np.squeeze(self.z)
         s = "PLE: id1:{0},id2: {1},z: [{2}, {3}]".format(self.id1, self.id2, x, y)
         return s
-
-class PoseLandmarkEdge2(Edge):
-
-    def __init__(self, vertex1, vertex2, z, information):
-        """
-        For range/bearing sensor model
-        """
-        Edge.__init__(self, vertex1, vertex2, z, information)
-        assert isinstance(self.vertex1, PoseVertex)
-        assert isinstance(self.vertex2, LandmarkVertex)
-        assert z.shape == (2, 1)
-        assert information.shape == (2, 2)
-
-    @staticmethod
-    def encode_measurement(observation, covariance):
-        """
-        Encode the raw_measurement of landmark observation.
-        The vector meas_xy represents how the robot sees a landmark. This vector is a cartesian coordinate (x, y).
-        The Jacobian matrix of the error function is calculated by this model.
-        :param observation: The raw measurement from range bearing sensor (distance, angle)
-        :param covariance: The covariance matrix of the measurement
-        return
-                meas_rb: a encoded measurement vector (d, a) related to the robot, which will be set to an edge as a measurement vector z.
-                info: an information matrix
-        """
-        meas_rb = np.array(observation)[0:2].reshape(2, 1)
-        info = inv(covariance)
-        return meas_rb, info
-
-    def calc_error_vector(self, x, lm, z):
-        """
-        Calculate the error vector of the actual and expected measurements
-        :param x: Robot pose of the graph configuration. (expected)
-        :param lm: Landmark pose with respect to the graph configuration. (expected)
-        :param z: Actual measurement. A range-bearing vector, i.e. z == [distance, angle].T
-        :return:
-        """
-        delta = lm - x[0:2]
-        distance = math.sqrt(delta[0,0]**2 + delta[1, 0]**2) # expected measurement
-        angle = math.atan2(delta[1, 0], delta[0, 0])
-        error = np.array([[distance - z[0, 0]],
-                          [angle - z[1, 0]]])
-        return error
-
-    def linearize_constraint(self, x, lm, z):
-        """
-        Compute the error of a pose-landmark constraint.
-        :param x: 3x1 vector [x,y,theta].T of the robot pose.
-        :param lm: 2x1 vector [x, y].T of the landmark position.
-        :param z: 2x1 vector [distance, angle].T of the actual measurement
-        :return:
-            A 2x3 Jacobian wrt x.
-            B 2x2 Jacobian wrt lm.
-        """
-        delta_x = lm[0, 0] - x[0, 0]
-        delta_y = lm[1, 0] - x[1, 0]
-        q = delta_x**2 + delta_y**2
-        sq = math.sqrt(q)
-        A = np.array([[-sq*delta_x, -sq*delta_y, 0],
-                          [delta_y, -delta_x, -q]]) / q
-        B = np.array([[sq*delta_x, sq*delta_y],
-                          [-delta_y, delta_x]]) / q
-        return A, B
 
 
 """   Define Graph Class
