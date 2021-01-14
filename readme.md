@@ -1,7 +1,5 @@
 # Sobot Rimulator - A Robot Programming Tool
 
-![Screenshot](documentation/sim_config.png)
-
 This project is an extension of the [sobot rimulator](https://github.com/nmccrea/sobot-rimulator) developed by Nick McCrea
 which allows the simulation of a mobile robot in a map of obstacles that must be avoided.
 The [extension](https://collaborating.tuhh.de/cva9931/sobot-rimulator) developed by Michael Dobler includes 
@@ -19,7 +17,8 @@ It is recommended to run the simulator directly on your native machine. For this
 - Python 3: Please follow the instructions at http://www.python.org/download/
 - PyGTK 3: Please follow the instructions at https://pygobject.readthedocs.io/en/latest/getting_started.html
 
-An additional dependency (see [scikit-sparse](https://scikit-sparse.readthedocs.io/en/latest/overview.html)) is required:
+An additional dependency (see [scikit-sparse](https://scikit-sparse.readthedocs.io/en/latest/overview.html)) 
+is required for the Graph-based SLAM algorithm:
 
     sudo apt-get install libsuitesparse-dev
 
@@ -49,7 +48,7 @@ Alternatively, the simulator can be run using `docker`, as described in [documen
 ## Graphical User Interface
 
 The graphical user interface consists of the visualization of the current simulated world as well as a control panel of 
-buttons with which the user can interact. The robot is depicted in blue and aims to reach its goal depicted in green 
+buttons, with which the user can interact. The robot is depicted in blue and aims to reach its goal depicted in green 
 while avoiding collisions with the red objects. The buttons of the control panel are:
 
 #### Control row
@@ -114,7 +113,7 @@ However, the graph will grow faster when smaller interval is applied, which can 
 - `frontend_pose_density`: Specifies the minimum distance between two neighboring pose-vertices while adding a new one during the front-end process.
 - `num_fixed_vertexes`: Specifies the number of vertices that are fixed during optimization.
 - `solver`: Specifies the sparse solver during the optimization. We can use either `spsolve` or `cholesky`. 
-  `cholesky`: requires the **scikit-sparse** library 
+  Note that `cholesky` requires the **scikit-sparse** library. 
   
 ### 3. Occupancy Gird Mapping and Path Planning:
 - `resolution`: Specifies the resolution of the grid map estimated by occupancy grid 
