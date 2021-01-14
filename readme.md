@@ -1,16 +1,16 @@
 # Sobot Rimulator - A Robot Programming Tool
 
-![Screenshot](documentation/GUI_GM.png)
+![Screenshot](documentation/sim_config.png)
 
 This project is an extension of the [sobot rimulator](https://github.com/nmccrea/sobot-rimulator) developed by Nick McCrea
 which allows the simulation of a mobile robot in a map of obstacles that must be avoided.
 The [extension](https://collaborating.tuhh.de/cva9931/sobot-rimulator) developed by Michael Dobler includes 
 the integration of the EKFSLAM and FastSLAM algorithms to perform an estimation 
-of the current robot state and its surrounding environment based on its previous motion commands 
-and proximity sensor readings. In my extension Graph-based SLAM algorithm was integrated 
-to perform an estimation of the full traverse trajectory of the robot as well as the surrounding environment based on its 
-previous motion commands and the measurements from the sensors and the wheel encoders. Occupancy grid mapping algorithm 
-and A* path planning algorithm were also integrated to search a path from the robot to the goal based on the mapping of the area where the robot has visited. 
+of the current robot state and a map of its surrounding environment based on its previous motion commands 
+and proximity sensor readings. While in my extension Graph-based SLAM algorithm was integrated 
+to perform an estimation of the full traverse trajectory additionally. Moreover, Occupancy Grid Mapping algorithm 
+and A* Path Planning algorithm were also integrated into the simulator. The path planning algorithm searches a path 
+for the robot towards the goal based on the map created by the mapping algorithm. 
 
 
 ## Setup
@@ -37,7 +37,12 @@ specified as an additional program parameter:
 
     python rimulator.py original_config.yaml
     python rimulator.py config01.yaml
-
+Note that `config.yaml` is the configuration file especially for the Graph-based SLAM simulation, 
+where the feature-map with large rectangular obstacles
+is used:
+ ![Screenshot](documentation/sim_config.png) 
+The configuration file `config01.yaml` is for the point-like feature-map without any obstacles where the EKFSLAM and FastSLAM are performed in particular:
+![Screenshot](documentation/sim_config01.png)
 Alternatively, the simulator can be run using `docker`, as described in [documentation/docker.md](documentation/docker.md).
     
 
@@ -80,16 +85,19 @@ Only displayed if the EKF SLAM is enabled in the configuration.
 over the course of the simulation. Only displayed if the SLAM evaluation is enabled in the configuration.
 - **Plot Graph**: Plots a graph estimated by Graph-based SLAM algorithm displaying the pose-vertices 
 representing the robot poses and landmark-vertices representing the landmark positions.
+- **Start/Reset Mapping**: Starts the Occupancy Grid Mapping algorithm to evaluate a grid map,
+also a path is generated on the map by A* Path Planning algorithm.
 ## Configuration
-
 The simulator can be configured by a variety of parameters. The default configuration file is [config.yaml](config01.yaml)
 where all parameters are documented. This file includes the EKF Slam, FastSlam, Graph based Slam, Occupancy gird mapping and A* path planning that can be enabled or
 disabled. The configuration file [config01.yaml](config01.yaml) includes 
-an extension performing completely identical to the [sobot rimulator](https://collaborating.tuhh.de/cva9931/sobot-rimulator) of Michael Dobler. The configuration file [original_config.yaml](original_config.yaml) does not include
+an extension performing almost identical to the [sobot rimulator](https://collaborating.tuhh.de/cva9931/sobot-rimulator) of Michael Dobler 
+while a frame of the Graph-based SLAM is appended on the right. The configuration file [original_config.yaml](original_config.yaml) does not include
 any of the extensions made and performs completely identical to the original sobot rimulator.
 
 The most important parameters in terms of the SLAM algorithms are:
 
+### 1. EKFSLAM and FastSLAM
 - `motion_noise`: Specifies the motion noise used by the algorithm, in Dobler's thesis denoted as `R_t`. The currently used motion 
 noise is very low to reflect the very accurate motion of the simulated robot. Increasing the motion noise increases the 
 region that the robot is estimated to be in.
@@ -97,25 +105,37 @@ region that the robot is estimated to be in.
 is relatively high, so the robot currently rarely makes large modifications of its pose estimate based on sensor readings.
 - `distance_threshold`: Specifies a threshold to be used for the data association. Decreasing this value will increase 
 the frequency of the SLAM algorithm considering a landmark as "new" instead of associating it with an encountered landmark.
-- The evaluation `interval` specifies the interval of simulation cycles after which the SLAM accuracy shall be evaluated.
-Low intervals can lead to performance problems. The SLAM evaluation can also be disabled entirely to further improve performance.
-- `frontend_interval` Specifies the interval of adding a pose-vertex. The lower the interval is, the better graph can be obtained by graph optimization.
-However, the graph will grow faster when smaller interval is applied, which can lead to performance problems during graph optimization    
-- `optimization_interval` Specifies the interval of optimizing the graph. Small interval can lead to performance problems. 
-However, large interval will lead to wrong data-association in case that the robot is moving with a noisy motor, 
-because the current robot pose estimated by the motion model can't be corrected in time. 
 
-The most important parameters in terms of the occupancy gird mapping and path planning algorithms are:
+### 2. Graph-based SLAM
+- `feature_detector`: Determines whether SLAM algorithms should work with known data association. 
+  Note that the Graph-based SLAM only works with known data association.
+- `frontend_interval`: Specifies the time interval of adding a pose-vertex in simulation cycles. The lower the interval is, the better graph can be obtained by graph optimization.
+However, the graph will grow faster when smaller interval is applied, which can lead to performance problems during graph optimization    
+- `frontend_pose_density`: Specifies the minimum distance between two neighboring pose-vertices while adding a new one during the front-end process.
+- `num_fixed_vertexes`: Specifies the number of vertices that are fixed during optimization.
+- `solver`: Specifies the sparse solver during the optimization. We can use either `spsolve` or `cholesky`. 
+  `cholesky`: requires the **scikit-sparse** library 
+  
+### 3. Occupancy Gird Mapping and Path Planning:
 - `resolution`: Specifies the resolution of the grid map estimated by occupancy grid 
 mapping algorithm. The mapping algorithm can handle high resolution maps efficiently, 
 but high resolution can lead to performance problems of the GUI while grids are being drawn on the frames
 - `heuristic_weight`: Determines how important the heuristic term is when planning a path from the robot position to the goal.
 If the value is 0, that means that heuristic term is not considered.   
 
-Other interesting parameters are:
+### 4.  SLAM Evaluation
+The data during the simulation can be recorded and saved in the folder [./scripts](./scripts). They are [sobot_information1.csv](scripts/sobot_information1.csv) and 
+[sobot_information2.csv](scripts/sobot_information2.csv) which can be analysed through the jupyter notebook in the ipynb files. 
+- `interval`: Specifies the interval of simulation cycles after which the SLAM accuracy shall be evaluated.
+Low intervals can lead to performance problems. The SLAM evaluation can also be disabled entirely to further improve performance.
+- `associate_id`: Determines whether landmarks should be associated with identifiers while calculating their distances between the estimated landmarks and those of the ground truth.
+- `save_csv_data`: Determines whether the data should be saved in csv files, while the user clicks the **Plot Slam Evaluation** button.
+    The csv files are usually large, which can be found in the folder [./scripts](./scripts).
+    
 
+### 5. Other interesting parameters:
 - the map configuration paramters, such as amount and shape of obstacles. It is however recommended to perform a SLAM simulation
-with small, circular obstacles, which can be better represented by point-like landmarks.
+with small, circular obstacles, which can be better represented by point-like features.
 - the robots control parameters, particularly the `caution_distance`. This parameter controls the robots transition into
 the `follow wall` state and has been significantly decreased to avoid the problem of the robot looping around the small 
 circular objects. Using large, rectangular objects allows the usage of a larger value.
