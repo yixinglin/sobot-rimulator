@@ -27,21 +27,20 @@ class GraphBasedSLAM(Slam):
         self.motion_noise = np.diag([slam_cfg["graph_based_slam"]["motion_noise"]["x"],
                                      slam_cfg["graph_based_slam"]["motion_noise"]["y"],
                                      np.deg2rad(slam_cfg["graph_based_slam"]["motion_noise"]["theta"])]) ** 2
-        # distance threshold for determining optimization
         self.min_distance_threshold = slam_cfg["graph_based_slam"]["distance_threshold"]
         self.frontend_pose_density = slam_cfg["graph_based_slam"]["frontend_pose_density"]
         self.frontend_interval = slam_cfg["graph_based_slam"]['frontend_interval']   # the timestep interval of executing the frontend part.
         self.num_fixed_vertices = slam_cfg["graph_based_slam"]["num_fixed_vertexes"]
         # solver
         self.solver = slam_cfg["graph_based_slam"]['solver'].lower()
-        # The estimated combined state vector, initially containing the robot pose at the origin and no landmarks
+        # the current robot pose and its uncertainty
         self.mu = np.zeros((self.robot_state_size, 1))
         self.Sigma = np.zeros((self.robot_state_size, self.robot_state_size)) # The state covariance, initially set to absolute certainty of the initial robot pose
         self.step_counter = 0
         self.graph = LMGraph()
 
-        self.flg_optim = False
-        self.callback = callback
+        self.flg_optim = False # determines whether the graph should be optimized
+        self.callback = callback # a callback function
 
         # add the first node to the graph
         vertex1 = PoseVertex(self.mu, np.eye(3))
@@ -57,7 +56,7 @@ class GraphBasedSLAM(Slam):
         return Pose(self.mu[0, 0], self.mu[1, 0], self.mu[2, 0])
 
     def get_estimated_trajectory(self):
-        return [ (v.pose[0,0], v.pose[1,0])  \
+        return [(v.pose[0,0], v.pose[1,0])  \
                  for v in self.graph.get_estimated_pose_vertices()]
 
     def get_hessian(self):
@@ -79,7 +78,7 @@ class GraphBasedSLAM(Slam):
 
     def plot_graph(self):
         """
-        plot the graph estimated by slam
+        plot the graph estimated by the Graph-based SLAM
         """
         self.graph.draw()
 
@@ -105,8 +104,6 @@ class GraphBasedSLAM(Slam):
             self.__front_end(z)
             num_vertices = len(self.graph.vertices) #  #vertices = #poses + #landmarks
             if num_vertices > 0 and self.flg_optim == True:
-                print (str(self.counter) + ": " + "Graph-based SLAM starts the backend-optimization with " +
-                       str(num_vertices) + " vertices")
                 self.flg_optim = False
                 self.__back_end()
 
@@ -173,18 +170,9 @@ class GraphBasedSLAM(Slam):
         self.mu = np.copy(last_vertex.pose)  # update current state
         self.Sigma = np.copy(last_vertex.sigma)
 
-    def __calc_range_bearing_delta(self, x, lm, z):
-        delta = lm - x[0:2, :]
-        range = np.linalg.norm(delta, axis=0)
-        phi = np.arctan2(delta[1, :], delta[0, :])
-        ext_z = np.vstack((range, phi))
-        err = ext_z - np.array(z).reshape((2,1))
-        err[1, :] = np.arctan2(np.sin(err[1, :]), np.cos(err[1, :]))
-        return err
-
     def __data_association(self, zi):
         """
-        Associates the measurement to a landmark using the landmark id.
+        Associates the measurement to a landmark using the landmark identifiers.
         :param zi: (distance, angle, landmark_id)
         return
             vertex: a vertex object with the same id containing in zi
@@ -197,13 +185,6 @@ class GraphBasedSLAM(Slam):
                 vertex = v
                 break
         return vertex
-
-    def get_estimated_landmark_position(self):
-        lm_pos = []
-        vertices_lm = self.graph.get_estimated_landmark_vertices()
-        for v in vertices_lm:
-            lm_pos.append((v.pose[0, 0], v.pose[1, 0]))
-        return lm_pos, vertices_lm
 
     @staticmethod
     def jaco_motion_model(x, u, dt):
@@ -264,18 +245,6 @@ class GraphBasedSLAM(Slam):
         lm[1, 0] = x[1, 0] + z[0] * sin(z[1] + x[2, 0])
         return lm
 
-
-    @staticmethod
-    def diff_to_uni(v_l, v_r, width):
-        """
-        :param v_l: Translational velocity of the left wheel
-        :param v_r: Translational velocity of the right wheel
-        :return v, w
-                Translational and angular velocities
-        """
-        v = (v_r + v_l) * 0.5
-        w = (v_r - v_l) / width
-        return v, w
 
     def __str__(self):
         return "Graph-based SLAM"

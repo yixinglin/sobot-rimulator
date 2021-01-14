@@ -20,7 +20,7 @@
 from supervisor.ControlState import *
 from simulation.exceptions import GoalReachedException, GoalNotReachedException
 from utils import linalg2_util as linalg
-from supervisor.slam.Timer import Timer
+from supervisor.Timer import Timer
 
 class SupervisorStateMachine:
 

@@ -4,10 +4,10 @@ from matplotlib.ticker import MaxNLocator
 from models.obstacles.FeaturePoint import FeaturePoint
 import pandas as pd
 
-class SlamEvaluation2:
+class SlamEvaluation:
   def __init__(self, list_slam, evaluation_cfg, robot):
     """
-    Initializes an object of the SlamEvaluation2 class
+    Initializes an object of the SlamEvaluation class
     :param list_slam: a list of slam algorithms that will be evaluated
     :param evaluation_cfg: The configurations for the class.
                            Currently only used to calculate number of simulation cycles
@@ -20,6 +20,9 @@ class SlamEvaluation2:
     self.robot = robot
     self.reset_record()
     self.sim_circle = 0
+    self.interval = self.cfg["interval"]
+    self.save_csv_data = self.cfg['save_csv_data']
+    self.associate_id = self.cfg['associate_id']
 
   def reset_record(self):
     self.head1 = ["sim_circle", "landmark_id", "estimated_landmark_position", "estimated_robot_pose",
@@ -41,7 +44,7 @@ class SlamEvaluation2:
       slam_obstacles = slam.get_landmarks()
       distances = []
       for i, slam_obstacle in enumerate(slam_obstacles):
-        if self.cfg["associate_id"] == True:
+        if self.associate_id == True:
           dist = self.__find_distance_by_landmark_id(slam_obstacle, obstacles)
         else:
           dist = self.__find_min_distance(slam_obstacle, obstacles)
@@ -56,6 +59,7 @@ class SlamEvaluation2:
     """
     Record data in a list
     :param sim_circle: simulation circle
+    :param obstacles: list of obstacle objects in the world.
     """
     self.sim_circle = sim_circle
     for j, slam in enumerate(self.list_slam):
@@ -75,11 +79,8 @@ class SlamEvaluation2:
             actual_landmark_position = obstacle.pose.sunpack()
             break
 
-        self.data.append([int(sim_circle), int(landmark_id), estimated_landmark_position,
-                estimated_robot_position, actual_landmark_position, actual_robot_position, slam_name])
-
-    if sim_circle % 1000 == 0:
-      print ("sim_circle", sim_circle)
+        self.data.append([int(sim_circle), int(landmark_id), estimated_landmark_position, estimated_robot_position,
+                          actual_landmark_position, actual_robot_position, slam_name])
 
   def time_per_step(self, name, time):
     """
@@ -118,7 +119,8 @@ class SlamEvaluation2:
     Produces a plot of how the average distance changed over the course of the simulation.
     Saves the plot in a png file.
     """
-    self.save_infomation("./scripts/sobot_information")
+    if self.save_csv_data:
+      self.save_infomation("./scripts/sobot_information")
 
     fig, ax = plt.subplots(2, figsize=(9,8))
 
@@ -130,8 +132,8 @@ class SlamEvaluation2:
 
       name = str(slam)
       # Calculates number of elapsed simulation cycles
-      sim_cycles = len(self.average_distances_lm[i]) * self.cfg["interval"]
-      ax[0].plot(range(0, sim_cycles, self.cfg["interval"]),
+      sim_cycles = len(self.average_distances_lm[i]) * self.interval
+      ax[0].plot(range(0, sim_cycles, self.interval),
               self.average_distances_lm[i],
               line_styles[i%len(self.list_slam)], label = name)
     ax[0].xaxis.set_major_locator(MaxNLocator(integer=True))
@@ -141,8 +143,6 @@ class SlamEvaluation2:
     ax[0].grid()
     plt.show()
 
-
-    #fig, ax = plt.subplots()
     ax[1].grid()
     for i, slam in enumerate(self.list_slam):
       if slam is None:
@@ -150,8 +150,8 @@ class SlamEvaluation2:
 
       name = str(slam)
       # Calculates number of elapsed simulation cycles
-      sim_cycles = len(self.average_distances_lm[i]) * self.cfg["interval"]
-      ax[1].plot(range(0, sim_cycles, self.cfg["interval"]), self.distances_robot[i], line_styles[i%len(self.list_slam)], label = name)
+      sim_cycles = len(self.average_distances_lm[i]) * self.interval
+      ax[1].plot(range(0, sim_cycles, self.interval), self.distances_robot[i], line_styles[i%len(self.list_slam)], label = name)
     ax[1].legend()
     ax[1].set(xlabel='Simulation cycles', ylabel='Distance to true robot position in meters', title='Evaluation of SLAM')
     plt.savefig('slam_robot_position_evaluation.png')

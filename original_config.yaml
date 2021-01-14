@@ -219,7 +219,7 @@ slam:
     draw_trajectory: false
     # sparse solver: cholesky or spsolve.
     # For the faster sparse solver cholesky, users have to install the scikit-sparse library.
-    solver: "cholesky"
+    solver: "spsolve"
     # Configures the motion noise. The values are currently empirically chosen.
     motion_noise:
       # Standard deviation of the robots x-coordinate in meters after executing a motion command.
@@ -246,6 +246,10 @@ slam:
     # Determine the method of data association,
     # if true, landmark identifiers will be associated, otherwise by minimum distance
     associate_id: true
+    # Determines whether the data is saved in csv files, while the user
+    # clicks the `Plot Slam Evaluation` button.
+    # The csv files are usually large. The csv-files can be found in the folder ./scripts
+    save_csv_data: false
 
   # Configures the 2D occupancy grid mapping algorithm
   mapping:

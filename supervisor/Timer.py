@@ -41,6 +41,6 @@ class Timer:
             return False
         elif time.time() - self.start_time_best_distance_to_goal > T_NO_BEST_DIST_CHANGE:  # no changes in time
             self.start_time_to_goal = time.time()
-            print("Best distance dose not changed in time.")
+            #print("Best distance dose not changed in time.")
             return True
         return False

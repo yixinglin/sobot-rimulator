@@ -24,7 +24,7 @@ import gi
 from gi.repository import GLib
 
 from plotters.SlamPlotter import *
-from supervisor.slam.SlamEvaluation import SlamEvaluation2
+from supervisor.slam.SlamEvaluation import SlamEvaluation
 
 
 from plotters.MappingPlotter import MappingPlotter
@@ -153,8 +153,8 @@ class Simulator:
         self.slam_evaluation = None
         if self.cfg["slam"]["evaluation"]["enabled"]:
             list_slam = [self.world.supervisors[0].ekfslam, self.world.supervisors[0].fastslam, self.world.supervisors[0].graphbasedslam]
-            self.slam_evaluation = SlamEvaluation2(list_slam,
-                                                   self.cfg["slam"]["evaluation"], self.world.robots[0])
+            self.slam_evaluation = SlamEvaluation(list_slam,
+                                                  self.cfg["slam"]["evaluation"], self.world.robots[0])
             for slam in list_slam:
                 if slam is not None:
                     slam.callback = self.slam_evaluation.time_per_step  # set the callback function
@@ -297,8 +297,6 @@ class Simulator:
 
 if __name__ == "__main__":
     filename = "config.yaml" if len(sys.argv) == 1 else sys.argv[1]
-    #filename = "config01.yaml" if len(sys.argv) == 1 else sys.argv[1]
-    #filename = "original_config.yaml" if len(sys.argv) == 1 else sys.argv[1]
 
     with open(filename, 'r') as ymlfile:
         cfg = yaml.safe_load(ymlfile)

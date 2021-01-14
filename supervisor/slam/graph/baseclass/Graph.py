@@ -85,10 +85,10 @@ class Graph:
         """
         Optimization of the graph
         :param number_fix: fix the estimation of the initial step
-        :param damp_factor: how fasten you want to fix a vertex.
+        :param damp_factor: how much you want to fix a vertex.
         :param max_iter: the maximum number of iterations
         :param callback: a callback function, callback(vertices, edges, info)
-        :param difference for determining convergence
+        :param epsilon: difference for determining convergence
         :return: epsilon global error after optimization
         """
         global_error = np.inf
@@ -128,7 +128,7 @@ class Graph:
 
     def apply_covariance(self, H):
         H = H.tocsr()
-        indices, hess_size = self.get_block_index_(self.vertices)
+        indices, hess_size = self.get_block_index(self.vertices)
         for id, vertex in enumerate(self.vertices):
             i1, i2 = indices[id]
             Hii = H[i1:i2, i1:i2].toarray()
@@ -159,7 +159,7 @@ class Graph:
                 H: the hessian matrix (information matrix)
                 b: information vector
         """
-        indices, hess_size = self.get_block_index_(vertices)  # calculate indices for each block in the hessian matrix
+        indices, hess_size = self.get_block_index(vertices)  # calculate indices for each block in the hessian matrix
         b = np.zeros((hess_size, 1), dtype=np.float64)  # initialize an information vector
         Hessian_data = list()  # a list to store the block matrices (flattened)
         row_indices = list()   # a list of row indices for the corresponding values in H matrix
@@ -176,7 +176,6 @@ class Graph:
             Hjj = B.T @ omega @ B
             Hij = A.T @ omega @ B
             Hji = B.T @ omega @ A
-
 
             """     Compute the hessian matrix and vector    """
             i1, i2 = indices[edge.vertex1.id]
@@ -242,14 +241,14 @@ class Graph:
         A apply the increment dx on all vertices of the graph
         :param dx: increment
         """
-        indices, _ = self.get_block_index_(self.vertices)
+        indices, _ = self.get_block_index(self.vertices)
         for i, v in enumerate(self.vertices):
             i1, i2 = indices[i]
             v.pose += dx[i1:i2]
         self.normalize_angles(self.vertices)
 
     @staticmethod
-    def get_block_index_(vertices):
+    def get_block_index(vertices):
         """
         Calculate block indices in hessian matrix for each vertices of the graph
         :param vertices: A list of vertices of the graph

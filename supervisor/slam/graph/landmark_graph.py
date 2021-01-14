@@ -261,8 +261,6 @@ class LMGraph(Graph):
                 raise RuntimeError()
         return pose, landmarks
 
-
-
     def get_last_pose_vertex(self):
         """
             Return the last vertex object of poses

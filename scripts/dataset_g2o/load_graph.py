@@ -160,7 +160,5 @@ if __name__ == "__main__":
   #posegraph = read_data("input_INTEL_g2o.g2o")
   #posegraph = read_data("input_MITb_g2o.g2o")
   posegraph = read_data("input_M3500_g2o.g2o")
-  #posegraph.graph_optimization(max_iter=30, damp_factor=5)
-  #posegraph = read_data("input_M3500a_g2o.g2o")
   posegraph.graph_optimization(max_iter=16, damp_factor=1)
   posegraph.draw()
