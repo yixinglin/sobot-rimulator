@@ -21,6 +21,7 @@ An additional dependency (see [scikit-sparse](https://scikit-sparse.readthedocs.
 is required for the Graph-based SLAM algorithm:
 
     sudo apt-get install libsuitesparse-dev
+    pip install --user scikit-sparse
 
 Additional dependencies can then be installed using `pip`
 
@@ -39,7 +40,7 @@ specified as an additional program parameter:
 Note that `config.yaml` is the configuration file especially for the Graph-based SLAM simulation, 
 where the feature-map with large rectangular obstacles
 is used:
- ![Screenshot](documentation/sim_config.png) 
+ ![Screenshot](documentation/sim_config.png)
 The configuration file `config01.yaml` is for the point-like feature-map without any obstacles where the EKFSLAM and FastSLAM are performed in particular:
 ![Screenshot](documentation/sim_config01.png)
 Alternatively, the simulator can be run using `docker`, as described in [documentation/docker.md](documentation/docker.md).
