@@ -21,7 +21,7 @@ An additional dependency (see [scikit-sparse](https://scikit-sparse.readthedocs.
 is required for the Graph-based SLAM algorithm:
 
     sudo apt-get install libsuitesparse-dev
-    pip install --user scikit-sparse
+    pip3 install --user scikit-sparse
 
 Additional dependencies can then be installed using `pip`
 
