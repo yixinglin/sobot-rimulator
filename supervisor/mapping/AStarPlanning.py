@@ -18,7 +18,7 @@ class AStarPlanning(PathPlanning):
 
   def execute(self, sx, sy, gx, gy, obstacle_map, weight=1.0, type='manhattan'):
     """
-    A* path search
+    Execute A* path searching on a map.
     :param sx: start x position [pix]
     :param sy: start y position [pix]
     :param gx: goal x position [pix]
@@ -166,8 +166,7 @@ class AStarPlanning(PathPlanning):
     else:
       d = 0
 
-    d = weight * d
-    return d
+    return weight * d
 
 
 if __name__ == '__main__':
@@ -177,7 +176,7 @@ if __name__ == '__main__':
   map = np.full((100, 100), False, dtype=np.bool)
   for i in range(80):
     map[i, 20] = True
-  for i in range(0, 100):
+  for i in range(20, 100):
     map[i, 40] = True
   for i in range(90):
     map[i, 60] = True
@@ -187,7 +186,7 @@ if __name__ == '__main__':
   start_time = time.time()
   # set start and goal
   start = [5, 2]  # x, y
-  goal = [90, 98]  # x, y
+  goal = [90, 95]  # x, y
   # calculate shortest path
   astar = AStarPlanning()
   path = astar.execute(start[0], start[1], goal[0], goal[1], map, weight=5, type='euclidean')

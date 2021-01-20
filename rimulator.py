@@ -150,16 +150,19 @@ class Simulator:
         # register slam estimations to the system
         self.reg_slam_evaluations = [self.ekfslam_evaluation, self.fastslam_evaluation, self.graphbasedslam_evaluation]
 
+        list_slam = [self.world.supervisors[0].ekfslam, self.world.supervisors[0].fastslam,
+                     self.world.supervisors[0].graphbasedslam]
+        list_mapping = [self.world.supervisors[0].ekfslam_mapping, self.world.supervisors[0].fastslam_mapping,
+                        self.world.supervisors[0].graphbasedslam_mapping]
+
         self.slam_evaluation = None
         if self.cfg["slam"]["evaluation"]["enabled"]:
-            list_slam = [self.world.supervisors[0].ekfslam, self.world.supervisors[0].fastslam, self.world.supervisors[0].graphbasedslam]
             self.slam_evaluation = SlamEvaluation(list_slam,
                                                   self.cfg["slam"]["evaluation"], self.world.robots[0])
             for slam in list_slam:
                 if slam is not None:
                     slam.callback = self.slam_evaluation.time_per_step  # set the callback function
-            list_mapping = [self.world.supervisors[0].ekfslam_mapping, self.world.supervisors[0].fastslam_mapping,
-                         self.world.supervisors[0].graphbasedslam_mapping]
+
             for mapping in list_mapping:
                 if mapping is not None:
                     mapping.callback = self.slam_evaluation.time_per_step  # set the callback function

@@ -50,7 +50,7 @@ class MapManager:
             obstacles += self.__generate_rectangle_obstacles(world)
         if self.cfg["obstacle"]["feature"]["enabled"] \
             and self.cfg["obstacle"]["rectangle"]["enabled"]:
-            obstacles += self.__generate_features(world, obstacles)
+            obstacles += self.__generate_features(obstacles)
         if self.cfg["obstacle"]["feature"]["enabled"] \
             and not self.cfg["obstacle"]["rectangle"]["enabled"]:
             obstacles += self.__generate_random_features(world)
@@ -87,9 +87,9 @@ class MapManager:
 
     def __generate_random_features(self, world):
         """
-        Generate random octagon obstacles
+        Generate random features represented by octagon obstacles
         :param world: The world for which they are generated
-        :return: List of generated octagon obstacles
+        :return: List of generated features
         """
         obs_radius = self.cfg["obstacle"]["feature"]["radius"]
         obs_min_count = self.cfg["obstacle"]["feature"]["min_count"]
@@ -172,42 +172,17 @@ class MapManager:
                 obstacles.append(obstacle)
         return obstacles
 
-    def __generate_feature_line2(self, world, x0, y0, x1, y1):
-        r = 8  # resolution: pixs/meter
-        obs_radius = 0.04
-        line = geometrics.bresenham_line(x0*r, y0*r, x1*r, y1*r)
-        test_geometries = [r.global_geometry for r in world.robots]
-
-        obstacles = []
-        for x, y in line:
-            x = x/r
-            y = y/r
-            theta = -pi + (random() * 2 * pi)
-            obstacle = FeaturePoint(obs_radius, Pose(x, y, theta), 0)
-
-            # intersects = self.__check_obstacle_intersections([x,y])
-            # if not intersects:
-            #     obstacles.append(obstacle)
-            intersects = False
-            for test_geometry in test_geometries:
-                intersects |= geometrics.convex_polygon_intersect_test(test_geometry, obstacle.global_geometry)
-            if not intersects:
-                obstacles.append(obstacle)
-        return obstacles
-
-    def feature_test_geometry(self, x,y):
-        n = 6
-        r = 0.3
-        goal_test_geometry = []
-        for i in range(n):
-            goal_test_geometry.append(
-                [x + r * cos(i * 2 * pi / n), y + r * sin(i * 2 * pi / n)]
-            )
-        test_geometry = Polygon(goal_test_geometry)
-        return test_geometry
-
-
-    def __generate_feature_line(self, x0, y0, x1, y1, obs_radius, density):
+    def __generate_feature_line(self, x0, y0, x1, y1, radius, density):
+        """
+        Generate features along a line.
+        :param x0: coordinate of the starting point.
+        :param y0: coordinate of the end
+        :param x1: coordinate of the starting point
+        :param y1: coordinate of the end
+        :param radius: the radius of feature-point.
+        :param density: density of the features on the line.
+        :return:
+        """
         c = density  # feature density
         a = atan2((y1-y0), (x1-x0))
         obstacles = []
@@ -222,12 +197,17 @@ class MapManager:
             theta = -pi + (random() * 2 * pi)
             nx = dx*(random()-1)*2
             ny = dy*(random()-1)*2
-            feature = FeaturePoint(obs_radius, Pose(x + nx, y + ny, theta), 0)
+            feature = FeaturePoint(radius, Pose(x + nx, y + ny, theta), 0)
 
             obstacles.append(feature)
         return obstacles
 
-    def __generate_feature_obstacle(self, world, vertexes):
+    def __generate_feature_obstacles(self, vertexes):
+        """
+        Generate features on the boundary of a obstacle.
+        :param vertexes: list of vertexes of the obstacle.
+        :return:
+        """
         radius = self.cfg["obstacle"]["feature"]["radius"]
         density = self.cfg["obstacle"]["feature"]["density"]
         num_vertexes = len(vertexes)
@@ -239,15 +219,19 @@ class MapManager:
             x1 = vertexes[j][0]
             y1 = vertexes[j][1]
             obstacles += self.__generate_feature_line(x0, y0, x1, y1, radius, density)
-            #obstacles.pop()
         return obstacles
 
-    def __generate_features(self, world, obstacles):
+    def __generate_features(self, obstacles):
+        """
+        Generate features on the boundary of obstacles.
+        :return:
+            a set of obstacles.
+        """
         features = []
         for obstacle in obstacles:
             if type(obstacle) == FeaturePoint:
                 continue
-            features += self.__generate_feature_obstacle(world, obstacle.global_geometry.vertexes)
+            features += self.__generate_feature_obstacles(obstacle.global_geometry.vertexes)
         # add identifiers for each feature.
         for i, f in enumerate(features):
             f.id = i
@@ -273,7 +257,7 @@ class MapManager:
     def __check_obstacle_intersections(self, goal):
         """
         Check for intersections between the goal and the obstacles
-        :param goal: The goal posibition
+        :param goal: The goal position
         :return: Boolean value indicating if the goal is too close to an obstacle
         """
         # generate a proximity test geometry for the goal

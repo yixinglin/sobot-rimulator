@@ -213,6 +213,7 @@ class OccupancyGridMapping2d(Mapping):
 
   def __prob2log(self, p):
     """
+    Convert probability to log-odds ratio
     :param p: probability that a grid is occupied
     :return: log likelihood
     """
@@ -220,7 +221,8 @@ class OccupancyGridMapping2d(Mapping):
 
   def __log2prob(self, lx):
     """
-    :param lx: log likelihood
+    Convert log-odds ratio to probability
+    :param lx: the log-odds ratio
     :return: probability that a grid is occupied
     """
     return 1 - 1 / (1 + np.exp(lx))

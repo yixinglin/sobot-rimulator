@@ -3,9 +3,9 @@ from math import cos, sin, atan2
 
 def v2t(v):
     """
-    computes the homogeneous transform matrix T of the pose vector v
+    computes the homogeneous transform matrix T corresponding to the pose vector v
     :param v: the pose vector v = [x, y, theta]
-    :return: a 3 by 3 homogeneous transform
+    :return: a 3 x 3 homogeneous transform
     """
     c = cos(v[2, 0])
     s = sin(v[2, 0])
@@ -15,7 +15,7 @@ def v2t(v):
 def t2v(T):
     """
     computes the pose vector v from a homogeneous transform T
-    :param T: a 3 by 3 homogeneous transform
+    :param T: a 3 x 3 homogeneous transform
     :return: the pose vector v = [x, y, theta]
     """
     x = T[0, 2]
@@ -23,15 +23,6 @@ def t2v(T):
     theta = atan2(T[1, 0], T[0, 0])
     v = np.array([x, y, theta])
     return v.reshape(3,1)
-
-
-if __name__ == "__main__":
-
-    v = np.array([1,3,1]).reshape(3,1)
-    T = v2t(v)
-    w = t2v(T)
-    print (T)
-    print(w)
 
 
 

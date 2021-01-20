@@ -180,7 +180,7 @@ slam:
       theta: 1
     # Configures the sensor noise. The values are currently empirically chosen.
     sensor_noise:
-      # Standard deviation of the detected distance in meters 0.2 0.01
+      # Standard deviation of the detected distance in meters
       detected_distance: 0.2
       # Standard deviation of the detected angle in degrees
       detected_angle: 30
@@ -193,13 +193,13 @@ slam:
     n_particles: 200
     # Configures the motion noise. The values are currently empirically chosen.
     motion_noise:
-      # Standard deviation of the motion command's translational velocity in m/s. # 0.02,0.015
+      # Standard deviation of the motion command's translational velocity in m/s.
       translational_velocity: 0.005
       # Standard deviation of the motion command's rotational velocity in rad/s.
       rotational_velocity: 0.005
     # Configures the sensor noise. The values are currently empirically chosen.
     sensor_noise:
-      # Standard deviation of the detected distance in meters 0.2 0.01
+      # Standard deviation of the detected distance in meters
       detected_distance: 0.2
       # Standard deviation of the detected angle in degrees
       detected_angle: 30
@@ -263,7 +263,7 @@ slam:
       width: 5
       # Height of the map in meters
       height: 6
-      # Number of grids per meter. Note that high resolution will lead to performance issues.
+      # Number of grids per meter. High resolution may lead to performance issues.
       resolution: 20
 
     path_planning:

@@ -1,7 +1,7 @@
 
 class PathPlanning:
     """
-    An abstract class for path planning algorithm
+    An abstract class for path planning algorithms
     """
     def execute(self, sx, sy, gx, gy, obstacle_map):
         """

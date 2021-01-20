@@ -7,7 +7,7 @@ from supervisor.slam.graph.baseclass.Graph import Graph
 from supervisor.slam.graph.vetor2matrix import *
 
 """       Define Vertex Classes        
-Vertex
+Extended from the base-classs Vertex 
     - PoseVertex
     - LandmarkVertex
 """
@@ -40,13 +40,12 @@ class LandmarkVertex(Vertex):
         assert sigma.shape == (2, 2)
         self.landmark_id = landmark_id
 
-
     def __str__(self):
         x, y = np.squeeze(self.pose)
         return "Landmark[id = {0}, pose = {1}]".format(self.id, (x, y))
 
 """      Define Edge Classes       
-Edge
+Extended from the base-classs Edge
     - PosePoseEdge
     - PoseLandmarkEdge
 
@@ -62,18 +61,15 @@ class PosePoseEdge(Edge):
         :param z: actual measurement obtained by sensor
         :param information: information matrix
         """
-
         Edge.__init__(self, vertex1, vertex2, z, information)
         assert isinstance(self.vertex1, PoseVertex)
         assert isinstance(self.vertex2, PoseVertex)
         assert z.shape == (3, 1)
         assert information.shape == (3, 3)
 
-
     def calc_error_vector(self, x1, x2, z):
         """
         Calculate the error vector.
-
         :param x1: 3x1 vector of previous state.
         :param x2: 3x1 vector of current state.
         :param z:  3x1 vector of measurement from x to m.
@@ -107,8 +103,7 @@ class PosePoseEdge(Edge):
 
     def linearize_constraint(self, x1, x2, z):
         """
-        Linearize the pose-pose constraint.
-
+        Linearize the pose-pose constraint of edge.
         :param x1: 3x1 vector of previous pose.
         :param x2: 3x1 vector of current pose.
         :param z:  3x1 vector of measurement from x to m.
@@ -131,7 +126,7 @@ class PosePoseEdge(Edge):
 
     def __str__(self):
         x, y, yaw = np.squeeze(self.z)
-        s = "PPE: id1:{0},id2: {1},z: [{2}, {3}, {4}]".format(self.id1, self.id2, x, y, yaw)
+        s = "PPE: id1:{0},id2: {1},z: [{2}, {3}, {4}]".format(self.vertex1.id, self.vertex2.id, x, y, yaw)
         return s
 
 class PoseLandmarkEdge(Edge):
@@ -202,12 +197,12 @@ class PoseLandmarkEdge(Edge):
 
     def __str__(self):
         x, y, yaw = np.squeeze(self.z)
-        s = "PLE: id1:{0},id2: {1},z: [{2}, {3}]".format(self.id1, self.id2, x, y)
+        s = "PLE: id1:{0},id2: {1},z: [{2}, {3}]".format(self.vertex1.id, self.vertex2.id, x, y)
         return s
 
 
 """   Define Graph Class
-Graph
+Extended from the base-classs Graph
     -LMGraph 
 
 """
@@ -215,8 +210,8 @@ class LMGraph(Graph):
 
     def __init__(self):
         """
-        Posegraph to estimate only robot's poses
-        :param vertices: list of vertices. a single vertex is a pose of robot
+        Landmark-Graph to estimate robot's poses and landmarks
+        :param vertices: list of vertices. a single vertex is a pose of robot or a landmark
         :param edges: list of edges. a single edge is a constraint
                             An edge can be an object of
                             1. PoseLandmarkEdge, (PoseVertex - PoseVertex)
@@ -241,11 +236,11 @@ class LMGraph(Graph):
             edge = PosePoseEdge(vertex1, vertex2, z, information)
         else:
             raise ValueError()
-
         return edge
 
     def count_vertices(self):
         """
+        Count the number of vertices
         :return:
                 pose: number of PoseVertex objects
                 landmarks: number of LandmarkVertex objects
@@ -263,7 +258,7 @@ class LMGraph(Graph):
 
     def get_last_pose_vertex(self):
         """
-            Return the last vertex object of poses
+            Return the last pose vertex.
         """
         v_pose = None
         for v in reversed(self.vertices):

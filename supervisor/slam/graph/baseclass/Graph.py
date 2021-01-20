@@ -1,6 +1,7 @@
 """
-LS-Slam
-Based on implementation of dnovischi (https://github.com/aimas-upb/slam-course-solutions)
+In this class, Gauss-Newton minimization algorithm is implemented.
+
+Based on implementation by dnovischi (https://github.com/aimas-upb/slam-course-solutions)
 
 The parent class of any types of graph
 The Graph class has to be inherited and the following methods has to be implemented,
@@ -83,7 +84,7 @@ class Graph:
                            damp_factor = 0.01, max_iter = 10,
                            solver = "spsolve", callback = None, epsilon = 1e-2):
         """
-        Optimization of the graph
+        Optimization of the graph with Gauss-Newton minimization algorithm
         :param number_fix: fix the estimation of the initial step
         :param damp_factor: how much you want to fix a vertex.
         :param max_iter: the maximum number of iterations
@@ -154,7 +155,7 @@ class Graph:
 
     def linearize_constraints(self, vertices, edges, number_fix, damp_factor):
         """
-        Linearize the problem (global) i.e. compute the hessian matrix and the information vector
+        Linearize the error (global) i.e. compute the hessian matrix and the information vector
         :return:
                 H: the hessian matrix (information matrix)
                 b: information vector
@@ -167,7 +168,7 @@ class Graph:
 
         """    [ISSUE] This for-loop for calculating H and b cost time!    """
         for edge in edges:
-            err, A, B = edge.linearize() # calculate error and obtain the Jacobian matrices A and B
+            err, A, B = edge.linearize() # calculate error and obtain the Jacobian matrices A and B of the error, w.r.t. xi and xj
             omega = edge.information # the information matrix
             """     Compute the block matrices and vectors   """
             bi = (err.T @ omega @ A).T

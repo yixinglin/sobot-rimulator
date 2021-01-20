@@ -180,7 +180,7 @@ slam:
       theta: 0.1
     # Configures the sensor noise. The values are currently empirically chosen.
     sensor_noise:
-      # Standard deviation of the detected distance in meters 0.2 0.01
+      # Standard deviation of the detected distance in meters
       detected_distance: 0.2
       # Standard deviation of the detected angle in degrees
       detected_angle: 30
@@ -199,7 +199,7 @@ slam:
       rotational_velocity: 0.0001
     # Configures the sensor noise. The values are currently empirically chosen.
     sensor_noise:
-      # Standard deviation of the detected distance in meters 0.2 0.01
+      # Standard deviation of the detected distance in meters
       detected_distance: 0.2
       # Standard deviation of the detected angle in degrees
       detected_angle: 30
@@ -262,7 +262,7 @@ slam:
       width: 8
       # Height of the map in meters
       height: 8
-      # Number of grids per meter. Note that high resolution will lead to performance issues.
+      # Number of grids per meter. High resolution may lead to performance issues.
       resolution: 20
 
     path_planning:

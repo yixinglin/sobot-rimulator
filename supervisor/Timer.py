@@ -1,7 +1,7 @@
 import time
 
-T_NOT_REACH_GOAL = 60 # time that robot not reaches a goal in seconds
-T_NO_BEST_DIST_CHANGE = 30 # time that robot not updates the best distance to goal
+T_NOT_REACH_GOAL = 60 # time that the robot dose not reaches a goal in seconds
+T_NO_BEST_DIST_CHANGE = 30 # time that the robot dose not updates the best distance to goal
 
 class Timer:
     """

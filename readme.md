@@ -8,7 +8,7 @@ of the current robot state and a map of its surrounding environment based on its
 and proximity sensor readings. While in my extension Graph-based SLAM algorithm was integrated 
 to perform an estimation of the full traverse trajectory additionally. Moreover, Occupancy Grid Mapping algorithm 
 and A* Path Planning algorithm were also integrated into the simulator. The path planning algorithm searches a path 
-for the robot towards the goal based on the map created by the mapping algorithm. 
+for the robot towards the goal based on the grid map created by the mapping algorithm. 
 
 
 ## Setup
@@ -18,7 +18,7 @@ It is recommended to run the simulator directly on your native machine. For this
 - PyGTK 3: Please follow the instructions at https://pygobject.readthedocs.io/en/latest/getting_started.html
 
 An additional dependency (see [scikit-sparse](https://scikit-sparse.readthedocs.io/en/latest/overview.html)) 
-is required for the Graph-based SLAM algorithm:
+is required for the Graph-based SLAM algorithm (if sparse Cholesky decomposition is enabled):
 
     sudo apt-get install libsuitesparse-dev
     pip3 install --user scikit-sparse
@@ -27,24 +27,42 @@ Additional dependencies can then be installed using `pip`
 
     pip3 install matplotlib numpy scipy pandas
     pip3 install pyyaml
-    
+
+Here, *numpy* and *scipy* are required for scientific computing, 
+*pandas* for analysing the experimental results, and *matplotlib* for 
+visualizing the results.
+
 The simulator is then started by 
 
     python rimulator.py
     
-which uses the default `config.yaml` configuration file. A specific configuration file can be
+which uses the default `config.yaml` configuration file. 
+A specific configuration file can be
 specified as an additional program parameter:
 
     python rimulator.py original_config.yaml
     python rimulator.py config01.yaml
-Note that `config.yaml` is the configuration file especially for the Graph-based SLAM simulation, 
-where the feature-map with large rectangular obstacles
-is used:
+Note that `config.yaml` is the configuration file 
+especially for the Graph-based SLAM simulation. 
+The environment is represented by 
+the feature-based maps with large rectangular obstacles. In particular, there
+are point-like features on the boundary.
+For simulation of the following map, the user can start the simulator by
+    
+    python rimulator.py
+and then load the map [graph_based_slam_example_1](maps/graph_based_slam_example_1)
+
  ![Screenshot](documentation/sim_config.png)
 The configuration file `config01.yaml` is for the point-like feature-map without any obstacles where the EKFSLAM and FastSLAM are performed in particular:
-![Screenshot](documentation/sim_config01.png)
-Alternatively, the simulator can be run using `docker`, as described in [documentation/docker.md](documentation/docker.md).
+For simulation of the following map, the user can start the simulator by
     
+    python rimulator.py config01.yaml
+and then load the map [slam_example_1](maps/slam_example_1)
+
+![Screenshot](documentation/sim_config01.png)
+
+Alternatively, the simulator can be run using `docker`, as described in [documentation/docker.md](documentation/docker.md).
+
 
 ## Graphical User Interface
 
@@ -88,11 +106,11 @@ representing the robot poses and landmark-vertices representing the landmark pos
 - **Start/Reset Mapping**: Starts the Occupancy Grid Mapping algorithm to evaluate a grid map,
 also a path is generated on the map by A* Path Planning algorithm.
 ## Configuration
-The simulator can be configured by a variety of parameters. The default configuration file is [config.yaml](config01.yaml)
+The simulator can be configured by a variety of parameters. The default configuration file is [config.yaml](config.yaml)
 where all parameters are documented. This file includes the EKF Slam, FastSlam, Graph based Slam, Occupancy gird mapping and A* path planning that can be enabled or
 disabled. The configuration file [config01.yaml](config01.yaml) includes 
-an extension performing almost identical to the [sobot rimulator](https://collaborating.tuhh.de/cva9931/sobot-rimulator) of Michael Dobler 
-while a frame of the Graph-based SLAM is appended on the right. The configuration file [original_config.yaml](original_config.yaml) does not include
+an extension performing almost identical to the [sobot rimulator](https://collaborating.tuhh.de/cva9931/sobot-rimulator) by Michael Dobler 
+while a frame of the Graph-based SLAM is appended on the right in addition. The configuration file [original_config.yaml](original_config.yaml) does not include
 any of the extensions made and performs completely identical to the original sobot rimulator.
 
 The most important parameters in terms of the SLAM algorithms are:
@@ -108,20 +126,22 @@ the frequency of the SLAM algorithm considering a landmark as "new" instead of a
 
 ### 2. Graph-based SLAM
 - `feature_detector`: Determines whether SLAM algorithms should work with known data association. 
-  Note that the Graph-based SLAM only works with known data association.
-- `frontend_interval`: Specifies the time interval of adding a pose-vertex in simulation cycles. The lower the interval is, the better graph can be obtained by graph optimization.
-However, the graph will grow faster when smaller interval is applied, which can lead to performance problems during graph optimization    
-- `frontend_pose_density`: Specifies the minimum distance between two neighboring pose-vertices while adding a new one during the front-end process.
-- `num_fixed_vertexes`: Specifies the number of vertices that are fixed during optimization.
+  Note that the existing Graph-based SLAM algorithm only works with known data association, while EKF SLAM and FastSLAM are able to work with unknown data association.
+- `frontend_interval`: Specifies the time interval of adding a pose-vertex in simulation cycles. The lower the interval is, 
+  the faster the graph grows, and the better evaluation can be obtained by graph optimization.
+However, smaller interval may lead to performance problems during graph optimization.    
+- `frontend_pose_density`: Specifies the minimum distance between two neighboring pose-vertices while adding a new one in the graph during the front-end process.
+- `num_fixed_vertexes`: Specifies the number of the fixed vertices during the optimization.
 - `solver`: Specifies the sparse solver during the optimization. We can use either `spsolve` or `cholesky`. 
-  Note that `cholesky` requires the **scikit-sparse** library. 
+  Note that `cholesky` requires the [**scikit-sparse**](https://scikit-sparse.readthedocs.io/en/latest/overview.html)
+  library. 
   
 ### 3. Occupancy Gird Mapping and Path Planning:
 - `resolution`: Specifies the resolution of the grid map estimated by occupancy grid 
 mapping algorithm. The mapping algorithm can handle high resolution maps efficiently, 
-but high resolution can lead to performance problems of the GUI while grids are being drawn on the frames
+but high resolution may lead to performance problems.
 - `heuristic_weight`: Determines how important the heuristic term is when planning a path from the robot position to the goal.
-If the value is 0, that means that heuristic term is not considered.   
+If the value is 0, meaning that the heuristic term is not considered.   
 
 ### 4.  SLAM Evaluation
 The data during the simulation can be recorded and saved in the folder [./scripts](./scripts). They are [sobot_information1.csv](scripts/sobot_information1.csv) and 

@@ -39,7 +39,7 @@ class GraphBasedSLAM(Slam):
         self.step_counter = 0
         self.graph = LMGraph()
 
-        self.flg_optim = False # determines whether the graph should be optimized
+        self.flg_optim = False # determines whether the graph should be optimized in a simulation cycles.
         self.callback = callback # a callback function
 
         # add the first node to the graph
@@ -56,6 +56,9 @@ class GraphBasedSLAM(Slam):
         return Pose(self.mu[0, 0], self.mu[1, 0], self.mu[2, 0])
 
     def get_estimated_trajectory(self):
+        """
+        Returns hte estimated trajectory of the robot.
+        """
         return [(v.pose[0,0], v.pose[1,0])  \
                  for v in self.graph.get_estimated_pose_vertices()]
 
@@ -112,21 +115,21 @@ class GraphBasedSLAM(Slam):
 
     def __front_end(self, z):
         """
-        Front end part of the Graph_based SLAM where a graph is built and growing as robot's moving.
+        Front end part of the Graph_based SLAM where a graph is constructed and growing while robot's moving.
         :param z: list of range-bearing measurement, a single item is (distance, angle, landmark_id) related to robot
         """
 
         """    calculate the next vertex of poses     """
-        vertex1 = self.graph.get_last_pose_vertex() # a previous vertex
-        vertex2 = PoseVertex(self.mu, self.Sigma)  # a current vertex
+        vertex1 = self.graph.get_last_pose_vertex() # the previous vertex
+        vertex2 = PoseVertex(self.mu, self.Sigma)  # the current vertex
         distance = (vertex1.pose[0, 0] - vertex2.pose[0, 0])**2 + (vertex1.pose[1, 0] - vertex2.pose[1, 0])**2
         if distance < self.frontend_pose_density**2:  # keep the vertex density not high
             return
 
-        self.graph.add_vertex(vertex2)
+        self.graph.add_vertex(vertex2) # add a new pose-vertex in the graph
         """     calculate landmark vertices    """
         for i, zi in enumerate(z): # zi = [x, y, id].T
-            lm_id = zi[2]
+            lm_id = zi[2]  # the identifier of a detected landmark.
             # Only execute if sensor has observed landmark
             if not self.supervisor.proximity_sensor_positive_detections()[i] \
                 or lm_id == -1: # not a feature
@@ -137,23 +140,23 @@ class GraphBasedSLAM(Slam):
             if vertex3 == None:
                 # Detect a new landmark: this landmark has not been detected in the past
                 vertex3 = LandmarkVertex(pos_lm, self.sensor_noise, lm_id) # create a new vertex representing a landmark
-                self.graph.add_vertex(vertex3) # add the vertex to the graph
+                self.graph.add_vertex(vertex3) # add the landmark-vertex to the graph
             else:
-                # 1. Known that the robot is revisiting a previous seen landmark,
-                # 2. Calculate the distance between the estimated landmarks via slam and via actual measurement,
-                # if the robot is revisiting a landmark, and the distance is larger than the threshold,
-                #       start backend to correct the consistancy between the estimate and the measurments.
-                distance2 = (pos_lm[0, 0] -  vertex3.pose[0, 0])**2 + (pos_lm[1, 0] -  vertex3.pose[1, 0])**2
-                if distance2 > self.min_distance_threshold**2 and self.flg_optim == False:
+                # 1. The robot is revisiting a previous seen landmark,
+                # 2. Calculate the distance between the estimated landmark via slam and that via actual measurement,
+                # if the robot is revisiting a landmark, and the distance is larger than the threshold (large error),
+                #       start backend to correct the inconsistency between the evaluation and the measurement.
+                sq_distance = (pos_lm[0, 0] -  vertex3.pose[0, 0])**2 + (pos_lm[1, 0] -  vertex3.pose[1, 0])**2
+                if sq_distance > self.min_distance_threshold**2 and self.flg_optim == False:
                     self.flg_optim = True
 
             # Create an edge connecting a pose and a landmark.
-            measurement, info = PoseLandmarkEdge.encode_measurement(zi, self.sensor_noise)
+            measurement, info = PoseLandmarkEdge.encode_measurement(zi, self.sensor_noise) # create a spatial constraint.
             self.graph.add_edge(vertex2, vertex3, measurement, info) # add an PoseLandmarkEdge edge
 
         """      calculate pose-pose edge       """
         # Create an edge connecting two poses
-        measurement, info = PosePoseEdge.encode_measurement(vertex1.pose, vertex2.pose, self.motion_noise)
+        measurement, info = PosePoseEdge.encode_measurement(vertex1.pose, vertex2.pose, self.motion_noise) # create a spatial constraint.
         self.graph.add_edge(vertex1, vertex2, measurement, info)
 
 
